@@ -1,0 +1,126 @@
+﻿using System;
+using System.IO;
+using System.Text;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+
+using BriefTempl.Config;
+using System.Collections.Generic;
+
+namespace BriefTempl.Data.Serialize.Bson {
+
+  ///<summary>Bson format serialization.</summary>
+  public class BsonFormat {
+    private ILogger<BsonFormat> log;
+    private readonly JsonSerializer bson;
+
+    ///<summary>Ctor from <paramref name="log"/>.</summary>
+    public BsonFormat(ILogger<BsonFormat> log) {
+      this.log= log;
+      this.bson= Json.JsonFormat.NewtonJsonSingleton.Instance;  //use same central JsonSerializer !
+    }
+
+    ///<summary>Bson format serializer for <typeparamref name="T"/>.</summary>
+    public class Serializer<T> : ISerializer<T> where T : class, new() {
+      private BsonFormat format;
+
+      ///<summary>Ctor from <paramref name="format"/>.</summary>
+      public Serializer(BsonFormat format) {
+        this.format= format;
+      }
+
+      ///<inherit/>
+      public string Encoding => "BSON";
+
+      ///<summary>Load object from BSON <paramref name="strm"/>.</summary>
+      public T LoadObj(Stream strm) {
+        using (var rd = new BsonReader(strm)) {
+          return format.bson.Deserialize<T>(rd);
+        }
+      }
+
+      ///<summary>Load object from BSON <paramref name="base64"/>.</summary>
+      public T LoadObj(string base64) {
+        return LoadObj(new MemoryStream(Convert.FromBase64String(base64)));
+      }
+
+      ///<summary>Write object to BSON <paramref name="strm"/>.</summary>
+      public void WriteObj(Stream strm, T obj) {
+        using (var wr = new BsonWriter(strm)) {
+          format.bson.Serialize(wr, obj, typeof(T));
+        }
+      }
+    } //class Serializer<T>
+
+    ///<summary>Bson format serializer for dynamic types known only during runtime.</summary>
+    public class DynamicSerializer : IDynamicSerializer {
+      private BsonFormat format;
+
+      ///<inherit/>
+      public string Encoding => "BSON";
+
+      ///<summary>Ctor from <paramref name="format"/>.</summary>
+      public DynamicSerializer(BsonFormat format) {
+        this.format= format;
+      }
+
+      ///<inherit/>
+      public IEnumerable<T> LoadIEnumerable<T>(Stream stream) {
+        using(var rd= new BsonReader(stream)) {
+          while(rd.Read()) {
+            if(rd.TokenType == JsonToken.StartObject) {
+              var deserializedItem= format.bson.Deserialize<T>(rd);
+              yield return deserializedItem;
+            }
+          }
+        }
+      }
+
+      ///<inherit/>
+      public object LoadObj(Stream strm, Type type) {
+        using (var rd = new BsonReader(strm)) {
+          return format.bson.Deserialize(rd, type);
+        }
+      }
+
+      ///<inherit/>
+      public object LoadObj(string base64, Type type) {
+        return LoadObj(new MemoryStream(Convert.FromBase64String(base64)), type);
+      }
+
+      ///<inherit/>
+      public void WriteObj(Stream strm, object obj) {
+        using (var wr = new BsonWriter(strm)) {
+          format.bson.Serialize(wr, obj, obj.GetType());
+        }
+      }
+
+      /// <inherit/>
+      public void WriteIEnumerable<T>(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+        using (var wr = new BsonWriter(strm)) {
+          wr.WriteStartArray();
+          foreach(T item in itemsToSerialize) {
+            format.bson.Serialize(wr, callback(item), typeof(T));
+          }
+          wr.WriteEndArray();
+        }
+      }
+    } //class DynamicSerializer
+
+  } //class BsonFormat
+
+  ///<summary>Bson serializer configurator.</summary>
+  public class BsonSeriConfigurator : IConfigurator<IServiceCollection> {
+    ///<summary>Add Bson serializer to <paramref name="target"/>.</summary>
+    public void AddTo(IServiceCollection target, IConfiguration cfg) {
+      target.AddSingleton<BsonFormat>();
+      target.AddSingleton<IDynamicSerializer, BsonFormat.DynamicSerializer>();
+      target.AddSingleton(typeof(ISerializer<>), typeof(BsonFormat.Serializer<>));
+      target.AddSingleton(typeof(BsonFormat.Serializer<>));
+    }
+  }
+
+}
