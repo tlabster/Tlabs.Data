@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Tlabs.Core/src/Tlabs.Core.csproj" />
-    <ProjectReference Include="../../Tlabs.CalcNgn/src/Tlabs.CalcNgn.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -13,7 +13,6 @@ using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Serialize;
 using Tlabs.Dynamic;
-using Tlabs.CalcNgn;
 
 namespace Tlabs.Data.Processing {
 
@@ -21,16 +20,23 @@ namespace Tlabs.Data.Processing {
   public partial class DocSchemaProcessor {
     /// <summary><see cref="ILogger"/>.</summary>
     public static readonly ILogger<DocSchemaProcessor> Log= App.Logger<DocSchemaProcessor>();
-    private DocumentSchema schema;
-    private string sid;
+
+    /// <summary><see cref="DocumentSchema"/>.</summary>
+    protected DocumentSchema schema;
+
+    /// <summary>Schema id.</summary>
+    protected string sid;
+
     private IDynamicSerializer docSeri;
-    private Calculator.Model calcNgnModel;
-    private DynamicAccessor bodyAccessor;
+
+    /// <summary>internal dynamic body accessor.</summary>
+    protected DynamicAccessor bodyAccessor;
+
     private ParameterExpression[] typedValidationParms;
     private CompiledValidation[] validationRules;
 
     /// <summary>Ctor from <paramref name="schema"/>, <paramref name="docClassFactory"/> and <paramref name="docSeri"/>.</summary>
-    public DocSchemaProcessor(DocumentSchema schema, IDocumentClassFactory docClassFactory, IDynamicSerializer docSeri, Calculator calcNgn) {
+    public DocSchemaProcessor(DocumentSchema schema, IDocumentClassFactory docClassFactory, IDynamicSerializer docSeri) {
       if (null == (this.schema= schema)) throw new ArgumentNullException(nameof(schema));
       this.sid= schema.TypeId;
       if (null == (this.schema.Fields)) throw new ArgumentException(nameof(schema.Fields));
@@ -39,24 +45,13 @@ namespace Tlabs.Data.Processing {
 
       this.BodyType= docClassFactory.GetBodyType(schema);
       this.typedValidationParms= new ParameterExpression[] {
-        Expression.Parameter(BodyType, "d"),
+        Expression.Parameter(BodyType, "d")
         // Expression.Parameter(typeof(Insuree), "i"),
         // Expression.Parameter(typeof(ISource), "p")
       };
 
       this.docSeri= docSeri;
-      if (schema.HasCalcModel) {
-        // using (var strm= new FileStream("D:\\tmp\\calcModel.xls", FileMode.Create)) {
-        //   schema.CalcModelStream.CopyTo(strm);
-        //   schema.CalcModelStream.Position= 0;
-        // }
-        this.calcNgnModel= calcNgn.LoadModel(schema.CalcModelStream);
-        var impCnt= calcNgnModel.Definition.Imports.Count;
-        var expCnt= calcNgnModel.Definition.Exports.Count;
-        Log.LogDebug("{schema} has {imp} import(s) and {exp} export(s).", schema.TypeId, impCnt, expCnt);
-        if (0 == impCnt + expCnt) Log.LogWarning("No data import/export definition found in calcModel of {schema}.", schema.TypeId);
-      }
-      bodyAccessor= new DynamicAccessor(this.BodyType);
+      this.bodyAccessor= new DynamicAccessor(this.BodyType);
 
       this.validationRules= new CompiledValidation[validations.Count];
       var errors= new List<CodeSyntaxException>();
@@ -126,7 +121,7 @@ namespace Tlabs.Data.Processing {
         }
       }
 
-      computeBodyObject(bodyObj, setupData);
+      processBodyObject(bodyObj, setupData);
 
       using (var strm = new MemoryStream(bufSz)) {
         strm.SetLength(0);
@@ -144,27 +139,8 @@ namespace Tlabs.Data.Processing {
       if (this.schema.TypeId != doc.Sid) throw new ArgumentException(nameof(doc.Sid));
     }
 
-    private object computeBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) {
-      if (null == calcNgnModel) return bodyObj;
-      var model=   null != setupData
-                 ? setupData(bodyObj)
-                 : bodyAccessor.ToDictionary(bodyObj);
-#if DEBUG
-      SaveModel(Path.Combine(Path.GetDirectoryName(App.MainEntryPath), "calcNgnModel", schema.TypeName + "0.xls"));
-#endif
-      calcNgnModel.Compute(model);
-#if DEBUG
-      SaveModel(Path.Combine(Path.GetDirectoryName(App.MainEntryPath), "calcNgnModel", schema.TypeName + ".xls"));
-#endif
-      return bodyObj;
-    }
-
-    private void SaveModel(string path) {
-      new DirectoryInfo(Path.GetDirectoryName(path)).Create();  //ensure path
-      using (var strm = File.Create(path)) {
-        calcNgnModel.Definition.WriteStream(strm);
-      }
-    }
+    ///<summary>Perform any schema specific update processing.</summary>
+    protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) => bodyObj;
 
     ///<summary>Check <paramref name="doc"/> against the validation rules and applies the result to the document status properties.</summary>
     public void ApplyValidation<T>(T doc/*, Insuree insuree, ISource src*/, out object body) where T : BaseDocument<T> {

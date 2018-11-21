@@ -42,8 +42,6 @@ namespace Tlabs.Data {
 
     private void configureDocProcessor(IServiceCollection services) {
       services.TryAddSingleton<IDocumentClassFactory, DocumentClassFactory>();
-      services.TryAddSingleton<CalcNgn.Calculator>();
-      services.TryAddSingleton<CalcNgn.Intern.ICalcNgnModelParser, CalcNgn.Sgear.CalcNgnModelParser>();
       services.AddScoped(typeof(Processing.DocProcessorRepo));
 
       string tzid= null;
