@@ -7,7 +7,10 @@ using Tlabs.Data.Entity;
 
 namespace Tlabs.Data.Processing.Intern {
 
-  ///<summary>Repository of <see cref="DocSchemaProcessor"/>.</summary>
+  ///<summary>Abstract repository of <see cref="DocSchemaProcessor"/>.</summary>
+  ///<remarks>
+  ///Implementations must provide a createProcessor() method to return a subclass of <see cref="DocSchemaProcessor"/>.
+  ///</remarks>
   public abstract class AbstractDocProcRepo<T> where T : DocSchemaProcessor {
     ///<summary>Internal logger.</summary>
     protected static readonly ILogger<AbstractDocProcRepo<T>> log= App.Logger<AbstractDocProcRepo<T>>();
