@@ -26,11 +26,7 @@ namespace Tlabs.Data {
     /// 
     /// </summary>
     /// <returns></returns>
-    protected virtual Type baseType {
-      get{
-        return typeof(object);
-      }
-    }
+    protected virtual Type baseType => typeof(object);
 
     /// <summary>Ctor from <paramref name="schemaRepo"/>  </summary>
     public DocumentClassFactory(IDocSchemaRepo schemaRepo) {
@@ -99,10 +95,8 @@ namespace Tlabs.Data {
     private Type CreateType(DocumentSchema schema) {
       if (0 == schema.Fields?.Count) throw new InvalidOperationException("Unable to create DocBody from empty fields list");
 
-      var dynProps= schema.Fields.Select(fld =>
-        new DynamicProperty(fld.Name, fld.Type, GetAttributes(fld))
-      ).ToList();
-      return DynamicClassFactory.CreateType(dynProps, baseType);
+      var dynProps= schema.Fields.Select(fld => new DynamicProperty(fld.Name, fld.Type, GetAttributes(fld))).ToList();
+      return DynamicClassFactory.CreateType(dynProps, baseType, schema.TypeId);
     }
   }
 }
