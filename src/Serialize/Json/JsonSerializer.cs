@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -8,8 +11,6 @@ using Newtonsoft.Json.Serialization;
 
 using Tlabs.Misc;
 using Tlabs.Config;
-using System;
-using System.Collections.Generic;
 
 namespace Tlabs.Data.Serialize.Json {
 
@@ -99,6 +100,34 @@ namespace Tlabs.Data.Serialize.Json {
           }
         }
       }
+
+      ///<inherit/>
+      public IEnumerable<T> LoadIEnumerable(Stream stream) {
+        using (var sr = new StreamReader(stream, JsonFormat.encoding, true)) {
+          using (var rd = new JsonTextReader(sr)) {
+            while (rd.Read()) {
+              if (rd.TokenType == JsonToken.StartObject) {
+                var deserializedItem= format.json.Deserialize<T>(rd);
+                yield return deserializedItem;
+              }
+            }
+          }
+        }
+      }
+
+      /// <inherit/>
+      public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+        using (var sw = new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
+          using (var wr = new JsonTextWriter(sw)) {
+            wr.WriteStartArray();
+            foreach (T item in itemsToSerialize) {
+              format.json.Serialize(wr, callback(item), typeof(T));
+            }
+            wr.WriteEndArray();
+          }
+        }
+      }
+
     } //class Serializer<T>
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
@@ -123,20 +152,6 @@ namespace Tlabs.Data.Serialize.Json {
       }
 
       ///<inherit/>
-      public IEnumerable<T> LoadIEnumerable<T>(Stream stream) {
-        using(var sr= new StreamReader(stream, JsonFormat.encoding, true)) {
-          using(var rd= new JsonTextReader(sr)) {
-            while(rd.Read()) {
-              if(rd.TokenType == JsonToken.StartObject) {
-                var deserializedItem= format.json.Deserialize<T>(rd);
-                yield return deserializedItem;
-              }
-            }
-          }
-        }
-      }
-
-      ///<inherit/>
       public object LoadObj(string text, Type type) {
         using (var rd = new JsonTextReader(new StringReader(text))) {
           return format.json.Deserialize(rd, type);
@@ -152,13 +167,27 @@ namespace Tlabs.Data.Serialize.Json {
         }
       }
 
+      ///<inherit/>
+      public IEnumerable LoadIEnumerable(Stream stream) {
+        using (var sr = new StreamReader(stream, JsonFormat.encoding, true)) {
+          using (var rd = new JsonTextReader(sr)) {
+            while (rd.Read()) {
+              if (rd.TokenType == JsonToken.StartObject) {
+                var deserializedItem= format.json.Deserialize(rd);
+                yield return deserializedItem;
+              }
+            }
+          }
+        }
+      }
+
       /// <inherit/>
-      public void WriteIEnumerable<T>(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+      public void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback) {
         using (var sw = new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
           using (var wr = new JsonTextWriter(sw)) {
             wr.WriteStartArray();
-            foreach(T item in itemsToSerialize) {
-              format.json.Serialize(wr, callback(item), typeof(T));
+            foreach(var item in itemsToSerialize) {
+              format.json.Serialize(wr, callback(item));
             }
             wr.WriteEndArray();
           }

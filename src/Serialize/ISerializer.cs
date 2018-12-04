@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Tlabs.Data.Serialize {
+
+  /// <summary>
+  /// Callback delegate to allow performing modifications on single serialized items
+  /// </summary>
+  public delegate object ElementCallback(object elem);
 
   /// <summary>
   /// Callback delegate to allow performing modifications on single serialized items
@@ -19,17 +25,17 @@ namespace Tlabs.Data.Serialize {
     /// <summary>Write serialized <paramref name="obj"/> to <paramref name="strm"/>.</summary>
     void WriteObj(Stream strm, object obj);
 
-    /// <summary>Write serialized <paramref name="itemsToSerialize"/> to <paramref name="strm"/> from IEnumerable.</summary>
-    void WriteIEnumerable<T>(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback);
-
     /// <summary>Load deserialized object from <paramref name="strm"/> stream with expected <paramref name="type"/>.</summary>
     object LoadObj(Stream strm, Type type);
 
     /// <summary>Load deserialized object from <paramref name="text"/> string with expected <paramref name="type"/>.</summary>
     object LoadObj(string text, Type type);
-  
+
+    /// <summary>Write serialized <paramref name="itemsToSerialize"/> to <paramref name="strm"/> from IEnumerable.</summary>
+    void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback);
+
     /// <summary>Load deserialized items from <paramref name="strm"/> string as IEnumerable.</summary>
-    IEnumerable<T> LoadIEnumerable<T>(Stream strm);
+    IEnumerable LoadIEnumerable(Stream strm);
   }
 
   /// <summary>Interface of a serializer / deserializer of objects with type <typeparamref name="T"/>.</summary>
@@ -45,6 +51,12 @@ namespace Tlabs.Data.Serialize {
 
     /// <summary>Load deserialized instance of T from <paramref name="text"/> string.</summary>
     T LoadObj(string text);
+    
+    /// <summary>Write serialized <paramref name="itemsToSerialize"/> to <paramref name="strm"/> from IEnumerable.</summary>
+    void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback);
+
+    /// <summary>Load deserialized items from <paramref name="strm"/> string as IEnumerable.</summary>
+    IEnumerable<T> LoadIEnumerable(Stream strm);
   }
 
   /// <summary>

@@ -69,6 +69,16 @@ namespace Tlabs.Data.Serialize.Xml {
       public void WriteObj(Stream strm, T obj) {
         format.xml.Serialize(strm, obj);
       }
+
+      ///<inherit/>
+      public IEnumerable<T> LoadIEnumerable(Stream stream) {
+        throw new NotImplementedException();
+      }
+
+      /// <inherit/>
+      public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+        throw new NotImplementedException();
+      }
     } //class Serializer<T, S>
   } //class XmlFormat<T, S>
 
