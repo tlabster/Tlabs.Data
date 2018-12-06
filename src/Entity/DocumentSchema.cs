@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using Tlabs.Misc;
 
@@ -98,6 +99,8 @@ namespace Tlabs.Data.Entity {
     public class Field : Intern.EditableEntity {
       private string typeName;
       private Type type;
+      private string extMappingInfo;
+      private IDictionary<string, string> mappingInfo;
 
       ///<summary>Default ctor</summary>
       public Field() { }
@@ -131,7 +134,23 @@ namespace Tlabs.Data.Entity {
         }
       }
 
-      public string ExtMappingInfo { get; set; }
+      public string ExtMappingInfo {
+        get => this.extMappingInfo;
+        set {
+          this.extMappingInfo= value;
+          if (string.IsNullOrEmpty(this.extMappingInfo)) {
+            this.mappingInfo= new Dictionary<string, string>();
+            return;
+          }
+          var mappings= this.extMappingInfo.Split('\n').Select(elem => elem.Split('=')).Where(pair => pair.Count() == 2);
+          this.mappingInfo= mappings.ToDictionary(pair => pair[0], pair => pair[1]);
+        }
+      }
+
+      //implicitly not mapped
+      public IDictionary<string, string> MappingInfo {
+        get => this.mappingInfo;
+      }
     } //class Field
 
     public class ValidationRule : Intern.EditableEntity {

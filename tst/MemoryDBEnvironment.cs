@@ -14,7 +14,7 @@ using Tlabs.Data.Repo;
 using Tlabs.Data.Serialize;
 using Tlabs.Data.Serialize.Json;
 
-namespace DMProg.Test.Common {
+namespace Tlabs.Test.Common {
   public class Document : BaseDocument<Document> {
 
   }

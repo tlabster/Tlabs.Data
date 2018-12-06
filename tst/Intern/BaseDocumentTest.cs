@@ -1,5 +1,5 @@
 ﻿using System;
-using DMProg.Test.Common;
+using Tlabs.Test.Common;
 using Tlabs.Data.Entity.Intern;
 using Xunit;
 

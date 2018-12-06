@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using DMProg.Test.Common;
+using Tlabs.Test.Common;
 using Xunit;
 
 namespace Tlabs.Data.Serialize.Tests {

@@ -12,21 +12,11 @@ using System.Collections.Generic;
 using System.Dynamic;
 
 namespace Tlabs.Data.Processing.Tests {
-  using XmlFormater = XmlFormat<DocumentSchema, DocXmlSchema>;
   public class DocSchemaProcessorTest {
-    public class TestSerializer {
-      public readonly ISerializer<DocumentSchema> DocSchemaSerializer;
-      public readonly IDynamicSerializer JsonSerializer;
-      public TestSerializer() {
-        this.DocSchemaSerializer= new XmlFormater.Serializer(new XmlFormater(App.Logger<XmlFormater>()));
-        this.JsonSerializer= JsonFormat.CreateDynSerializer();
-      }
-    }
-
     public class Document : BaseDocument<Document> {
     }
 
-    private TestSerializer tstSer= Singleton<TestSerializer>.Instance;
+    private static readonly JsonFormat.DynamicSerializer tstSer= JsonFormat.CreateDynSerializer();
 
     public static DocumentSchema CreateTestSchema() {
       return new DocumentSchema {
@@ -165,47 +155,6 @@ namespace Tlabs.Data.Processing.Tests {
     }
 
     [Fact]
-    public void SimpleDeserializationTest() {
-      var docSchema= tstSer.DocSchemaSerializer.LoadObj(SIMPLE_XML);
-
-      Assert.Equal("DB1-ED", docSchema.TypeName);
-      Assert.Equal(123, Convert.ToInt32(docSchema.TypeVers));
-      Assert.True(docSchema.Comment.Length > 0, "Schema comment expected");
-    }
-
-    [Fact]
-    public void SchemaDeserializationTest() {
-      var docSchema= tstSer.DocSchemaSerializer.LoadObj(DB1_ED_XML);
-
-      Assert.NotEmpty(docSchema.Validations);
-      foreach (var valid in docSchema.Validations) {
-        Assert.NotEmpty(valid.Key);
-        Assert.NotEmpty(valid.Description);
-        Assert.NotEmpty(valid.Code);
-      }
-
-      Assert.Equal("DB1-ED", docSchema.TypeName);
-      Assert.Equal(1, Convert.ToInt32(docSchema.TypeVers));
-      Assert.True(docSchema.Comment.Length > 0, "Schema comment expected");
-      Assert.NotEmpty(docSchema.Fields);
-      DocumentSchema.Field field= docSchema.Fields.Where(f => f.Name == "Kassenname").SingleOrDefault();
-      Assert.NotNull(field);
-      Assert.True(field.ExtMappingInfo.Length > 0);
-
-
-
-      var proc= CreateDocSchemaProcessor(docSchema);
-      Assert.IsAssignableFrom(typeof(Type), proc.BodyType);
-      var docBody= Activator.CreateInstance(proc.BodyType);
-      Assert.NotNull(docBody);
-
-      DocumentSchema.ValidationRule rule;
-      var res= proc.CheckValidation(proc.EmptyBody, out rule);
-      Assert.False(res);  //Must fail with EmptyBody...
-      Assert.NotNull(rule);
-    }
-
-    [Fact]
     public void ValidateSid() {
       var docSchema= CreateDocSchema();
       var proc= CreateDocSchemaProcessor(docSchema);
@@ -227,110 +176,5 @@ namespace Tlabs.Data.Processing.Tests {
       dynamic dyn= new ExpandoObject();
       proc.UpdateBodyObject(doc, dyn);
     }
-
-    const string SIMPLE_XML= @"<?xml version=""1.0"" encoding=""UTF-8""?>
-<form name=""DB1-ED"" version=""123"" generator=""Dok-Gen-Tool V1.x""/>";
-
-    //***TODO: XML must be updated to reflect our own document definition...*/
-    const string DB1_ED_XML= @"<?xml version=""1.0"" encoding=""UTF-8""?>
-<form name=""DB1-ED"" version=""1"" generator=""Dok-O-Mat RC5"" >
-  <source>DB1-ED.xls</source>
-  <validations>
-    <rule id=""R17C41"" desc=""Diabetis Symptome nicht eindeutig"">{true &amp;&amp; @OneOf2(d.symptomsTrue, d.symptomsFalse) || 1 &lt; 2}</rule>
-    <rule id=""R29C41"" desc=""Insulin Therapie nicht eindeutig"">{@OneOf2(d.InsuFalse, d.InsuYes)}</rule>
-    <rule id=""R30C41"" desc=""Diagnose Datum ungültig"">{d.nextDocDate.HasValue and d.nextDocDate != null}</rule>
-  </validations>
-  <field name=""Kassenname"" type=""TEXT"">
-    <cell row=""6"" col=""3""/>
-    <edifact path=""DMP/0/1"" mandatory=""true"" condition=""123:DMP/0/0""/>
-    <input-Control/>
-  </field>
-  <field name=""Nachname"" type=""TEXT"">
-    <cell row=""8"" col=""3""/>
-    <input-Control/>
-  </field>
-  <field name=""Vorname"" type=""TEXT"">
-    <cell row=""8"" col=""11""/>
-    <input-Control/>
-  </field>
-  <field name=""KVNR"" type=""TEXT"">
-    <cell row=""13"" col=""3""/>
-    <input-Control/>
-  </field>
-  <field name=""VNR"" type=""TEXT"">
-    <cell row=""13"" col=""6""/>
-    <input-Control/>
-  </field>
-  <field name=""status"" type=""TEXT"">
-    <cell row=""13"" col=""13""/>
-    <input-Control/>
-  </field>
-  <field name=""ArztNr"" type=""TEXT"">
-    <cell row=""15"" col=""3""/>
-    <input-Control/>
-  </field>
-  <field name=""validUntil"" type=""DATETIME"">
-    <cell row=""15"" col=""6""/>
-    <input-Control/>
-  </field>
-  <field name=""birthday"" type=""DATETIME"">
-    <cell row=""15"" col=""13""/>
-    <input-Control/>
-  </field>
-  <field name=""insuYes"" type=""BOOLEAN"">
-    <cell row=""30"" col=""29""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""insuFalse"" type=""BOOLEAN"">
-    <cell row=""30"" col=""32""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""symptomsTrue"" type=""BOOLEAN"">
-    <cell row=""35"" col=""11""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""symptomsFalse"" type=""BOOLEAN"">
-    <cell row=""35"" col=""14""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""smokerTrue"" type=""BOOLEAN"">
-    <cell row=""41"" col=""35""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <!-- ... -->
-
-  <field name=""nextDocDate"" type=""DATETIME"">
-    <cell row=""103"" col=""25""/>
-    <input-Control/>
-  </field>
-  <field name=""dokIntervallQuart"" type=""BOOLEAN"">
-    <cell row=""105"" col=""31""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""dokIntervallSecondQuart"" type=""BOOLEAN"">
-    <cell row=""107"" col=""31""/>
-    <input-Control selection=""true""/>
-
-  </field>
-
-  <field name=""docDate"" type=""DATETIME"">
-    <cell row=""109"" col=""25""/>
-    <input-Control/>
-  </field>
-</form>
-";
-
   }
 }

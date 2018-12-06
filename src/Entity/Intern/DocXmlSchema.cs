@@ -44,7 +44,7 @@ namespace Tlabs.Data.Entity.Intern {
 
       //form child element <form><field>...
       xmlAttr= new XmlAttributes();
-      xmlAttr.XmlElements.Add(new XmlElementAttribute("field", typeof(EdifactXmlField)));
+      xmlAttr.XmlElements.Add(new XmlElementAttribute("field", typeof(AnyChildXmlField)));
       this.Add(typeof(DocumentSchema), "Fields", xmlAttr);
 
       //field element 'name' attribute <field name=...>
@@ -62,10 +62,10 @@ namespace Tlabs.Data.Entity.Intern {
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("sensitive");
       this.Add(typeof(DocumentSchema.Field), "Sensitive", xmlAttr);
 
-      //field child element <form><field><edifact>...
+      //field child element <form><field><any>...
       xmlAttr= new XmlAttributes();
-      xmlAttr.XmlAnyElements.Add(new XmlAnyElementAttribute("edifact"));
-      this.Add(typeof(EdifactXmlField), "AnyChildElements", xmlAttr);
+      xmlAttr.XmlAnyElements.Add(new XmlAnyElementAttribute());
+      this.Add(typeof(AnyChildXmlField), "AnyChildElements", xmlAttr);
 
       //Ignore field properties 'Types', 'Schema'...
       xmlAttr= new XmlAttributes();
@@ -112,23 +112,22 @@ namespace Tlabs.Data.Entity.Intern {
     }
   } //class DocXmlSchema
 
-  ///<summary>Derived <see cref="DocumentSchema.Field"/> to convert any <c>&lt;edifact&gt;</c> xml child-elements into <see cref="DocumentSchema.Field.ExtMappingInfo"/>.</summary>
-  public class EdifactXmlField : DocumentSchema.Field {
-    const string EDIFACT_ELEM_NAME= "edifact";
+  ///<summary>Derived <see cref="DocumentSchema.Field"/> to convert any xml child-elements into <see cref="DocumentSchema.Field.ExtMappingInfo"/>.</summary>
+  public class AnyChildXmlField : DocumentSchema.Field {
 
     ///<summary>Property to receive any child elements.</summary>
     public System.Xml.XmlElement[] AnyChildElements {
       get { return null; }
       set {
         if (null == value) return;
-        var edifactMapping= new List<string>();
-        foreach (var el in value) if ("edifact" == el.Name) {
+        var mappingInfo= new List<string>();
+        foreach (var el in value) {
           foreach (var a in el.Attributes) {
             var attr= (System.Xml.XmlAttribute)a; //down cast into XmlAttribute
-            edifactMapping.Add($"{attr.Name}={attr.Value}");
+            mappingInfo.Add($"{el.Name}-{attr.Name}={attr.Value}"); //like: edifact-path=value
           }
         }
-        this.ExtMappingInfo= string.Join("\n", edifactMapping);
+        this.ExtMappingInfo= string.Join("\n", mappingInfo);
       }
     }
   } //class EdifactXmlField

@@ -1,11 +1,11 @@
 ﻿using System;
-using DMProg.Test.Common;
-using Moq;
+using Tlabs.Test.Common;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Processing;
 using Tlabs.Data.Repo;
 using Tlabs.Data.Serialize.Json;
+using Moq;
 using Xunit;
 
 namespace Tlabs.Data.Intern.Tests {
