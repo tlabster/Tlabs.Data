@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<form name="SAMPLE" version="1" alternatename="ALT-SAMPLE" generator="from-o-mat v0.4.2">
+	<source>Sample.xls</source>
+	<field name="Name" type="TEXT">
+		<cell row="4" col="6"/>
+	</field>
+	<field name="Category" type="TEXT">
+		<cell row="6" col="5"/>
+	</field>
+	<field name="Active" type="BOOLEAN">
+		<cell row="7" col="5"/>
+	</field>
+</form>

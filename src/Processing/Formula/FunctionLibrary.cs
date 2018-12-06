@@ -68,7 +68,9 @@ namespace Tlabs.Data.Processing.Formula {
       var dv1= (o1 as DateTime?).GetValueOrDefault();
       var dv2= (o2 as DateTime?).GetValueOrDefault();
       var tspan= (dv1 - dv2);
-      return (decimal)Math.Abs(Math.Floor(tspan.TotalDays));
+      var totalDays= tspan.TotalDays;
+      var daySpan=  totalDays > 0 ? Math.Floor(totalDays) : Math.Ceiling(totalDays);
+      return (decimal)Math.Abs(daySpan);
     }
     internal static DateTime? AfterDays(object o1, object od) {
       var nd= o1 as DateTime?;

@@ -17,7 +17,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.*" />
     <PackageReference Include="xunit" Version="2.4.*" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.*" />
+    <PackageReference Include="Moq" Version="4.7.*"/>
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.*" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <Content Include="./rsc/*.data/*" CopyToOutputDirectory="PreserveNewest" Link="rsc/%(RecursiveDir)/%(Filename)%(Extension)"/>
+  </ItemGroup>
 </Project>

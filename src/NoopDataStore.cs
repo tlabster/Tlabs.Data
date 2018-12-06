@@ -74,7 +74,7 @@ namespace Tlabs.Data {
       public void ResetChanges() => throw new NotImplementedException();
 
       ///<inherit/>
-      public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => throw new NotImplementedException();
+      public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
       ///<inherit/>
       public void LoadExplicit<E, P>(E entity, Expression<Func<E, P>> prop) where E : class where P : class => throw new NotImplementedException();
