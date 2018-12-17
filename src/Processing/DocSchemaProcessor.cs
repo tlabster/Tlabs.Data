@@ -75,9 +75,12 @@ namespace Tlabs.Data.Processing {
       var errors= new List<ExpressionSyntaxException>();
       for (var l = 0; l < validations.Count; ++l) try {
           var valid= validations[l];
+          var exprCode= valid.Code;
+          if (!exprCode.StartsWith("{") || !exprCode.EndsWith("}")) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
+          exprCode= exprCode.Substring(1, exprCode.Length-2);
           this.validationRules[l]= new CompiledValidation {
             Rule= validations[l],
-            Validator= new DynamicExpression(valid.Code, ctxConverter)
+            Validator= new DynamicExpression(exprCode, ctxConverter)
           };
         }
         catch (ExpressionSyntaxException se) {
