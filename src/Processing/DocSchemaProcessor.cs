@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Linq;
-using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
+using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +13,7 @@ using Tlabs.Data.Serialize;
 using Tlabs.Dynamic;
 
 namespace Tlabs.Data.Processing {
+  using DynamicExpression= DynamicExpression<DocSchemaProcessor.ValidationContext, bool>;
 
   /// <summary><see cref="DocumentSchema"/> processor.</summary>
   public partial class DocSchemaProcessor {
@@ -32,8 +31,29 @@ namespace Tlabs.Data.Processing {
     /// <summary>internal dynamic body accessor.</summary>
     protected DynamicAccessor bodyAccessor;
 
-    private ParameterExpression[] typedValidationParms;
+    private IDictionary<string, Type> ctxConverter;
     private CompiledValidation[] validationRules;
+
+    /// <summary>Validation datat context type.</summary>
+    public class ValidationContext {
+      /// <summary>Docuemnt exposed as d.</summary>
+      public object d { get; set; }
+    }
+
+    class CompiledValidation {
+      public DocumentSchema.ValidationRule Rule { get; set; }
+      public DynamicExpression Validator { get; set; }
+    }
+
+    /// <summary>Validation exception.</summary>
+    public class ValidationException : GeneralException {
+      /// <summary>Rule for which validation failed.</summary>
+      public DocumentSchema.ValidationRule Rule { get; }
+      /// <summary>Default ctor</summary>
+      public ValidationException(DocumentSchema.ValidationRule rule, Exception e) : base(e.Message, e) {
+        this.Rule= rule;
+      }
+    }
 
     /// <summary>Ctor from <paramref name="schema"/>, <paramref name="docClassFactory"/> and <paramref name="docSeri"/>.</summary>
     public DocSchemaProcessor(DocumentSchema schema, IDocumentClassFactory docClassFactory, IDynamicSerializer docSeri) {
@@ -44,25 +64,27 @@ namespace Tlabs.Data.Processing {
       if (null == (validations)) throw new ArgumentException(nameof(schema.Validations));
 
       this.BodyType= docClassFactory.GetBodyType(schema);
-      this.typedValidationParms= new ParameterExpression[] {
-        Expression.Parameter(BodyType, "d")
-        // Expression.Parameter(typeof(Insuree), "i"),
-        // Expression.Parameter(typeof(ISource), "p")
+      this.ctxConverter= new Dictionary<string, Type> {
+        [nameof(ValidationContext.d)]= this.BodyType
       };
 
       this.docSeri= docSeri;
       this.bodyAccessor= new DynamicAccessor(this.BodyType);
 
       this.validationRules= new CompiledValidation[validations.Count];
-      var errors= new List<CodeSyntaxException>();
+      var errors= new List<ExpressionSyntaxException>();
       for (var l = 0; l < validations.Count; ++l) try {
-          this.validationRules[l]= new CompiledValidation(this, validations[l]);
+          var valid= validations[l];
+          this.validationRules[l]= new CompiledValidation {
+            Rule= validations[l],
+            Validator= new DynamicExpression(valid.Code, ctxConverter)
+          };
         }
-        catch (CodeSyntaxException se) {
+        catch (ExpressionSyntaxException se) {
           errors.Add(se);
           if (errors.Count >= 10) break;
         }
-      if (errors.Count > 0) throw new CodeSyntaxException(errors);  //error aggregate
+      if (errors.Count > 0) throw new ExpressionSyntaxException(errors);  //error aggregate
     }
 
     /// <summary><see cref="DocumentSchema"/>.</summary>
@@ -148,7 +170,7 @@ namespace Tlabs.Data.Processing {
       body= LoadBodyObject(doc);
       doc.StatusDetails= null;
       doc.Status= BaseDocument<T>.State.VALID.ToString();
-      if (!CheckValidation(body/*, insuree, src*/, out rule)) {
+      if (!CheckValidation(body, out rule)) {
         doc.StatusDetails= $"{rule.Key} - {rule.Description}";
         doc.Status= BaseDocument<T>.State.IMPLAUSIBLE.ToString();
       }
@@ -157,17 +179,18 @@ namespace Tlabs.Data.Processing {
 
     ///<summary>Check <paramref name="doc"/> against the validation rules.</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    public bool CheckValidation<T>(T doc/*, Insuree insuree, ISource src*/, out DocumentSchema.ValidationRule rule) where T : BaseDocument<T> {
-      return CheckValidation(LoadBodyObject(doc)/*, insuree, src*/, out rule);
+    public bool CheckValidation<T>(T doc, out DocumentSchema.ValidationRule rule) where T : BaseDocument<T> {
+      return CheckValidation(LoadBodyObject(doc), out rule);
     }
 
     ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    public bool CheckValidation(object body/*, Insuree insuree, ISource src*/, out DocumentSchema.ValidationRule rule) {
+    public bool CheckValidation(object body, out DocumentSchema.ValidationRule rule) {
+      var ctx= new ValidationContext { d= body };
       rule= null;
       foreach (var v in validationRules) try {
           rule= v.Rule.NewCopy<DocumentSchema.ValidationRule>();
-          if (!v.IsValid(body/*, insuree, src*/))
+          if (!v.Validator.Evaluate(ctx))
             return false;
         }
         catch (Exception e) { throw new ValidationException(rule, e); }

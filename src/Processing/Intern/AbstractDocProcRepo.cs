@@ -82,7 +82,7 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<summary>Create a new <see cref="DocSchemaProcessor"/> for <paramref name="schema"/>.</summary>
-    ///<exception cref="CodeSyntaxException">Thrown when syntax error(s) in the validation code are detected.</exception>
+    ///<exception cref="Tlabs.Dynamic.ExpressionSyntaxException">Thrown if any syntax error(s) in the validation code are detected.</exception>
     public Mutex<T> CreateDocumentProcessor<DocT>(DocumentSchema schema) where DocT : Entity.Intern.BaseDocument<DocT> {
       if (null == schema) throw new ArgumentNullException(nameof(schema));
       var docProc= schemaCache[schema.TypeId]= createProcessor(schema);
