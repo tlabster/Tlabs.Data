@@ -7,9 +7,12 @@ using Tlabs.Data.Entity;
 
 namespace Tlabs.Data.Processing.Intern {
 
-  ///<summary>Abstract repository of <see cref="DocSchemaProcessor"/>.</summary>
+  ///<summary>Abstract repository of T.</summary>
+  ///<typeparam name="T">
+  /// Subcalss of <see cref="DocSchemaProcessor"/>
+  ///</typeparam>
   ///<remarks>
-  ///Implementations must provide a createProcessor() method to return a subclass of <see cref="DocSchemaProcessor"/>.
+  ///Implementations must provide a createProcessor() method to return an instance of T.
   ///</remarks>
   public abstract class AbstractDocProcRepo<T> where T : DocSchemaProcessor {
     ///<summary>Internal logger.</summary>
@@ -24,8 +27,8 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<summary>Ctor from services.</summary>
     protected AbstractDocProcRepo(Repo.IDocSchemaRepo schemaRepo,
-                            IDocumentClassFactory docClassFactory,
-                            Serialize.IDynamicSerializer docSeri)
+                                  IDocumentClassFactory docClassFactory,
+                                  Serialize.IDynamicSerializer docSeri)
     {
       this.schemaRepo= schemaRepo;
       this.docClassFactory= docClassFactory;
