@@ -26,11 +26,15 @@ namespace Tlabs.Data.Processing.Tests {
 
         Fields= new List<DocumentSchema.Field> {
           new DocumentSchema.Field { Name= "txtProp", TypeName= "TEXT" },
+          new DocumentSchema.Field { Name= "txtLstProp", TypeName= "TEXT[]" },
           new DocumentSchema.Field { Name= "numProp", TypeName= "NUMBER" }
         },
 
         Validations= new List<DocumentSchema.ValidationRule> {
-          new DocumentSchema.ValidationRule { Key= "v01", Code= "{d.txtProp.Length > 0}", Description= "must not be empty" }
+          new DocumentSchema.ValidationRule { Key= "v01", Code= "{d.txtProp.Length > 0}", Description= "must not be empty" },
+          new DocumentSchema.ValidationRule { Key= "v02", Code= "{d.txtLstProp.Count > 0}", Description= "must not be empty" },
+          new DocumentSchema.ValidationRule { Key= "v03", Code= "{d.txtLstProp.Contains(\"tstText01\")}", Description= "must contain tstText01" },
+          new DocumentSchema.ValidationRule { Key= "v03", Code= "{NOT d.txtLstProp.Contains(\"xyz\")}", Description= "must NOT contain xyz" }
         }
       };
     }
@@ -110,10 +114,24 @@ namespace Tlabs.Data.Processing.Tests {
       var dynSerializer= JsonFormat.CreateDynSerializer();
 
       var proc= CreateDocSchemaProcessor(CreateTestSchema());
-      
-      DocumentSchema.ValidationRule rule;
-      Assert.False(proc.CheckValidation(proc.EmptyBody, out rule));
 
+      dynamic bodyObj= proc.EmptyBody;
+      DocumentSchema.ValidationRule rule;
+      Assert.False(proc.CheckValidation((object)bodyObj, out rule));
+
+      bodyObj.txtProp= "tstText";
+      bodyObj.txtLstProp= new List<string>{ "tstText01", "tstText02" };
+      var doc= new Document();
+      doc.Sid= proc.Sid;
+      proc.UpdateBodyObject(doc, bodyObj);
+      Assert.True(proc.CheckValidation<Document>(doc, out rule), rule?.Description ?? "RULE???");
+
+      dynamic bodyObj2= proc.LoadBodyObject(doc);
+      Assert.Equal(bodyObj.txtProp, bodyObj2.txtProp);
+      Assert.NotEmpty(bodyObj2.txtProp);
+      Assert.True(bodyObj2.txtLstProp.Contains(bodyObj.txtLstProp[0]));
+      Assert.True(bodyObj2.txtLstProp.Contains(bodyObj.txtLstProp[1]));
+      Assert.False(bodyObj2.txtLstProp.Contains("TSTText01"));  //check case
     }
 
     [Fact]

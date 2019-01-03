@@ -15,7 +15,14 @@ namespace Tlabs.Data.Entity {
       ["BOOLEAN"]= typeof(bool),
       ["DATETIME"]= typeof(DateTime?),
       ["DATE"]= typeof(DateTime?),
-      ["TIME"]= typeof(TimeSpan?)
+      ["TIME"]= typeof(TimeSpan?),
+
+      ["TEXT[]"]= typeof(List<string>),
+      ["NUMBER[]"]= typeof(List<decimal>),
+      ["BOOLEAN[]"]= typeof(List<bool>),
+      ["DATETIME[]"]= typeof(List<DateTime>),
+      ["DATE[]"]= typeof(List<DateTime>),
+      ["TIME[]"]= typeof(List<TimeSpan>)
     };
 
     private static readonly char[] TSID= new char[] { ':' };
