@@ -2,10 +2,10 @@
 using Tlabs.Misc;
 using Tlabs.Data.Entity;
 
-namespace Tlabs.Data.Processing {
+namespace Tlabs.Data.Processing.Intern {
 
-  ///<summary>Repository of <see cref="DocSchemaProcessor"/>.</summary>
-  public class DocProcessorRepo : Intern.AbstractDocProcRepo<DocSchemaProcessor> {
+  ///<summary>Repository of <see cref="IDocSchemaProcessor"/>.</summary>
+  public class DocProcessorRepo : Intern.AbstractDocProcRepo {
     private static readonly BasicCache<string, DocSchemaProcessor> schemaCache= new BasicCache<string, DocSchemaProcessor>();
 
     ///<summary>Ctor from services.</summary>
@@ -15,8 +15,7 @@ namespace Tlabs.Data.Processing {
     { }
 
     ///<inherit/>
-    protected override DocSchemaProcessor createProcessor(DocumentSchema schema) => new DocSchemaProcessor(schema, docClassFactory, docSeri);
+    protected override IDocSchemaProcessor createProcessor(DocumentSchema schema) => new DocSchemaProcessor(schema, docClassFactory, docSeri);
   }
-
 
 }

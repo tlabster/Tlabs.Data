@@ -104,9 +104,9 @@ namespace Tlabs.Data.Processing.Tests {
       return schema;
     }
 
-    public static DocSchemaProcessor CreateDocSchemaProcessor(DocumentSchema schema) {
+    public static IDocSchemaProcessor CreateDocSchemaProcessor(DocumentSchema schema) {
       var dynSerializer= JsonFormat.CreateDynSerializer();
-      return new DocSchemaProcessor(schema, new DocumentClassFactory(null), dynSerializer);
+      return new Processing.Intern.DocSchemaProcessor(schema, new DocumentClassFactory(null), dynSerializer);
     }
 
     [Fact]

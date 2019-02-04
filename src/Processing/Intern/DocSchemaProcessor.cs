@@ -12,11 +12,11 @@ using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Serialize;
 using Tlabs.Dynamic;
 
-namespace Tlabs.Data.Processing {
+namespace Tlabs.Data.Processing.Intern {
   using DynamicExpression= DynamicExpression<DocSchemaProcessor.ValidationContext, bool>;
 
   /// <summary><see cref="DocumentSchema"/> processor.</summary>
-  public partial class DocSchemaProcessor {
+  public class DocSchemaProcessor : IDocSchemaProcessor {
     /// <summary><see cref="ILogger"/>.</summary>
     public static readonly ILogger<DocSchemaProcessor> Log= App.Logger<DocSchemaProcessor>();
 
@@ -45,16 +45,6 @@ namespace Tlabs.Data.Processing {
       public DynamicExpression Validator { get; set; }
     }
 
-    /// <summary>Validation exception.</summary>
-    public class ValidationException : GeneralException {
-      /// <summary>Rule for which validation failed.</summary>
-      public DocumentSchema.ValidationRule Rule { get; }
-      /// <summary>Default ctor</summary>
-      public ValidationException(DocumentSchema.ValidationRule rule, Exception e) : base(e.Message, e) {
-        this.Rule= rule;
-      }
-    }
-
     /// <summary>Ctor from <paramref name="schema"/>, <paramref name="docClassFactory"/> and <paramref name="docSeri"/>.</summary>
     public DocSchemaProcessor(DocumentSchema schema, IDocumentClassFactory docClassFactory, IDynamicSerializer docSeri) {
       if (null == (this.schema= schema)) throw new ArgumentNullException(nameof(schema));
@@ -73,7 +63,7 @@ namespace Tlabs.Data.Processing {
 
       this.validationRules= new CompiledValidation[validations.Count];
       var errors= new List<ExpressionSyntaxException>();
-      for (var l = 0; l < validations.Count; ++l) try {
+      for (var l= 0; l < validations.Count; ++l) try {
           var valid= validations[l];
           var exprCode= valid.Code;
           if (!exprCode.StartsWith("{") || !exprCode.EndsWith("}")) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
@@ -90,13 +80,13 @@ namespace Tlabs.Data.Processing {
       if (errors.Count > 0) throw new ExpressionSyntaxException(errors);  //error aggregate
     }
 
-    /// <summary><see cref="DocumentSchema"/>.</summary>
+    ///<inherit/>>
     public DocumentSchema Schema => schema;
-    /// <summary>Schema type Id.</summary>
+    ///<inherit/>>
     public string Sid => sid;
-    /// <summary><see cref="BaseDocument{T}"/>'s Body type resulting from <see cref="DocumentSchema"/>.</summary>
+    ///<inherit/>>
     public Type BodyType { get; }
-    /// <summary>Empty body object of Type: <see cref="BodyType"/>.</summary>
+    ///<inherit/>>
     public object EmptyBody {
       get {
         var emptyBody= Activator.CreateInstance(BodyType);
@@ -109,10 +99,10 @@ namespace Tlabs.Data.Processing {
       }
     }
 
-    ///<summary><see cref="DynamicAccessor"/> to the body type.</summary>
+    ///<inherit/>>
     public DynamicAccessor BodyAccessor => bodyAccessor;
 
-    ///<summary>Return <paramref name="doc"/>'s Body as object (according to its <see cref="DocumentSchema"/>).</summary>
+    ///<inherit/>>
     public object LoadBodyObject<T>(T doc) where T : BaseDocument<T> {
       checkDocument(doc);
       return doc.GetBodyObject((body) => {
@@ -123,12 +113,8 @@ namespace Tlabs.Data.Processing {
       });
     }
 
-    ///<summary>Set <paramref name="doc"/>'s Body to <paramref name="bodyObj"/>.</summary>
-    /// <remarks>
-    /// By specifying a <paramref name="setupData"/> delegate the caller can provide a custom dictionary of data beeing imported into
-    /// the CalcNgn model. (Defaults to a dictionary representing all public properties of the <paramref name="bodyObj"/>.)
-    /// </remarks>
-    public object UpdateBodyObject<T>(T doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz = 10*1024) where T : BaseDocument<T> {
+    ///<inherit/>>
+    public object UpdateBodyObject<T>(T doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz= 10*1024) where T : BaseDocument<T> {
       checkDocument(doc);
 
       var body= doc.Body;
@@ -136,7 +122,7 @@ namespace Tlabs.Data.Processing {
       if (!BodyType.GetTypeInfo().IsAssignableFrom(bodyObj.GetType())) {
         /* coerce obj into bodyType !!!
           */
-        using (var strm = new MemoryStream(bufSz)) {
+        using (var strm= new MemoryStream(bufSz)) {
           docSeri.WriteObj(strm, bodyObj);
           body.BodyData= strm.ToArray();
           body.Encoding= docSeri.Encoding;
@@ -148,7 +134,7 @@ namespace Tlabs.Data.Processing {
 
       processBodyObject(bodyObj, setupData);
 
-      using (var strm = new MemoryStream(bufSz)) {
+      using (var strm= new MemoryStream(bufSz)) {
         strm.SetLength(0);
         strm.Position= 0;
         docSeri.WriteObj(strm, bodyObj);
@@ -164,10 +150,10 @@ namespace Tlabs.Data.Processing {
       if (this.schema.TypeId != doc.Sid) throw new ArgumentException(nameof(doc.Sid));
     }
 
-    ///<summary>Perform any schema specific update processing.</summary>
+    ///<inherit/>>
     protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) => bodyObj;
 
-    ///<summary>Check <paramref name="doc"/> against the validation rules and applies the result to the document status properties.</summary>
+    ///<inherit/>>
     public void ApplyValidation<T>(T doc/*, Insuree insuree, ISource src*/, out object body) where T : BaseDocument<T> {
       DocumentSchema.ValidationRule rule;
       body= LoadBodyObject(doc);
@@ -180,14 +166,12 @@ namespace Tlabs.Data.Processing {
     }
 
 
-    ///<summary>Check <paramref name="doc"/> against the validation rules.</summary>
-    ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
+    ///<inherit/>>
     public bool CheckValidation<T>(T doc, out DocumentSchema.ValidationRule rule) where T : BaseDocument<T> {
       return CheckValidation(LoadBodyObject(doc), out rule);
     }
 
-    ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
-    ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
+    ///<inherit/>>
     public bool CheckValidation(object body, out DocumentSchema.ValidationRule rule) {
       var ctx= new ValidationContext { d= body };
       rule= null;
@@ -196,7 +180,7 @@ namespace Tlabs.Data.Processing {
           if (!v.Validator.Evaluate(ctx))
             return false;
         }
-        catch (Exception e) { throw new ValidationException(rule, e); }
+        catch (Exception e) { throw new DocumentValidationException(rule, e); }
       rule= null;
       return true;
     }

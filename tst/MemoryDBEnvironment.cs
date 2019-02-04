@@ -21,7 +21,7 @@ namespace Tlabs.Test.Common {
 
   public class MemoryDBEnvironment : IDisposable {
     private ISerializer<DocumentSchema> schemaSeri;
-    private DocProcessorRepo procRepo;
+    private IDocProcessorRepo procRepo;
     private DocSchemaRepo docSchemaRepo;
     public IServiceProvider svcProv { get; set; }
     public virtual IQueryable<Document> Documents { get { return new List<Document>().AsQueryable(); } }
@@ -55,7 +55,7 @@ namespace Tlabs.Test.Common {
       this.svcProv= svcColl.BuildServiceProvider();
       
       schemaSeri= (ISerializer<DocumentSchema>)svcProv.GetService(typeof(ISerializer<DocumentSchema>));
-      procRepo= (DocProcessorRepo)svcProv.GetService(typeof(DocProcessorRepo));
+      procRepo= (IDocProcessorRepo)svcProv.GetService(typeof(IDocProcessorRepo));
       docSchemaRepo= (DocSchemaRepo)svcProv.GetService(typeof(IDocSchemaRepo));
       
       SeedSchemas();

@@ -21,14 +21,14 @@ namespace Tlabs.Data.Intern.Tests {
     private MemoryDBEnvironment dBEnvironment;
     private DocSchemaRepo docSchemaRepo;
     private DocumentClassFactory docClassFactory;
-    private DocProcessorRepo repo;
+    private IDocProcessorRepo repo;
 
     public DocProcessorRepoTest(MemoryDBEnvironment dBEnvironment) {
       this.dBEnvironment= dBEnvironment;
       this.docSchemaRepo= (DocSchemaRepo)dBEnvironment.svcProv.GetService(typeof(IDocSchemaRepo));
       this.docClassFactory= (DocumentClassFactory)dBEnvironment.svcProv.GetService(typeof(IDocumentClassFactory));
       var dynSerializer= JsonFormat.CreateDynSerializer();
-      this.repo= new DocProcessorRepo(this.docSchemaRepo, this.docClassFactory, dynSerializer);
+      this.repo= new Processing.Intern.DocProcessorRepo(this.docSchemaRepo, this.docClassFactory, dynSerializer);
     }
 
     [Fact]

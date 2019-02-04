@@ -42,7 +42,7 @@ namespace Tlabs.Data {
 
     private void configureDocProcessor(IServiceCollection services) {
       services.TryAddSingleton<IDocumentClassFactory, DocumentClassFactory>();
-      services.AddScoped(typeof(Processing.DocProcessorRepo));
+      services.AddScoped<Processing.IDocProcessorRepo, Processing.Intern.DocProcessorRepo>();
 
       string tzid= null;
       // config.TryGetValue("timeZone", out tzid);
