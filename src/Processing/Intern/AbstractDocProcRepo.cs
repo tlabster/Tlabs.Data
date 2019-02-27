@@ -32,44 +32,37 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inherit/>
-    public Mutex<IDocSchemaProcessor> GetDocumentProcessorBySid<DocT>(string sid) where DocT : Entity.Intern.BaseDocument<DocT> {
+    public IDocSchemaProcessor GetDocumentProcessorBySid<DocT>(string sid) where DocT : Entity.Intern.BaseDocument<DocT> {
       if (null == sid) throw new ArgumentNullException(nameof(sid));
       Func<IDocSchemaProcessor> loadSchemaProc= () => {  //helping Omnisharp...
         var docSchema= schemaRepo.GetByTypeId(sid);
         return this.createProcessor(docSchema);
       };
-      return new Mutex<IDocSchemaProcessor>(schemaCache[sid, loadSchemaProc]);
+      return schemaCache[sid, loadSchemaProc];
     }
 
     ///<inherit/>
-    public Mutex<IDocSchemaProcessor> GetDocumentProcessorByAltName<DocT>(string altName) where DocT : Entity.Intern.BaseDocument<DocT> {
+    public IDocSchemaProcessor GetDocumentProcessorByAltName<DocT>(string altName) where DocT : Entity.Intern.BaseDocument<DocT> {
       if (null == altName) throw new ArgumentNullException(nameof(altName));
       return GetDocumentProcessorBySid<DocT>(schemaRepo.GetByAltTypeName(altName).TypeId);
     }
 
     ///<inherit/>
-    public Mutex<IDocSchemaProcessor> GetDocumentProcessor<DocT>(DocT doc) where DocT : Entity.Intern.BaseDocument<DocT> {
+    public IDocSchemaProcessor GetDocumentProcessor<DocT>(DocT doc) where DocT : Entity.Intern.BaseDocument<DocT> {
       if (null == doc) throw new ArgumentNullException(nameof(doc));
       return GetDocumentProcessorBySid<DocT>(doc.Sid);
     }
 
     ///<inherit/>
-    public object LoadDocumentBodyObject<DocT>(DocT doc) where DocT : Entity.Intern.BaseDocument<DocT> {
-      using (var mtx= GetDocumentProcessor(doc))
-        return mtx.Value.LoadBodyObject(doc);
-    }
+    public object LoadDocumentBodyObject<DocT>(DocT doc) where DocT : Entity.Intern.BaseDocument<DocT> => GetDocumentProcessor(doc).LoadBodyObject(doc);
 
     ///<inherit/>
-    public object UpdateDocumentBodyObject<DocT>(DocT doc, object bodyObj) where DocT : Entity.Intern.BaseDocument<DocT> {
-      using (var mtx= GetDocumentProcessor(doc))
-        return mtx.Value.UpdateBodyObject(doc, bodyObj);
-    }
+    public object UpdateDocumentBodyObject<DocT>(DocT doc, object bodyObj) where DocT : Entity.Intern.BaseDocument<DocT> => GetDocumentProcessor(doc).UpdateBodyObject(doc, bodyObj);
 
     ///<inherit/>
-    public Mutex<IDocSchemaProcessor> CreateDocumentProcessor<DocT>(DocumentSchema schema) where DocT : Entity.Intern.BaseDocument<DocT> {
+    public IDocSchemaProcessor CreateDocumentProcessor<DocT>(DocumentSchema schema) where DocT : Entity.Intern.BaseDocument<DocT> {
       if (null == schema) throw new ArgumentNullException(nameof(schema));
-      var docProc= schemaCache[schema.TypeId]= createProcessor(schema);
-      return new Mutex<IDocSchemaProcessor>(docProc);
+      return schemaCache[schema.TypeId]= createProcessor(schema);
     }
 
     ///<summary>Create a new <see cref="IDocSchemaProcessor"/> instance for <paramref name="schema"/>.</summary>
