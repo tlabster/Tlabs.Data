@@ -33,16 +33,14 @@ namespace Tlabs.Data.Intern.Tests {
 
     [Fact]
     void GetDocumentProcessorBySidTest() {
-      using(var mtx= repo.GetDocumentProcessorBySid<Document>("SAMPLE:1")) {
-        Assert.Equal("SAMPLE:1", mtx.Value.Sid);
-      }
+      var proc= repo.GetDocumentProcessorBySid<Document>("SAMPLE:1");
+      Assert.Equal("SAMPLE:1", proc.Sid);
     }
 
     [Fact]
     void GetDocumentProcessorByAltNameTest() {
-      using(var mtx= repo.GetDocumentProcessorByAltName<Document>("ALT-SAMPLE:1")) {
-        Assert.Equal("SAMPLE:1", mtx.Value.Sid);
-      }
+      var proc= repo.GetDocumentProcessorByAltName<Document>("ALT-SAMPLE:1");
+      Assert.Equal("SAMPLE:1", proc.Sid);
     }
 
     [Fact]
@@ -50,9 +48,8 @@ namespace Tlabs.Data.Intern.Tests {
       var doc= new Document();
       doc.Sid= "SAMPLE:1";
 
-      using(var mtx= repo.GetDocumentProcessor<Document>(doc)) {
-        Assert.Equal("SAMPLE:1", mtx.Value.Sid);
-      }
+      var proc= repo.GetDocumentProcessor<Document>(doc);
+      Assert.Equal("SAMPLE:1", proc.Sid);
     }
 
     [Fact]
@@ -60,10 +57,9 @@ namespace Tlabs.Data.Intern.Tests {
       var doc= new Document();
       doc.Sid= "SAMPLE:1";
 
-      using(var mtx= repo.GetDocumentProcessor<Document>(doc)) {
-        var body= repo.LoadDocumentBodyObject<Document>(doc);
-        Assert.IsAssignableFrom(mtx.Value.BodyType, body);
-      }
+      var proc= repo.GetDocumentProcessor<Document>(doc);
+      var body= repo.LoadDocumentBodyObject<Document>(doc);
+      Assert.IsAssignableFrom(proc.BodyType, body);
     }
 
     [Fact]
@@ -71,13 +67,11 @@ namespace Tlabs.Data.Intern.Tests {
       var docMock= new Mock<Document>();
       docMock.Object.Sid= "SAMPLE:1";
 
-      using(var mtx= repo.GetDocumentProcessor<Document>(docMock.Object)) {
-        var proc= mtx.Value;
-        dynamic body= proc.EmptyBody;
-        body.Active= true;
-        repo.UpdateDocumentBodyObject<Document>(docMock.Object, body);
-        docMock.Verify(m => m.SetBodyObject(It.IsAny<object>()));
-      }
+      var proc= repo.GetDocumentProcessor<Document>(docMock.Object);
+      dynamic body= proc.EmptyBody;
+      body.Active= true;
+      repo.UpdateDocumentBodyObject<Document>(docMock.Object, body);
+      docMock.Verify(m => m.SetBodyObject(It.IsAny<object>()));
     }
   }
 }
