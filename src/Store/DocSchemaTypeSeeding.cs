@@ -26,12 +26,16 @@ namespace Tlabs.Data.Store {
 
     ///<inherit/>
     public override void Perform() {
+      if (!schemaRepo.AllUntracked.Any())
+        SeedDocumentSchemas();
     }
 
     private void SeedDocumentSchemas() {
       var rscDir= new DirectoryInfo(Path.Combine(App.ContentRoot, "rsc"));
 
       foreach (var dir in rscDir.GetDirectories("*.xls.data")) {
+        log.LogWarning($"Seeding {nameof(DocumentSchema)} from: {dir.FullName}");
+        
         var xmlFile= dir.GetFiles("*.xml");
         if (1 != xmlFile.Length) throw new AppConfigException($"Exactly ONE XML schema file required in {dir.FullName}");
         using (var xmlStrm= File.OpenRead(xmlFile[0].FullName)) {
