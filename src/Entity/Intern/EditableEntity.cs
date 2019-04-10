@@ -15,7 +15,7 @@ namespace Tlabs.Data.Entity.Intern {
       EditableEntity ent= ev.Entity;
       ent.Modified= App.TimeInfo.Now;
       var usr= (Identity.IIdentityAccessor)App.ServiceProv.GetService(typeof(Identity.IIdentityAccessor));
-      ent.Editor= usr.Id;
+      ent.Editor= usr?.Id ?? -1; //Identity.IIdentityAccessor service could be missing
     }
 
     ///<summary>Editor user id.</summary>
