@@ -44,7 +44,7 @@ namespace Tlabs.Test.Common {
 
       AddConfigurators(svcColl);
 
-      var emptyStore= new NoopStoreConfigurator.NoopDataStore(null);
+      var emptyStore= new NoopStoreConfigurator.NoopDataStore();
       
       var prMock= new Mock<IRepo<Document>>();
       prMock.Setup(r => r.All).Returns(Documents);
