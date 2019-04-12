@@ -20,6 +20,10 @@ namespace Tlabs.Data {
     ///<summary>Reset the change state of all tracked entities to 'unchanged'.</summary>
     void ResetChanges();
 
+    ///<summary>Start the returned <see cref="IDataTransaction"/>.</summary>
+    IDataTransaction StartTransaction();
+
+
     ///<summary>Take actions to make sure the underlying store exists and optional plants all provided <paramref name="seeds"/>.</summary>
     ///<remarks>Should create the entire store, if not present.</remarks>
     void EnsureStore(IEnumerable<IDataSeed> seeds= null);

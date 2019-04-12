@@ -25,12 +25,8 @@ namespace Tlabs.Data {
 
     ///<summary>Non storing data store.<see cref="IDataStore"/>.</summary>
     public class NoopDataStore : IDataStore {
-      private ILogger<NoopDataStore> log;
+      static ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
 
-      ///<summary>Ctor from <paramref name="log"/>.</summary>
-      public NoopDataStore(ILogger<NoopDataStore> log) {
-        this.log= log;
-      }
       ///<inherit/>
       public bool AutoCommit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -71,7 +67,10 @@ namespace Tlabs.Data {
       public IQueryable<TEntity> Query<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
       ///<inherit/>
-      public void ResetChanges() => throw new NotImplementedException();
+      public void ResetChanges() { }
+
+      ///<inherit/>
+      public IDataTransaction StartTransaction() => new NoOpTransaction();
 
       ///<inherit/>
       public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
@@ -95,6 +94,7 @@ namespace Tlabs.Data {
       ///<inherit/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new EagerLoadedQueryable<E,Prop>(query);
+
     }
     
     private class EagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {
@@ -107,6 +107,16 @@ namespace Tlabs.Data {
       public IQueryProvider Provider => q.Provider;
       public IEnumerator<E> GetEnumerator() => q.GetEnumerator();
       IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private class NoOpTransaction : IDataTransaction {
+      public object Id => this;
+
+      public void Cancel() { }
+
+      public void Commit() { }
+
+      public void Dispose() { }
     }
   }
 }
