@@ -70,7 +70,7 @@ namespace Tlabs.Data {
       public void ResetChanges() { }
 
       ///<inherit/>
-      public IDataTransaction StartTransaction() => new NoOpTransaction();
+      public void WithTransaction(Action<IDataTransaction> operation) => operation(new NoOpTransaction());
 
       ///<inherit/>
       public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
