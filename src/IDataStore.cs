@@ -20,8 +20,9 @@ namespace Tlabs.Data {
     ///<summary>Reset the change state of all tracked entities to 'unchanged'.</summary>
     void ResetChanges();
 
-    ///<summary>Start the returned <see cref="IDataTransaction"/>.</summary>
-    IDataTransaction StartTransaction();
+    ///<summary>Excecutes <paramref name="operation"/> within a transaction.</summary>
+    ///<remarks>The <paramref name="operation"/> needs to call <see cref="IDataTransaction.Commit()"/> to commit.</remarks>
+    void WithTransaction(Action<IDataTransaction> operation);
 
 
     ///<summary>Take actions to make sure the underlying store exists and optional plants all provided <paramref name="seeds"/>.</summary>
