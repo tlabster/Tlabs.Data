@@ -48,7 +48,7 @@ namespace Tlabs.Data.Serialize.Json {
     ///<summary>Logger.</summary>
     protected ILogger<JsonFormat> log;
     ///<summary>Text encoding.</summary>
-    protected static readonly Encoding encoding= Encoding.UTF8;
+    protected static readonly Encoding encoding= new UTF8Encoding(false); //no BOM!
     ///<summary>internal JsonSerializer.</summary>
     protected JsonSerializer json;
 
