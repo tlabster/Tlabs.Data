@@ -27,14 +27,19 @@ namespace Tlabs.Data.Processing.Tests {
         Fields= new List<DocumentSchema.Field> {
           new DocumentSchema.Field { Name= "txtProp", TypeName= "TEXT" },
           new DocumentSchema.Field { Name= "txtLstProp", TypeName= "TEXT[]" },
-          new DocumentSchema.Field { Name= "numProp", TypeName= "NUMBER" }
+          new DocumentSchema.Field { Name= "numProp", TypeName= "NUMBER" },
+          new DocumentSchema.Field { Name= "autoTxt", TypeName= "TEXT", CalcFormula= "d.txtProp + \": \" + DateTime.Now.ToString()" },
+          new DocumentSchema.Field { Name= "dateNow", TypeName= "DATE", CalcFormula= "DateTime.Now" },
+          new DocumentSchema.Field { Name= "compDate", TypeName= "DATE", CalcFormula= "d.dateNow" }
         },
 
         Validations= new List<DocumentSchema.ValidationRule> {
           new DocumentSchema.ValidationRule { Key= "v01", Code= "{d.txtProp.Length > 0}", Description= "must not be empty" },
           new DocumentSchema.ValidationRule { Key= "v02", Code= "{d.txtLstProp.Count > 0}", Description= "must not be empty" },
           new DocumentSchema.ValidationRule { Key= "v03", Code= "{d.txtLstProp.Contains(\"tstText01\")}", Description= "must contain tstText01" },
-          new DocumentSchema.ValidationRule { Key= "v03", Code= "{NOT d.txtLstProp.Contains(\"xyz\")}", Description= "must NOT contain xyz" }
+          new DocumentSchema.ValidationRule { Key= "v04", Code= "{NOT d.txtLstProp.Contains(\"xyz\")}", Description= "must NOT contain xyz" },
+          new DocumentSchema.ValidationRule { Key= "v05", Code= "{d.autoTxt.StartsWith(d.txtProp)}", Description= "must start with <textProp>" },
+          new DocumentSchema.ValidationRule { Key= "v06", Code= "{d.dateNow == d.compDate}", Description= "it must d.dateNow == compDate" }
         }
       };
     }
@@ -106,32 +111,43 @@ namespace Tlabs.Data.Processing.Tests {
 
     public static IDocSchemaProcessor CreateDocSchemaProcessor(DocumentSchema schema) {
       var dynSerializer= JsonFormat.CreateDynSerializer();
-      return new Processing.Intern.DocSchemaProcessor(schema, new DocumentClassFactory(null), dynSerializer);
+      return new Processing.Intern.DocSchemaProcessor(
+        new Processing.Intern.CompiledDocSchema<DefaultExpressionContext, DefaultExpressionContext>(schema, new DocumentClassFactory(null), null, null), dynSerializer
+      );
     }
 
     [Fact]
-    void CompiledValidationTest() {
+    void ComputedValidationTest() {
       var dynSerializer= JsonFormat.CreateDynSerializer();
 
       var proc= CreateDocSchemaProcessor(CreateTestSchema());
-
       dynamic bodyObj= proc.EmptyBody;
+      var vcx= new DefaultExpressionContext(proc.BodyType, bodyObj);
       DocumentSchema.ValidationRule rule;
-      Assert.False(proc.CheckValidation((object)bodyObj, out rule));
+      Assert.False(proc.CheckValidation((object)bodyObj, vcx, out rule));
 
       bodyObj.txtProp= "tstText";
       bodyObj.txtLstProp= new List<string>{ "tstText01", "tstText02" };
       var doc= new Document();
       doc.Sid= proc.Sid;
-      proc.UpdateBodyObject(doc, bodyObj);
-      Assert.True(proc.CheckValidation<Document>(doc, out rule), rule?.Description ?? "RULE???");
+      dynamic bodyObj2= proc.UpdateBodyObject(doc, bodyObj);
+      vcx= new DefaultExpressionContext(proc.BodyType, bodyObj2);
 
-      dynamic bodyObj2= proc.LoadBodyObject(doc);
+      var cx= new DefaultExpressionContext(proc.BodyType, bodyObj2);
+      proc.EvaluateComputedFields(cx);
+      Assert.True(proc.CheckValidation<Document>(doc, vcx, out rule), rule?.Description ?? "RULE???");
+
       Assert.Equal(bodyObj.txtProp, bodyObj2.txtProp);
       Assert.NotEmpty(bodyObj2.txtProp);
       Assert.True(bodyObj2.txtLstProp.Contains(bodyObj.txtLstProp[0]));
       Assert.True(bodyObj2.txtLstProp.Contains(bodyObj.txtLstProp[1]));
       Assert.False(bodyObj2.txtLstProp.Contains("TSTText01"));  //check case
+
+      //computed fields:
+      Assert.NotEmpty(bodyObj2.autoTxt);
+      Assert.IsType<DateTime>(bodyObj2.dateNow);
+      Assert.True((DateTime.Now - (DateTime?)bodyObj2.dateNow).Value.TotalMilliseconds < 1000);
+      Assert.Equal(bodyObj2.dateNow, bodyObj.compDate);
     }
 
     [Fact]
@@ -140,7 +156,9 @@ namespace Tlabs.Data.Processing.Tests {
       var proc= CreateDocSchemaProcessor(docSchema);
       
       DocumentSchema.ValidationRule rule;
-      var res= proc.CheckValidation(proc.EmptyBody, out rule);
+      object bodyObj= proc.EmptyBody;
+      var vcx= new DefaultExpressionContext(proc.BodyType, bodyObj);
+      var res= proc.CheckValidation(bodyObj, vcx, out rule);
       Assert.True(res);
       Assert.Null(rule);
     }
@@ -165,9 +183,10 @@ namespace Tlabs.Data.Processing.Tests {
       var proc= CreateDocSchemaProcessor(docSchema);
       dynamic obj= proc.EmptyBody;
       obj.NumProp01= 123;
+      var vcx= new DefaultExpressionContext(proc.BodyType, obj);
 
       DocumentSchema.ValidationRule rule;
-      Assert.True(proc.CheckValidation((object) obj, out rule));
+      Assert.True(proc.CheckValidation((object) obj, vcx, out rule));
       Assert.Null(rule);
 
     }

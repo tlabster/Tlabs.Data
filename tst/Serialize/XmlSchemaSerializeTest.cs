@@ -40,6 +40,7 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.NotNull(field);
       Assert.True(field.ExtMappingInfo.Length > 0);
       Assert.NotEmpty(field.MappingInfo);
+      Assert.Null(field.CalcFormula);
 
       string mapping= null;
       Assert.True(field.MappingInfo.TryGetValue("edifact-path", out mapping));
@@ -48,6 +49,14 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.True(field.MappingInfo.TryGetValue("edifact-condition", out mapping));
       Assert.True(field.MappingInfo.TryGetValue("import-field", out mapping));
       Assert.Equal("HealthInsurance", mapping);
+
+      field= docSchema.Fields.Where(f => f.Name == "dateNow").Single();
+      Assert.NotNull(field.CalcFormula);
+      Assert.Contains("DateTime", field.CalcFormula);
+      //stable field order:
+      field= docSchema.Fields.Last();
+      Assert.Equal("hashCode", field.Name);
+      Assert.Equal("Kassenname", docSchema.Fields.First().Name);
     }
 
 
@@ -105,8 +114,14 @@ namespace Tlabs.Data.Serialize.Tests {
 	<field name=""insuYes"" type=""BOOLEAN"">
 		<cell row=""30"" col=""29""/>
 		<input-Control selection=""true""/>
-
   </field>
+
+	<field name=""dateNow"" type=""DATETIME"" desc=""current date/time"" calc-formula=""DateTime.Now"">
+		<cell row=""99"" col=""77""/>
+		<input-Control/>
+	</field>
+
+	<field name=""hashCode"" type=""NUMBER"" desc=""hash code"" calc-formula=""DateTime.Now.GetHashCode()""/>
 
 </form>
 ";

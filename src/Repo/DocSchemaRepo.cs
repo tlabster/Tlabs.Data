@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
+using Tlabs.Data.Serialize;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Store;
 
@@ -10,20 +11,33 @@ namespace Tlabs.Data.Repo {
 
   ///<summary>>see cref="DocumentSchema"/> spcific repository.</summary>
   public interface IDocSchemaRepo : IRepo<DocumentSchema> {
-    ///<summary>>Get schema by <paramref name="typeId"/>.</summary>
+    ///<summary>Get schema by <paramref name="typeId"/>.</summary>
     DocumentSchema GetByTypeId(string typeId);
-    ///<summary>>Try to get <paramref name="schema"/> by <paramref name="typeId"/>.</summary>
+    ///<summary>Try to get <paramref name="schema"/> by <paramref name="typeId"/>.</summary>
     bool TryGetByTypeId(string typeId, out DocumentSchema schema);
     ///<summary>>Get schema by <paramref name="altName"/>.</summary>
     DocumentSchema GetByAltTypeName(string altName);
-    ///<summary>>Try to get <paramref name="schema"/> by <paramref name="altName"/>.</summary>
+    ///<summary>Try to get <paramref name="schema"/> by <paramref name="altName"/>.</summary>
     bool TryGetByAltTypeName(string altName, out DocumentSchema schema);
+    ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
+    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
+    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, TVx vx, TCx cx)
+      where TDoc : Entity.Intern.BaseDocument<TDoc>
+      where TVx : class, Processing.IExpressionCtx
+      where TCx : class, Processing.IExpressionCtx;
+
   }
+
 
   ///<summary>>see cref="DocumentSchema"/> spcific repository implementation.</summary>
   public class DocSchemaRepo : Intern.BaseRepo<DocumentSchema>, IDocSchemaRepo {
-    ///<summary>>Ctor from <paramref name="store"/>.</summary>
-    public DocSchemaRepo(IDataStore store) : base(store) {}
+    ISerializer<DocumentSchema> schemaSeri;
+
+    ///<summary>Ctor from <paramref name="store"/>.</summary>
+    public DocSchemaRepo(IDataStore store, ISerializer<DocumentSchema> schemaSeri) : base(store) {
+      this.schemaSeri= schemaSeri;
+    }
 
     ///<inherit/>
     public DocumentSchema GetByTypeId(string typeId) {
@@ -80,6 +94,63 @@ namespace Tlabs.Data.Repo {
         return false;
       }
       return true;
+    }
+
+    ///<inherit/>
+    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc> {
+      var schema= loadFromStreams(defStreams);
+      /* Check validation syntax and calc. model:
+       */
+      docProcRepo.CreateDocumentProcessor<TDoc>(schema);
+      DocumentSchema oldSchema;
+      if (TryGetByTypeId(schema.TypeId, out oldSchema))
+        Delete(oldSchema);
+      Insert(schema);
+      Store.CommitChanges();
+      return schema;
+    }
+
+    ///<inherit/>
+    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, TVx vx, TCx cx)
+      where TDoc : Entity.Intern.BaseDocument<TDoc>
+      where TVx : class, Processing.IExpressionCtx
+      where TCx : class, Processing.IExpressionCtx
+    {
+      var schema= loadFromStreams(defStreams);
+      /* Check validation syntax and calc. model:
+       */
+      docProcRepo.CreateDocumentProcessor<TDoc, TVx, TCx>(schema, vx, cx);
+      DocumentSchema oldSchema;
+      if (TryGetByTypeId(schema.TypeId, out oldSchema))
+        Delete(oldSchema);
+      Insert(schema);
+      Store.CommitChanges();
+      return schema;
+    }
+
+    private DocumentSchema loadFromStreams(SchemaDefinitionStreams defStreams) {
+      if (null == defStreams.Schema) throw new ArgumentException("Schema stream required.");
+      var schema= schemaSeri.LoadObj(defStreams.Schema);
+
+      using (var memStrm= new MemoryStream()) {
+        memStrm.Position= 0;
+        if (null != defStreams.CalcModel) {
+          memStrm.Position= 0;
+          defStreams.CalcModel.CopyTo(memStrm);
+          schema.CalcModelData= memStrm.ToArray();
+        }
+        if (null != defStreams.Form) {
+          memStrm.Position= 0;
+          defStreams.Form.CopyTo(memStrm);
+          schema.FormData= memStrm.ToArray();
+        }
+        if (null != defStreams.Style) {
+          memStrm.Position= 0;
+          defStreams.Style.CopyTo(memStrm);
+          schema.FormStyleData= memStrm.ToArray();
+        }
+      }
+      return schema;
     }
 
     ///<inherit/>
