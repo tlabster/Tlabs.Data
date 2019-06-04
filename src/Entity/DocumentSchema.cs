@@ -136,7 +136,7 @@ namespace Tlabs.Data.Entity {
       //implicitly not mapped
       public Type Type {
         get {
-          if (type == null && !ATTR_TYPE.TryGetValue(typeName, out type)) throw new AppConfigException($"Unknown document attribute[{Name ?? "???"}] type: '{typeName}'.");
+          if (type == null && !ATTR_TYPE.TryGetValue(typeName, out type)) throw new AppConfigException($"Unknown document field[{Name ?? "???"}] type: '{typeName}'.");
           return type;
         }
       }
@@ -154,13 +154,29 @@ namespace Tlabs.Data.Entity {
         }
       }
 
+      public string CalcFormula { get; set; }
+
       //implicitly not mapped
       public IDictionary<string, string> MappingInfo {
         get => this.mappingInfo;
       }
+
+      /// <summary>Calculation exception.</summary>
+      public class CalcException : ApplicationException {
+
+        /// <summary>Default ctor</summary>
+        public CalcException() : base() { }
+
+        /// <summary>Ctor from message</summary>
+        public CalcException(string message) : base(message) { }
+
+        /// <summary>Ctor from message and inner exception.</summary>
+        public CalcException(string message, Exception e) : base(message, e) { }
+      }
     } //class Field
 
-    public class ValidationRule : Intern.EditableEntity {
+
+    public class ValidationRule : Intern.BaseEntity {
       public string Key { get; set; }
       public string Description { get; set; }
       public string Code { get; set; }
@@ -168,7 +184,7 @@ namespace Tlabs.Data.Entity {
 
 
       /// <summary>Validation exception.</summary>
-      public class ValidationException : AppConfigException {
+      public class ValidationException : ApplicationException {
 
         /// <summary>Default ctor</summary>
         public ValidationException() : base() { }

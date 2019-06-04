@@ -61,6 +61,12 @@ namespace Tlabs.Data.Entity.Intern {
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("sensitive");
       this.Add(typeof(DocumentSchema.Field), "Sensitive", xmlAttr);
 
+
+      //calculation attrib <calculation desc=...>
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlAttribute= new XmlAttributeAttribute("calc-formula");
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.CalcFormula), xmlAttr);
+
       //field child element <form><field><any>...
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAnyElements.Add(new XmlAnyElementAttribute());
