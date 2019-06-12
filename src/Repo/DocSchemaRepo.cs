@@ -19,6 +19,8 @@ namespace Tlabs.Data.Repo {
     DocumentSchema GetByAltTypeName(string altName);
     ///<summary>Try to get <paramref name="schema"/> by <paramref name="altName"/>.</summary>
     bool TryGetByAltTypeName(string altName, out DocumentSchema schema);
+    ///<summary>List of <see cref="DocumentSchema.TypeId"/>(s) optionally filterd by <paramref name="typeIdFilter"/>.</summary>
+    IQueryable<string> FilteredTypeIdList(string typeIdFilter= null);
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
     DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
@@ -95,6 +97,20 @@ namespace Tlabs.Data.Repo {
       }
       return true;
     }
+
+    private IQueryable<DocumentSchema> filterByTypeId(string typeIdFilter) {
+      var query= AllUntracked;
+      string typeName= null;
+      string typeVers= null;
+      if (!string.IsNullOrEmpty(typeIdFilter)) {
+        DocumentSchema.ParseTypeId(typeIdFilter, out typeName, out typeVers);
+        query= query.Where(s => (typeName == null || s.TypeName.Contains(typeName)) && (typeVers == null || s.TypeVers == typeVers));
+      }
+      return query;
+    }
+
+    ///<inherit/>
+    public IQueryable<string> FilteredTypeIdList(string typeIdFilter = null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
 
     ///<inherit/>
     public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc> {
