@@ -28,10 +28,10 @@ namespace Tlabs.Data {
       static ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
 
       ///<inherit/>
-      public bool AutoCommit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+      public bool AutoCommit { get => false; set => throw new NotImplementedException(); }
 
       ///<inherit/>
-      public void Attach<TEntity>(TEntity ent) where TEntity : class =>  throw new NotImplementedException();
+      public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
 
       ///<inherit/>
       public void CommitChanges() {}
@@ -55,10 +55,10 @@ namespace Tlabs.Data {
       public object GetIdentifier<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
       ///<inherit/>
-      public void Insert<E>(E ent) where E : class { }
+      public E Insert<E>(E ent) where E : class => ent;
 
       ///<inherit/>
-      public void Update<E>(E ent) where E : class { }
+      public E Update<E>(E ent) where E : class => ent;
 
       ///<inherit/>
       public TEntity Merge<TEntity>(TEntity entity) where TEntity : class, new() => throw new NotImplementedException();
@@ -76,10 +76,10 @@ namespace Tlabs.Data {
       public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
       ///<inherit/>
-      public void LoadExplicit<E, P>(E entity, Expression<Func<E, P>> prop) where E : class where P : class => throw new NotImplementedException();
+      public E LoadExplicit<E, P>(E entity, Expression<Func<E, P>> prop) where E : class where P : class => throw new NotImplementedException();
 
       ///<inherit/>
-      public void LoadExplicit<E, P>(E entity, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class => throw new NotImplementedException();
+      public E LoadExplicit<E, P>(E entity, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class => throw new NotImplementedException();
 
       ///<inherit/>
       public IQueryable<E> LoadRelated<E>(IQueryable<E> query, string navigationPropertyPath) where E : class => query;
@@ -95,6 +95,9 @@ namespace Tlabs.Data {
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new EagerLoadedQueryable<E,Prop>(query);
 
+      E IDataStore.Attach<E>(E ent) {
+        throw new NotImplementedException();
+      }
     }
     
     private class EagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {

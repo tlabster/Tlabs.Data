@@ -24,7 +24,6 @@ namespace Tlabs.Data {
     ///<remarks>The <paramref name="operation"/> needs to call <see cref="IDataTransaction.Commit()"/> to commit.</remarks>
     void WithTransaction(Action<IDataTransaction> operation);
 
-
     ///<summary>Take actions to make sure the underlying store exists and optional plants all provided <paramref name="seeds"/>.</summary>
     ///<remarks>Should create the entire store, if not present.</remarks>
     void EnsureStore(IEnumerable<IDataSeed> seeds= null);
@@ -44,7 +43,7 @@ namespace Tlabs.Data {
     IQueryable<E> UntrackedQuery<E>() where E : class;
 
     ///<summary>Add <paramref name="ent"/> for inserting to the store.</summary>
-    void Insert<E>(E ent) where E : class;
+    E Insert<E>(E ent) where E : class;
 
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>
@@ -65,22 +64,22 @@ namespace Tlabs.Data {
     E Merge<E>(E ent) where E : class, new();
     
     ///<summary>Track given <paramref name="ent"/> as modified for updating with the store.</summary>
-    void Update<E>(E ent) where E : class;
+    E Update<E>(E ent) where E : class;
 
     ///<summary>Mark given <paramref name="ent"/> as deleted for removing from the store.</summary>
     void Delete<E>(E ent) where E : class;
 
     ///<summary>Attach given <paramref name="ent"/> as unchanged (but tracked).</summary>
-    void Attach<E>(E ent) where E : class;
+    E Attach<E>(E ent) where E : class;
 
     ///<summary>Evict given <paramref name="ent"/> from beeing tracked by the repository.</summary>
     void Evict<E>(E ent) where E : class;
 
     ///<summary>Explicitly load collection <paramref name="prop">property</paramref> from <paramref name="ent"/> (if not already loaded).</summary>
-    void LoadExplicit<E, P>(E ent, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class;
+    E LoadExplicit<E, P>(E ent, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class;
 
     ///<summary>Explicitly load referenced <paramref name="prop">property</paramref> from <paramref name="ent"/> (if not already loaded).</summary>
-    void LoadExplicit<E, P>(E ent, Expression<Func<E, P>> prop) where E : class where P : class;
+    E LoadExplicit<E, P>(E ent, Expression<Func<E, P>> prop) where E : class where P : class;
 
     ///<summary>Load related data associated with the given <paramref name="navigationPropertyPath"/> with the entities selected by the <paramref name="query"/>.</summary>
     ///<remarks>
@@ -99,6 +98,5 @@ namespace Tlabs.Data {
  
     ///<summary>Load additional related data associated with the given <paramref name="navProperty"/> based on a related type that was just loaded.</summary>
     IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class;
-
   }
 }
