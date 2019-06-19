@@ -10,6 +10,9 @@ namespace Tlabs.Data.Processing {
   ///<summary>Interface of a <see cref="IDocSchemaProcessor"/> repository.</summary>
   public interface IDocProcessorRepo {
 
+    ///<summary><see cref="Repo.IDocSchemaRepo"/>.</summary>
+    Repo.IDocSchemaRepo SchemaRepo { get; }
+
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId).</summary>
     IDocSchemaProcessor GetDocumentProcessorBySid<TDoc>(string sid) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 

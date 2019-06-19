@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Tlabs.Misc;
 using Tlabs.Sync;
 using Tlabs.Data.Entity;
+using Tlabs.Data.Repo;
 
 namespace Tlabs.Data.Processing.Intern {
 
@@ -30,6 +31,9 @@ namespace Tlabs.Data.Processing.Intern {
       this.docClassFactory= docClassFactory;
       this.docSeri= docSeri;
     }
+
+    ///<inherit/>
+    public IDocSchemaRepo SchemaRepo => schemaRepo;
 
     ///<inherit/>
     public IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, TVx vx, TCx cx)
