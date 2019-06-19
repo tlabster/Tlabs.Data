@@ -16,11 +16,11 @@ namespace Tlabs.Data.Entity.Intern {
     private DocBody docBody;
     private object bodyObj;    //cached body object
 
-    public string Title { get; set; }
-    public string Summary { get; set; }
+    public virtual string Title { get; set; }
+    public virtual string Summary { get; set; }
     ///<summary>Schema TypeId</summary>
     public string Sid { get; set; }
-    public string Status {
+    public virtual string Status {
       get { return state.ToString(); }
       set {
         if (!Enum.TryParse<State>(value, out this.state)) this.state= default(State);
