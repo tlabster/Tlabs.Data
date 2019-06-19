@@ -104,6 +104,8 @@ namespace Tlabs.Data.Repo {
       string typeVers= null;
       if (!string.IsNullOrEmpty(typeIdFilter)) {
         DocumentSchema.ParseTypeId(typeIdFilter, out typeName, out typeVers);
+        if (0 == typeName.Length) typeName= null;
+        if (0 == typeVers.Length) typeVers= null;
         query= query.Where(s => (typeName == null || s.TypeName.Contains(typeName)) && (typeVers == null || s.TypeVers == typeVers));
       }
       return query;
