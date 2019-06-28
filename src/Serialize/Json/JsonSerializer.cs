@@ -25,7 +25,8 @@ namespace Tlabs.Data.Serialize.Json {
       public static JsonSerializerSettings BuildSettings() {
         var s= new JsonSerializerSettings();
         var cr= new DefaultContractResolver();
-        cr.NamingStrategy= new DefaultNamingStrategy();
+        // cr.NamingStrategy= new DefaultNamingStrategy();
+        cr.NamingStrategy= new CamelCaseNamingStrategy();
         s.ContractResolver= cr;
         s.NullValueHandling= NullValueHandling.Ignore;
         s.Converters.Add(new JsDateTimeConverter());

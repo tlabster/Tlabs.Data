@@ -1,0 +1,21 @@
+﻿using System;
+
+namespace Tlabs.Data {
+  /// <summary>Data entity not found exception.</summary>
+  public class DataEntityNotFoundException : GeneralException {
+    static string notFoundMsg(string ent, string key) => $"No valid {ent} with key: '{key}'";
+    /// <summary>Ctor from <paramref name="ent"/> and <paramref name="key"/>.</summary>
+    public DataEntityNotFoundException(string ent, string key) : base(notFoundMsg(ent, key)) { }
+    /// <summary>Ctor from <paramref name="ent"/>, <paramref name="key"/> and inner exception <paramref name="e"/>.</summary>
+    public DataEntityNotFoundException(string ent, string key, Exception e) : base(notFoundMsg(ent, key), e) { }
+  }
+
+  /// <summary>Data entity not found exception.</summary>
+  public class DataEntityNotFoundException<T> : DataEntityNotFoundException {
+    /// <summary>Ctor from <paramref name="key"/>.</summary>
+    public DataEntityNotFoundException(string key) : base(typeof(T).Name, key) { }
+    /// <summary>Ctor from <paramref name="key"/> and inner exception <paramref name="e"/>.</summary>
+    public DataEntityNotFoundException(string key, Exception e) : base(typeof(T).Name, key, e) { }
+  }
+
+}
