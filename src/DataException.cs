@@ -1,6 +1,14 @@
 ﻿using System;
 
 namespace Tlabs.Data {
+
+  /// <summary>Data persistence exception.</summary>
+  public class DataPersistenceException : GeneralException {
+    /// <summary>Ctor from <paramref name="msg"/> and inner exception <paramref name="e"/>.</summary>
+    public DataPersistenceException(string msg, Exception e) : base(msg, e) { }
+
+  }
+
   /// <summary>Data entity not found exception.</summary>
   public class DataEntityNotFoundException : GeneralException {
     static string notFoundMsg(string ent, string key) => $"No valid {ent} with key: '{key}'";
