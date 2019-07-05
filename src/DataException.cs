@@ -4,9 +4,20 @@ namespace Tlabs.Data {
 
   /// <summary>Data persistence exception.</summary>
   public class DataPersistenceException : GeneralException {
+    /// <summary>Ctor from inner exception <paramref name="e"/>.</summary>
+    public DataPersistenceException(Exception e) : base(e.Message, e) { }
+
     /// <summary>Ctor from <paramref name="msg"/> and inner exception <paramref name="e"/>.</summary>
     public DataPersistenceException(string msg, Exception e) : base(msg, e) { }
+  }
 
+  /// <summary>Data concurrent persistence exception.</summary>
+  public class DataConcurrentPersistenceException : DataPersistenceException {
+    /// <summary>Ctor from inner exception <paramref name="e"/>.</summary>
+    public DataConcurrentPersistenceException(Exception e) : base(e.Message, e) { }
+
+    /// <summary>Ctor from <paramref name="msg"/> and inner exception <paramref name="e"/>.</summary>
+    public DataConcurrentPersistenceException(string msg, Exception e) : base(msg, e) { }
   }
 
   /// <summary>Data entity not found exception.</summary>

@@ -178,17 +178,19 @@ namespace Tlabs.Data.Repo {
     }
 
     ///<inherit/>
-    public override void Insert(DocumentSchema schema) {
-      base.Insert(fixedSchema(schema));
+    public override DocumentSchema Insert(DocumentSchema schema) {
+      schema= base.Insert(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      return schema;
     }
 
     ///<inherit/>
-    public override void Update(DocumentSchema schema) {
-      base.Update(fixedSchema(schema));
+    public override DocumentSchema Update(DocumentSchema schema) {
+      schema= base.Update(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      return schema;
     }
 
     ///<inherit/>
@@ -199,10 +201,11 @@ namespace Tlabs.Data.Repo {
     }
 
     ///<inherit/>
-    public override void Attach(DocumentSchema schema) {
-      base.Attach(schema);
+    public override DocumentSchema Attach(DocumentSchema schema) {
+      schema= base.Attach(schema);
       DocumentSchema.Cache[schema.TypeId]= LoadRelated(schema);
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      return schema;
     }
 
     ///<inherit/>

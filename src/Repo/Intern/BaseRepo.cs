@@ -33,19 +33,19 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     ///<Inherit/>
-    public virtual void Insert(TEntity ent) => store.Insert<TEntity>(ent);
+    public virtual TEntity Insert(TEntity ent) => store.Insert<TEntity>(ent);
 
     ///<Inherit/>
     public virtual TEntity Merge(TEntity ent) => store.Merge<TEntity>(ent);
 
     ///<Inherit/>
-    public virtual void Update(TEntity ent) => store.Update<TEntity>(ent);
+    public virtual TEntity Update(TEntity ent) => store.Update<TEntity>(ent);
 
     ///<Inherit/>
     public virtual void Delete(TEntity ent) => store.Delete<TEntity>(ent);
 
     ///<Inherit/>
-    public virtual void Attach(TEntity ent) => store.Attach<TEntity>(ent);
+    public virtual TEntity Attach(TEntity ent) => store.Attach<TEntity>(ent);
 
     ///<Inherit/>
     public virtual void Evict(TEntity ent) => store.Evict<TEntity>(ent);

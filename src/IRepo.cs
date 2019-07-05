@@ -25,7 +25,7 @@ namespace Tlabs.Data {
     System.Linq.IQueryable<TEntity> AllUntracked { get; }
 
     ///<summary>Add <paramref name="entity"/> for inserting to the store.</summary>
-    void Insert(TEntity entity);
+    TEntity Insert(TEntity entity);
 
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>
@@ -35,13 +35,13 @@ namespace Tlabs.Data {
     TEntity Merge(TEntity ent);
 
     ///<summary>Track given <paramref name="entity"/> as modified for updating with the store.</summary>
-    void Update(TEntity entity);
+    TEntity Update(TEntity entity);
 
     ///<summary>Mark given <paramref name="entity"/> as deleted for removing from the store.</summary>
     void Delete(TEntity entity);
 
     ///<summary>Attach given <paramref name="entity"/> as unchanged (but tracked).</summary>
-    void Attach(TEntity entity);
+    TEntity Attach(TEntity entity);
 
     ///<summary>Evict given <paramref name="entity"/> from beeing tracked by the repository.</summary>
     void Evict(TEntity entity);
