@@ -29,7 +29,7 @@ namespace Tlabs.Data.Serialize.Json {
         cr.NamingStrategy= new CamelCaseNamingStrategy();
         s.ContractResolver= cr;
         s.NullValueHandling= NullValueHandling.Ignore;
-        s.Converters.Add(new JsDateTimeConverter());
+        s.Converters.Add(new DateTimeConverter());
         s.DateFormatHandling= DateFormatHandling.IsoDateFormat;
         s.ReferenceLoopHandling= ReferenceLoopHandling.Ignore;
         s.Formatting= Formatting.Indented;

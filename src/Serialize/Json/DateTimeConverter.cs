@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace Tlabs.Data.Serialize.Json {
 
   ///<summary>Converts a <see cref="DateTime"/> to and from a JS <c>Date.getTime()</c> (UTC).</summary>
-  public class JsDateTimeConverter : JsonConverter {
+  public class DateTimeConverter : JsonConverter {
     ///<summary>Check if <paramref name="objType"/> is <see cref="DateTime"/>.</summary>
     public override bool CanConvert(Type objType) {
       return typeof(DateTime) == objType || typeof(DateTime?) == objType;
@@ -20,6 +20,8 @@ namespace Tlabs.Data.Serialize.Json {
 
       if (JsonToken.StartConstructor == reader.TokenType)
         return readFromDateCtor(reader);
+
+      if(reader.TokenType == JsonToken.Date) return App.TimeInfo.ToAppTime(((DateTime)reader.Value).ToUniversalTime());
 
       if (JsonToken.Integer != reader.TokenType) throw new JsonSerializationException($"Can't convert {reader.TokenType} into {nameof(DateTime)}.");
 
@@ -46,7 +48,7 @@ namespace Tlabs.Data.Serialize.Json {
     ///<summary>Writes a <see cref="DateTime"/> value as integer value (like <c>Date.getTime()</c>).</summary>
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
       var dt= (DateTime)value;
-      writer.WriteValue(dt.JsTotalMsec());
+      writer.WriteValue(dt.ToUniversalTime().ToString("o", DateTimeFormatInfo.InvariantInfo));
     }
   }
 
