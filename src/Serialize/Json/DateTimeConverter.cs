@@ -4,14 +4,15 @@ using Newtonsoft.Json;
 
 namespace Tlabs.Data.Serialize.Json {
 
-  ///<summary>Converts a <see cref="DateTime"/> to and from a JS <c>Date.getTime()</c> (UTC).</summary>
+  ///<summary>Newtonsoft Converter for <see cref="DateTime"/> values</summary>
   public class DateTimeConverter : JsonConverter {
     ///<summary>Check if <paramref name="objType"/> is <see cref="DateTime"/>.</summary>
     public override bool CanConvert(Type objType) {
       return typeof(DateTime) == objType || typeof(DateTime?) == objType;
     }
 
-    ///<summary>Reads a integer value (from <c>Date.getTime()</c>) and converts this into a <see cref="DateTime"/> value.</summary>
+    ///<summary>Reads a value from the json reader and converts this into a <see cref="DateTime"/> value.</summary>
+    ///<remarks>Converts from integers containing JS Milliseconds since 1970 and from strings in ISO-8601 format</remarks>
     public override object ReadJson(JsonReader reader, Type objType, object existingValue, JsonSerializer serializer) {
       if (JsonToken.Null == reader.TokenType) { //handle null value
         if (typeof(DateTime?) != objType) throw new JsonSerializationException($"Can't convert null to {objType?.Name}.");
@@ -45,7 +46,7 @@ namespace Tlabs.Data.Serialize.Json {
       return dt;
     }
 
-    ///<summary>Writes a <see cref="DateTime"/> value as integer value (like <c>Date.getTime()</c>).</summary>
+    ///<summary>Writes a <see cref="DateTime"/> value as an ISO-8601 string in UTC.</summary>
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
       var dt= (DateTime)value;
       writer.WriteValue(dt.ToUniversalTime().ToString("o", DateTimeFormatInfo.InvariantInfo));
