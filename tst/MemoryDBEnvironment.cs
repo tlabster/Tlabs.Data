@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Tlabs;
-using Tlabs.Config;
 using Tlabs.Data;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;

@@ -1,9 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
-
-using Tlabs.Misc;
-using Tlabs.Sync;
-using Tlabs.Data.Entity;
+﻿using Tlabs.Data.Entity;
 
 namespace Tlabs.Data.Processing {
 

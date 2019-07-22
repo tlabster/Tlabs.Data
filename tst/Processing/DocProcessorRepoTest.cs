@@ -1,7 +1,4 @@
-﻿using System;
-using Tlabs.Test.Common;
-using Tlabs.Data.Entity;
-using Tlabs.Data.Entity.Intern;
+﻿using Tlabs.Test.Common;
 using Tlabs.Data.Processing;
 using Tlabs.Data.Repo;
 using Tlabs.Data.Serialize.Json;
