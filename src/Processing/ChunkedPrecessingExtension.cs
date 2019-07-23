@@ -20,7 +20,7 @@ namespace Tlabs.Data.Processing {
   public static class ChunkedPrecessingExtension {
     ///<summary>Chunked processing of <paramref name="query"/> result with a processor of <typeparamref name="TProc"/>>.</summary>
     ///<remarks>The processor receives a chunk of <typeparamref name="TEnt"/> with <paramref name="chunkSz"/> where up to <paramref name="parallelCnt"/> processor being executed in parallel.</remarks>
-    public static void ChunkedProessing<TProc, TEnt>(this IQueryable<TEnt> query, int chunkSz, int parallelCnt= 2) where TProc : IChunkProcessor<TEnt> {
+    public static void ChunkedProcessing<TProc, TEnt>(this IQueryable<TEnt> query, int chunkSz, int parallelCnt= 2) where TProc : IChunkProcessor<TEnt> {
       new ChunkContext<TProc, TEnt>(query, chunkSz, parallelCnt);
     }
 
