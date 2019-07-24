@@ -23,7 +23,7 @@ namespace Tlabs.Data.Processing.Tests {
       for (int l= 0; l< data.Length; ++l) data[l]= l;
 
       var qdata= data.AsQueryable();
-      qdata.ChunkedProessing<TestChnkProcessor, int>(10);
+      qdata.ChunkedProcessing<TestChnkProcessor, int>(10);
 
       // Thread.Sleep(1000);
       Assert.Equal(data.Sum(), dataSum);
