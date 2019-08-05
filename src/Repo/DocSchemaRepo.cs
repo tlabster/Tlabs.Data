@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 
 using Tlabs.Data.Serialize;
 using Tlabs.Data.Entity;
-using Tlabs.Data.Store;
 
 namespace Tlabs.Data.Repo {
 

@@ -27,6 +27,7 @@ namespace Tlabs.Data {
 
 
       services.AddScoped(typeof(IRepo<>), typeof(Repo.Intern.BaseRepo<>));
+      services.AddScoped(typeof(ICachedRepo<>), typeof(Repo.Intern.CachedRepo<>));
       configureCustomRepos(services);
       services.AddSingleton<XmlFormat<DocumentSchema, Entity.Intern.DocXmlSchema>>();
       services.AddSingleton<ISerializer<DocumentSchema>, XmlFormat<DocumentSchema, Entity.Intern.DocXmlSchema>.Serializer>();
