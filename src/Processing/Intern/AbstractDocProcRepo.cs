@@ -36,7 +36,7 @@ namespace Tlabs.Data.Processing.Intern {
     public IDocSchemaRepo SchemaRepo => schemaRepo;
 
     ///<inherit/>
-    public IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, TVx vx, TCx cx)
+    public IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx
@@ -44,7 +44,7 @@ namespace Tlabs.Data.Processing.Intern {
       if (null == sid) throw new ArgumentNullException(nameof(sid));
       Func<IDocSchemaProcessor> loadSchemaProc= () => {  //helping Omnisharp...
         var docSchema= schemaRepo.GetByTypeId(sid);
-        return this.createProcessor(docSchema, vx, cx);
+        return this.createProcessor<TVx, TCx>(docSchema, valCfac, evaCfac);
       };
       return schemaCache[new ProcessorKey(sid, typeof(TVx), typeof(TCx)), loadSchemaProc];
     }
@@ -55,9 +55,9 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inherit/>
-    IDocSchemaProcessor IDocProcessorRepo.GetDocumentProcessorByAltName<TDoc, TVx, TCx>(string altName, TVx vx, TCx cx) {
+    IDocSchemaProcessor IDocProcessorRepo.GetDocumentProcessorByAltName<TDoc, TVx, TCx>(string altName, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) {
       if (null == altName) throw new ArgumentNullException(nameof(altName));
-      return GetDocumentProcessorBySid<TDoc, TVx, TCx>(schemaRepo.GetByAltTypeName(altName).TypeId, vx, cx);
+      return GetDocumentProcessorBySid<TDoc, TVx, TCx>(schemaRepo.GetByAltTypeName(altName).TypeId, valCfac, evaCfac);
     }
 
     ///<inherit/>
@@ -67,9 +67,9 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inherit/>
-    IDocSchemaProcessor IDocProcessorRepo.GetDocumentProcessor<TDoc, TVx, TCx>(TDoc doc, TVx vx, TCx cx) {
+    IDocSchemaProcessor IDocProcessorRepo.GetDocumentProcessor<TDoc, TVx, TCx>(TDoc doc, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) {
       if (null == doc) throw new ArgumentNullException(nameof(doc));
-      return GetDocumentProcessorBySid<TDoc, TVx, TCx>(doc.Sid, vx, cx);
+      return GetDocumentProcessorBySid<TDoc, TVx, TCx>(doc.Sid, valCfac, evaCfac);
     }
 
     ///<inherit/>
@@ -90,17 +90,17 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inherit/>
-    public IDocSchemaProcessor CreateDocumentProcessor<TDoc, TVx, TCx>(DocumentSchema schema, TVx vx, TCx cx)
+    public IDocSchemaProcessor CreateDocumentProcessor<TDoc, TVx, TCx>(DocumentSchema schema, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx
     {
       if (null == schema) throw new ArgumentNullException(nameof(schema));
-      return schemaCache[new ProcessorKey(schema.TypeId, typeof(TVx), typeof(TCx))]= createProcessor(schema, vx, cx);
+      return schemaCache[new ProcessorKey(schema.TypeId, typeof(TVx), typeof(TCx))]= createProcessor<TVx, TCx>(schema, valCfac, evaCfac);
     }
 
     ///<summary>Create a new <see cref="IDocSchemaProcessor"/> instance for <paramref name="schema"/>.</summary>
-    protected abstract IDocSchemaProcessor createProcessor<TVx, TCx>(DocumentSchema schema, TVx vx, TCx cx) where TVx : class, IExpressionCtx where TCx : class, IExpressionCtx;
+    protected abstract IDocSchemaProcessor createProcessor<TVx, TCx>(DocumentSchema schema, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) where TVx : class, IExpressionCtx where TCx : class, IExpressionCtx;
 
     internal struct ProcessorKey : IEquatable<ProcessorKey> {
       string sid;

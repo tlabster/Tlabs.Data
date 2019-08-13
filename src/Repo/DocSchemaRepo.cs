@@ -22,7 +22,7 @@ namespace Tlabs.Data.Repo {
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
     DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, TVx vx, TCx cx)
+    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, Processing.CtxConverterFactory valCfac, Processing.CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, Processing.IExpressionCtx
       where TCx : class, Processing.IExpressionCtx;
@@ -127,7 +127,7 @@ namespace Tlabs.Data.Repo {
     }
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, TVx vx, TCx cx)
+    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, Processing.CtxConverterFactory valCfac, Processing.CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, Processing.IExpressionCtx
       where TCx : class, Processing.IExpressionCtx
@@ -135,7 +135,7 @@ namespace Tlabs.Data.Repo {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
-      docProcRepo.CreateDocumentProcessor<TDoc, TVx, TCx>(schema, vx, cx);
+      docProcRepo.CreateDocumentProcessor<TDoc, TVx, TCx>(schema, valCfac, evaCfac);
       DocumentSchema oldSchema;
       if (TryGetByTypeId(schema.TypeId, out oldSchema))
         Delete(oldSchema);

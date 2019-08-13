@@ -54,7 +54,7 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     /// <summary>Ctor form <paramref name="schema"/>, <paramref name="docClassFactory"/> and optional context templates.</summary>
-    public CompiledDocSchema(DocumentSchema schema, IDocumentClassFactory docClassFactory, TVx vx= null, TCx cx= null) {
+    public CompiledDocSchema(DocumentSchema schema, IDocumentClassFactory docClassFactory, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) {
       if (null == (this.Schema= schema)) throw new ArgumentNullException(nameof(schema));
       if (null == (schema.Fields)) throw new ArgumentException(nameof(schema.Fields));
       var validations= schema.Validations;
@@ -63,8 +63,8 @@ namespace Tlabs.Data.Processing.Intern {
       this.BodyType= docClassFactory.GetBodyType(schema);
       this.BodyAccessor= new DynamicAccessor(this.BodyType);
 
-      this.compValidations= compiledValidation(validations, vx);
-      this.compFieldFormulas= compiledFormulas(schema.Fields, cx);
+      this.compValidations= compiledValidation(validations, valCfac);
+      this.compFieldFormulas= compiledFormulas(schema.Fields, evaCfac);
     }
 
     ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
@@ -88,8 +88,8 @@ namespace Tlabs.Data.Processing.Intern {
         frml.Compute(cx.GetBody(), cx);
     }
 
-    private IEnumerable<CompiledValidation> compiledValidation(List<DocumentSchema.ValidationRule> validations, TVx vx) {
-      var vxCnv= vx?.GetContextConverter() ?? new DefaultExpressionContext(this.BodyType).GetContextConverter();
+    private IEnumerable<CompiledValidation> compiledValidation(List<DocumentSchema.ValidationRule> validations, CtxConverterFactory valCfac) {
+      var vxCnv= valCfac?.Invoke(BodyType) ?? DefaultExpressionContext.GetContextConverter(this.BodyType);
       var validRules= new CompiledValidation[validations.Count];
       var errors= new List<ExpressionSyntaxException>();
 
@@ -111,8 +111,8 @@ namespace Tlabs.Data.Processing.Intern {
       return validRules;
     }
 
-    private IEnumerable<CompiledFieldFomula> compiledFormulas(List<DocumentSchema.Field> fields, TCx cx) {
-      var cxCnv= cx?.GetContextConverter() ?? new DefaultExpressionContext(this.BodyType).GetContextConverter();
+    private IEnumerable<CompiledFieldFomula> compiledFormulas(List<DocumentSchema.Field> fields, CtxConverterFactory evaCfac) {
+      var cxCnv= evaCfac?.Invoke(BodyType) ?? DefaultExpressionContext.GetContextConverter(this.BodyType);
       var compParams= new ParameterExpression[] {
         // Expression.Parameter(this.BodyType),
         Expression.Parameter(typeof(object), "body"),

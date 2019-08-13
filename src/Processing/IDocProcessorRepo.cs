@@ -11,8 +11,8 @@ namespace Tlabs.Data.Processing {
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId).</summary>
     IDocSchemaProcessor GetDocumentProcessorBySid<TDoc>(string sid) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId) and template context objects.</summary>
-    IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, TVx vx, TCx cx)
+    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId) and template context factoriess.</summary>
+    IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx;
@@ -20,8 +20,8 @@ namespace Tlabs.Data.Processing {
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <see cref="DocumentSchema"/>'s alternate name.</summary>
     IDocSchemaProcessor GetDocumentProcessorByAltName<TDoc>(string altName) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <see cref="DocumentSchema"/>'s alternate name and template context objects.</summary>
-    IDocSchemaProcessor GetDocumentProcessorByAltName<TDoc, TVx, TCx>(string altName, TVx vx, TCx cx)
+    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <see cref="DocumentSchema"/>'s alternate name and template context factoriess.</summary>
+    IDocSchemaProcessor GetDocumentProcessorByAltName<TDoc, TVx, TCx>(string altName, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx;
@@ -29,8 +29,8 @@ namespace Tlabs.Data.Processing {
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="doc"/>.</summary>
     IDocSchemaProcessor GetDocumentProcessor<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="doc"/> and template context objects.</summary>
-    IDocSchemaProcessor GetDocumentProcessor<TDoc, TVx, TCx>(TDoc doc, TVx vx, TCx cx)
+    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="doc"/> and template context factoriess.</summary>
+    IDocSchemaProcessor GetDocumentProcessor<TDoc, TVx, TCx>(TDoc doc, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx;
@@ -45,9 +45,9 @@ namespace Tlabs.Data.Processing {
     ///<exception cref="Tlabs.Dynamic.ExpressionSyntaxException">Thrown if any syntax error(s) in the validation code are detected.</exception>
     IDocSchemaProcessor CreateDocumentProcessor<TDoc>(DocumentSchema schema) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
-    ///<summary>Create a new <see cref="IDocSchemaProcessor"/> for <paramref name="schema"/> and template context objects..</summary>
+    ///<summary>Create a new <see cref="IDocSchemaProcessor"/> for <paramref name="schema"/> and template context factoriess.</summary>
     ///<exception cref="Tlabs.Dynamic.ExpressionSyntaxException">Thrown if any syntax error(s) in the validation code are detected.</exception>
-    IDocSchemaProcessor CreateDocumentProcessor<TDoc, TVx, TCx>(DocumentSchema schema, TVx vx, TCx cx)
+    IDocSchemaProcessor CreateDocumentProcessor<TDoc, TVx, TCx>(DocumentSchema schema, CtxConverterFactory valCfac, CtxConverterFactory evaCfac)
       where TDoc : Entity.Intern.BaseDocument<TDoc>
       where TVx : class, IExpressionCtx
       where TCx : class, IExpressionCtx;
