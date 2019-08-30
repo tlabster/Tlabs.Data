@@ -33,6 +33,7 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.Contains("2018-12-01T09:00:00.0000000Z", json);
 
       dynamic obj2= ser.LoadObj(strm, ((object)obj).GetType());
+      Assert.Null(obj2.xyz_udefined);
       Assert.Equal(obj.StrProp, obj2.StrProp);
       Assert.Equal(obj.NumProp, obj2.NumProp);
       Assert.Equal(obj.DateProp, obj2.DateProp);
