@@ -11,6 +11,15 @@ namespace Tlabs.Data {
     public DataPersistenceException(string msg, Exception e) : base(msg, e) { }
   }
 
+  /// <summary>Data transaction exception.</summary>
+  public class DataTransactionException : GeneralException {
+    /// <summary>Ctor from inner exception <paramref name="e"/>.</summary>
+    public DataTransactionException(Exception e) : base(e.Message, e) { }
+
+    /// <summary>Ctor from <paramref name="msg"/> and inner exception <paramref name="e"/>.</summary>
+    public DataTransactionException(string msg, Exception e) : base(msg, e) { }
+  }
+
   /// <summary>Data concurrent persistence exception.</summary>
   public class DataConcurrentPersistenceException : DataPersistenceException {
     /// <summary>Ctor from inner exception <paramref name="e"/>.</summary>
