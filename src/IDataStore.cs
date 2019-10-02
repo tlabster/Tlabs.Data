@@ -20,6 +20,9 @@ namespace Tlabs.Data {
     ///<summary>Reset the change state of all tracked entities to 'unchanged'.</summary>
     void ResetChanges();
 
+    ///<summary>Reset all tracked entities to 'untracked'.</summary>
+    void ResetAll();
+
     ///<summary>Excecutes <paramref name="operation"/> within a transaction.</summary>
     ///<remarks>The <paramref name="operation"/> needs to call <see cref="IDataTransaction.Commit()"/> to commit.</remarks>
     void WithTransaction(Action<IDataTransaction> operation);

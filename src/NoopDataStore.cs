@@ -70,6 +70,9 @@ namespace Tlabs.Data {
       public void ResetChanges() { }
 
       ///<inherit/>
+      public void ResetAll() { }
+
+      ///<inherit/>
       public void WithTransaction(Action<IDataTransaction> operation) => operation(new NoOpTransaction());
 
       ///<inherit/>
