@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,10 +18,21 @@ namespace Tlabs.Data {
 
   ///<summary>Configures all data repositories as services.</summary>
   public class RepositoriesConfigurator : IConfigurator<IServiceCollection> {
-    ///<summary>Default time zone</summary>
-    public const string DEFAULT_TIME_ZONE= "W. Europe Standard Time";   //TODO: this is probably windows only
+    ///<summary>Default windows time zone</summary>
+    public const string DEFAULT_WINDOWS_TIME_ZONE= "W. Europe Standard Time";
+    ///<summary>Default non-windows time zone</summary>
+    public const string DEFAULT_NON_WINDOWS_TIME_ZONE= "Europe/Berlin";
 
     private ILogger log= App.Logger<RepositoriesConfigurator>();
+    private IDictionary<string, string> config;
+
+    ///<summary>Default ctor.</summary>
+    public RepositoriesConfigurator() : this(null) { }
+
+    ///<summary>Ctor from <paramref name="config"/>.</summary>
+    public RepositoriesConfigurator(IDictionary<string, string> config) {
+      this.config= config ?? new Dictionary<string, string>();
+    }
 
     ///<inherit/>
     public void AddTo(IServiceCollection services, IConfiguration cfg) {
@@ -37,20 +49,23 @@ namespace Tlabs.Data {
       services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>>();
       services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
 
-      configureDocProcessor(services);
+      configureAppTime(services);
       log.LogDebug("Repository services added.");
     }
 
-    private void configureDocProcessor(IServiceCollection services) {
+    private void configureAppTime(IServiceCollection services) {
       services.TryAddSingleton<IDocumentClassFactory, DocumentClassFactory>();
       services.AddScoped<Processing.IDocProcessorRepo, Processing.Intern.DocProcessorRepo>();
 
       string tzid= null;
-      // config.TryGetValue("timeZone", out tzid);
-      tzid= tzid ?? DEFAULT_TIME_ZONE;
+      if (   !config.TryGetValue("timeZone", out tzid)
+          || string.IsNullOrWhiteSpace(tzid)) {
+        tzid=   RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+              ? DEFAULT_WINDOWS_TIME_ZONE
+              : DEFAULT_NON_WINDOWS_TIME_ZONE;
+      }
 
-      /* TODO: To become OS independent it would be better to use
-       *       TimeZoneInfo.FromSerializedString() / ToSerilaizedString() but these are available only starting from .NET Core 2.0 ...
+      /* TODO: Use TimeZoneInfo.FromSerializedString() / ToSerilaizedString() but these are available only starting from .NET Core 2.0 ...
        */
       TimeZoneInfo timeZoneInfo;
       try {
@@ -62,7 +77,6 @@ namespace Tlabs.Data {
       }
       App.TimeInfo= new DateTimeHelper(timeZoneInfo);
       log.LogWarning("Application time zone: '{id}'", timeZoneInfo.Id);
-
 
     }
     private void configureCustomRepos(IServiceCollection services) {

@@ -18,10 +18,11 @@ namespace Tlabs.Data.Serialize.Tests {
     public void BasicJsonSerializeTest() {
       IDynamicSerializer ser= Json.JsonFormat.CreateDynSerializer();
       var strm= new MemoryStream();
+      var d0= new DateTime(2018,12,01,9,0,0);
       dynamic obj= new {
         StrProp= "abc",
         NumProp= 2.718281828,
-        DateProp= new DateTime(2018,12,01,10,0,0)
+        DateProp= Tlabs.App.TimeInfo.ToAppTime(d0)
       };
       ser.WriteObj(strm, obj);
       strm.Position= 0;
@@ -33,18 +34,23 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.Contains("2018-12-01T09:00:00.0000000Z", json);
 
       dynamic obj2= ser.LoadObj(strm, ((object)obj).GetType());
-      Assert.Null(obj2.xyz_udefined);
       Assert.Equal(obj.StrProp, obj2.StrProp);
       Assert.Equal(obj.NumProp, obj2.NumProp);
       Assert.Equal(obj.DateProp, obj2.DateProp);
 
-      // De-serializes in application time zone
-      dynamic obj3= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57-08:00\"}", ((object)obj).GetType());
-      Assert.Equal(new DateTime(1996, 12, 20, 01, 39, 57), obj3.DateProp);
+      // De-serializes from UTC in application time zone
+      dynamic obj3= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000Z\"}", ((object)obj).GetType());
+      var d= Tlabs.App.TimeInfo.ToAppTime(new DateTime(1996, 12, 19, 16, 39, 57));
+      Assert.Equal(d, obj3.DateProp);
+
+      // De-serializes from -06:00 in application time zone
+      dynamic obj5= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.000000-06:00\"}", ((object)obj).GetType());
+      var d1= Tlabs.App.TimeInfo.ToAppTime(new DateTime(1996, 12, 19, 22, 39, 57));
+      Assert.Equal(d1, obj5.DateProp);
 
       // Allows timestamp
       dynamic obj4= ser.LoadObj("{\"dateProp\": 1563197860271}", ((object)obj).GetType());
-      Assert.Equal(new DateTime(1996, 12, 20, 01, 39, 57), obj3.DateProp);
+      Assert.Equal(Tlabs.App.TimeInfo.ToAppTime(new DateTime(1996, 12, 19, 16, 39, 57)), obj3.DateProp);
 
       // Rejects only date
       Assert.Throws<JsonSerializationException>(() => ser.LoadObj("{\"dateProp\": \"2019-20-10\"}", ((object)obj).GetType()));

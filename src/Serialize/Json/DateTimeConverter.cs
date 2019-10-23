@@ -22,7 +22,7 @@ namespace Tlabs.Data.Serialize.Json {
       if (JsonToken.StartConstructor == reader.TokenType)
         return readFromDateCtor(reader);
 
-      if(reader.TokenType == JsonToken.Date) return App.TimeInfo.ToAppTime(((DateTime)reader.Value).ToUniversalTime());
+      if (reader.TokenType == JsonToken.Date) return App.TimeInfo.ToAppTime(((DateTime)reader.Value));
 
       if (JsonToken.Integer != reader.TokenType) throw new JsonSerializationException($"Can't convert {reader.TokenType} into {nameof(DateTime)}.");
 
