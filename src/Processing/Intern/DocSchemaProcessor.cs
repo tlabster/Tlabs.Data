@@ -93,6 +93,17 @@ namespace Tlabs.Data.Processing.Intern {
       return doc.SetBodyObject(bodyObj);
     }
 
+    ///<inheritdoc/>
+    public IDictionary<string, object> MergeBodyProperties<TDoc>(TDoc doc, IDictionary<string, object> props) where TDoc : BaseDocument<TDoc> {
+      if (null == props) return props;
+      var body= LoadBodyObject(doc);
+      var bodyProps= BodyAccessor.ToDictionary(body);
+      foreach (var pair in props)
+        bodyProps[pair.Key]= pair.Value;
+      UpdateBodyObject(doc, body);
+      return bodyProps;
+    }
+
     private void checkDocument<DocT>(DocT doc) where DocT : BaseDocument<DocT> {
       if (null == doc) throw new ArgumentNullException(nameof(doc));
       if (null == doc.Body) throw new ArgumentException(nameof(doc.Body));
@@ -128,6 +139,5 @@ namespace Tlabs.Data.Processing.Intern {
       compSchema.ComputeFieldFormulas(cx);
     }
   }
-
 
 }

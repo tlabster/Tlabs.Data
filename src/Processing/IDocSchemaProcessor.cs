@@ -35,12 +35,16 @@ namespace Tlabs.Data.Processing {
     ///<summary>Return <paramref name="doc"/>'s Body as object (according to its <see cref="DocumentSchema"/>).</summary>
     object LoadBodyObject<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>;
 
-    ///<summary>Set <paramref name="doc"/>'s Body to <paramref name="bodyObj"/>.</summary>
+    ///<summary>Update <paramref name="doc"/>'s Body with <paramref name="bodyObj"/>.</summary>
     /// <remarks>
     /// By specifying a <paramref name="setupData"/> delegate the caller can provide a custom dictionary of data beeing imported into
     /// the CalcNgn model. (Defaults to a dictionary representing all public properties of the <paramref name="bodyObj"/>.)
     /// </remarks>
     object UpdateBodyObject<TDoc>(TDoc doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz = 10*1024) where TDoc : BaseDocument<TDoc>;
+
+    ///<summary>Merge <paramref name="props"/> into <paramref name="doc"/>'s Body.</summary>
+    ///<returns>Updated body properties dictionary.</returns>
+    IDictionary<string, object> MergeBodyProperties<TDoc>(TDoc doc, IDictionary<string, object> props) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>
     /// Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="vx"/>)
