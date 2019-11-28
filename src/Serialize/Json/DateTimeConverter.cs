@@ -49,7 +49,7 @@ namespace Tlabs.Data.Serialize.Json {
     ///<summary>Writes a <see cref="DateTime"/> value as an ISO-8601 string in UTC.</summary>
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
       var dt= (DateTime)value;
-      writer.WriteValue(dt.ToUniversalTime().ToString("o", DateTimeFormatInfo.InvariantInfo));
+      writer.WriteValue(App.TimeInfo.ToUtc(dt).ToString("o", DateTimeFormatInfo.InvariantInfo));
     }
   }
 

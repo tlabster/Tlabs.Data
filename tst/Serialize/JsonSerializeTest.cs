@@ -43,6 +43,13 @@ namespace Tlabs.Data.Serialize.Tests {
       var d= Tlabs.App.TimeInfo.ToAppTime(new DateTime(1996, 12, 19, 16, 39, 57));
       Assert.Equal(d, obj3.DateProp);
 
+      // Serializes it back correctly into UTC
+      strm= new MemoryStream();
+      ser.WriteObj(strm, obj3);
+      strm.Position= 0;
+      json= Encoding.UTF8.GetString(strm.ToArray());
+      Assert.Contains("1996-12-19T16:39:57.0000000Z", json);
+
       // De-serializes from -06:00 in application time zone
       dynamic obj5= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.000000-06:00\"}", ((object)obj).GetType());
       var d1= Tlabs.App.TimeInfo.ToAppTime(new DateTime(1996, 12, 19, 22, 39, 57));
