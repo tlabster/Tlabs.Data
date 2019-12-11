@@ -94,14 +94,13 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inheritdoc/>
-    public IDictionary<string, object> MergeBodyProperties<TDoc>(TDoc doc, IDictionary<string, object> props) where TDoc : BaseDocument<TDoc> {
+    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props) where TDoc : BaseDocument<TDoc> {
       if (null == props) return props;
       var body= LoadBodyObject(doc);
       var bodyProps= BodyAccessor.ToDictionary(body);
       foreach (var pair in props)
         bodyProps[pair.Key]= pair.Value;
-      UpdateBodyObject(doc, body);
-      return bodyProps;
+      return UpdateBodyObject(doc, body);
     }
 
     private void checkDocument<DocT>(DocT doc) where DocT : BaseDocument<DocT> {

@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Linq;
-
-using Xunit;
-using Tlabs.Data.Entity;
-using Tlabs.Data.Entity.Intern;
-using Tlabs.Data.Serialize.Xml;
-using Tlabs.Data.Serialize;
-using Tlabs.Data.Serialize.Json;
-using Tlabs.Misc;
 using System.Collections.Generic;
 using System.Dynamic;
 
+using Tlabs.Data.Entity;
+using Tlabs.Data.Entity.Intern;
+using Tlabs.Data.Serialize.Json;
+using Xunit;
+
 namespace Tlabs.Data.Processing.Tests {
   public class DocSchemaProcessorTest {
-    public class Document : BaseDocument<Document> {
+    public class TstDocument : BaseDocument<TstDocument> {
+      public TstDocument(string sid) { this.Sid= sid; }
     }
 
     private static readonly JsonFormat.DynamicSerializer tstSer= JsonFormat.CreateDynSerializer();
@@ -48,7 +45,9 @@ namespace Tlabs.Data.Processing.Tests {
       new DocumentSchema.Field() {Name= "TxtProp01", TypeName= "TEXT", ExtMappingInfo = "path=PID/01"},
       new DocumentSchema.Field() {Name= "NumProp01", TypeName= "NUMBER"},
       new DocumentSchema.Field() {Name= "DateProp01", TypeName= "DATETIME"},
-      new DocumentSchema.Field() {Name= "BoolProp01", TypeName= "BooleAN"}  //must be case insensitive
+      new DocumentSchema.Field() {Name= "BoolProp01", TypeName= "BooleAN"},  //must be case insensitive
+      new DocumentSchema.Field() {Name= "TxtLst01", TypeName= "TEXT[]"},
+      new DocumentSchema.Field() {Name= "NumLst01", TypeName= "NUMBER[]"}
     };
 
     public static List<DocumentSchema.ValidationRule> CreateRulesList(DocumentSchema schema) {
@@ -128,14 +127,13 @@ namespace Tlabs.Data.Processing.Tests {
 
       bodyObj.txtProp= "tstText";
       bodyObj.txtLstProp= new List<string>{ "tstText01", "tstText02" };
-      var doc= new Document();
-      doc.Sid= proc.Sid;
+      var doc= new TstDocument(proc.Sid);
       dynamic bodyObj2= proc.UpdateBodyObject(doc, bodyObj);
       vcx= new DefaultExpressionContext(proc.BodyType, bodyObj2);
 
       var cx= new DefaultExpressionContext(proc.BodyType, bodyObj2);
       proc.EvaluateComputedFields(cx);
-      Assert.True(proc.CheckValidation<Document>(doc, vcx, out rule), rule?.Description ?? "RULE???");
+      Assert.True(proc.CheckValidation<TstDocument>(doc, vcx, out rule), rule?.Description ?? "RULE???");
 
       Assert.Equal(bodyObj.txtProp, bodyObj2.txtProp);
       Assert.NotEmpty(bodyObj2.txtProp);
@@ -195,8 +193,7 @@ namespace Tlabs.Data.Processing.Tests {
     public void ValidateSid() {
       var docSchema= CreateDocSchema();
       var proc= CreateDocSchemaProcessor(docSchema);
-      var doc= new Document();
-      doc.Sid= "basic-x:133";
+      var doc= new TstDocument(proc.Sid);
 
       dynamic dyn= new Object();
       Exception ex= Assert.Throws<ArgumentException>(() => proc.UpdateBodyObject(doc, dyn));
@@ -207,11 +204,68 @@ namespace Tlabs.Data.Processing.Tests {
     public void UpdateBodyObjectTest() {
       var docSchema= CreateDocSchema();
       var proc= CreateDocSchemaProcessor(docSchema);
-      var doc= new Document();
-      doc.Sid= "basic-x:123";
+      var doc= new TstDocument(docSchema.TypeId);
 
-      dynamic dyn= new ExpandoObject();
-      proc.UpdateBodyObject(doc, dyn);
+      /* 1. Update with object of exact proc.BodyType:
+       */
+      dynamic obj= proc.EmptyBody;
+      var txtVal= obj.TxtProp01= "TST";
+      var numVal= obj.NumProp01= 2.7182818285M;
+      proc.UpdateBodyObject(doc, obj);
+      dynamic body= proc.LoadBodyObject(doc);
+      Assert.IsType(proc.BodyType,body);
+      Assert.Equal(txtVal, body.TxtProp01);
+      Assert.Equal(numVal, body.NumProp01);
+
+      /* 2. Update with object of 'similar' type:
+       */
+      obj= new {
+        TxtProp01= "TST",
+        NumProp01= 2.7182818285M
+      };
+      proc.UpdateBodyObject(doc, obj);
+      body= proc.LoadBodyObject(doc);
+      Assert.IsType(proc.BodyType, body);
+      Assert.Equal(txtVal, body.TxtProp01);
+      Assert.Equal(numVal, body.NumProp01);
+
+      /* 3. Update with dictionary:
+       */
+      var dict= new Dictionary<string, object> {
+        ["TxtProp01"] = "TST",
+        ["NumProp01"]= 2.7182818285M
+      };
+      proc.UpdateBodyObject(doc, dict);
+      body= proc.LoadBodyObject(doc);
+      Assert.IsType(proc.BodyType, body);
+      Assert.Equal(txtVal, body.TxtProp01);
+      Assert.Equal(numVal, body.NumProp01);
+    }
+
+    [Fact]
+    public void MergeBodyPropertiesTest() {
+      var docSchema= CreateDocSchema();
+      var proc= CreateDocSchemaProcessor(docSchema);
+      var doc= new TstDocument(docSchema.TypeId);
+
+      dynamic obj= Activator.CreateInstance(proc.BodyType);
+      obj.TxtProp01= "TST0";
+      obj.NumProp01= 27.182818285M;
+      proc.UpdateBodyObject(doc, obj);  //set some initial body properties
+
+      var txtLst= new string[] {"1", "2"};
+      var props= new Dictionary<string, object> {
+        ["TxtProp01"] = "TST",          //overwrite
+        ["NumProp01"]= 2.7182818285M,   //overwrite
+        ["TxtLst01"]= txtLst,
+        ["ToBeIgnored"]= true
+      };
+      dynamic body= proc.MergeBodyProperties(doc, props);
+      Assert.Equal(props["TxtProp01"], body.TxtProp01);
+      Assert.Equal(props["NumProp01"], body.NumProp01);
+      Assert.Equal(txtLst.Length, body.TxtLst01.Count);
+      IDictionary<string, object> dict= proc.BodyAccessor.ToDictionary(body);
+      Assert.False(dict.ContainsKey("ToBeIgnored"));
     }
   }
 }

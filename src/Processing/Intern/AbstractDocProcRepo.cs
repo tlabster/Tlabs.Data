@@ -21,7 +21,7 @@ namespace Tlabs.Data.Processing.Intern {
     protected IDocumentClassFactory docClassFactory;
     ///<summary>Document</summary>
     protected Serialize.IDynamicSerializer docSeri;
-    private static readonly BasicCache<ProcessorKey, IDocSchemaProcessor> schemaCache= new BasicCache<ProcessorKey, IDocSchemaProcessor>();
+    private static readonly BasicCache<ProcessorKey, IDocSchemaProcessor> procCache= new BasicCache<ProcessorKey, IDocSchemaProcessor>();
 
     ///<summary>Ctor from services.</summary>
     protected AbstractDocProcRepo(Repo.IDocSchemaRepo schemaRepo,
@@ -46,7 +46,7 @@ namespace Tlabs.Data.Processing.Intern {
         var docSchema= schemaRepo.GetByTypeId(sid);
         return this.createProcessor<TVx, TCx>(docSchema, valCfac, evaCfac);
       };
-      return schemaCache[new ProcessorKey(sid, typeof(TVx), typeof(TCx)), loadSchemaProc];
+      return procCache[new ProcessorKey(sid, typeof(TVx), typeof(TCx)), loadSchemaProc];
     }
 
     ///<inherit/>
@@ -96,7 +96,7 @@ namespace Tlabs.Data.Processing.Intern {
       where TCx : class, IExpressionCtx
     {
       if (null == schema) throw new ArgumentNullException(nameof(schema));
-      return schemaCache[new ProcessorKey(schema.TypeId, typeof(TVx), typeof(TCx))]= createProcessor<TVx, TCx>(schema, valCfac, evaCfac);
+      return procCache[new ProcessorKey(schema.TypeId, typeof(TVx), typeof(TCx))]= createProcessor<TVx, TCx>(schema, valCfac, evaCfac);
     }
 
     ///<summary>Create a new <see cref="IDocSchemaProcessor"/> instance for <paramref name="schema"/>.</summary>

@@ -43,8 +43,8 @@ namespace Tlabs.Data.Processing {
     object UpdateBodyObject<TDoc>(TDoc doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz = 10*1024) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>Merge <paramref name="props"/> into <paramref name="doc"/>'s Body.</summary>
-    ///<returns>Updated body properties dictionary.</returns>
-    IDictionary<string, object> MergeBodyProperties<TDoc>(TDoc doc, IDictionary<string, object> props) where TDoc : BaseDocument<TDoc>;
+    ///<returns>Updated body object.</returns>
+    object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>
     /// Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="vx"/>)
