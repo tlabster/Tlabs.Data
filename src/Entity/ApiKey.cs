@@ -55,14 +55,5 @@ namespace Tlabs.Data.Entity {
       ///<summary>API Key</summary>
       public ApiKey ApiKey { get; set; }
     }
-
-    ///<summary>dummy for api key role</summary>
-    public class Role : EditableEntity {
-      //DUMMY for now
-      ///<summary>Name</summary>
-      public string Name { get; set; }
-      ///<summary>List of API Keys associated with this role</summary>
-      public List<RoleRef> ApiKeys { get; set; }
-    }
   }
 }
