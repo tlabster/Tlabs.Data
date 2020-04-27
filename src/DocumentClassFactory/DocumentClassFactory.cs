@@ -96,7 +96,8 @@ namespace Tlabs.Data {
       if (0 == schema.Fields?.Count) throw new InvalidOperationException("Unable to create DocBody from empty fields list");
 
       var dynProps= schema.Fields.Select(fld => new DynamicProperty(fld.Name, fld.Type, GetAttributes(fld))).ToList();
-      return DynamicClassFactory.CreateType(dynProps, baseType, schema.TypeId);
+      string bdyTypeName= $"{schema.TypeId}-{DateTime.UtcNow.Ticks}";     //unique type name to avoid caching in DynamicClassFactory
+      return DynamicClassFactory.CreateType(dynProps, baseType, bdyTypeName);
     }
   }
 }

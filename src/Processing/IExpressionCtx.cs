@@ -13,7 +13,7 @@ namespace Tlabs.Data.Processing {
     object GetBody();
   }
 
-  /// <summary>Validation datat context type.</summary>
+  /// <summary>Default validation data context type.</summary>
   public class DefaultExpressionContext : IExpressionCtx {
     /// <summary>Ctor from document body type.</summary>
     public DefaultExpressionContext(Type objType, object bdyObj= null) {
@@ -31,5 +31,14 @@ namespace Tlabs.Data.Processing {
     ///<inherit/>
     public object GetBody() => d;
   }
+
+  /// <summary>No data context type.</summary>
+  public class NoExpressionContext : IExpressionCtx {
+    /// <summary>Singleton instance.</summary>
+    public static readonly NoExpressionContext Instance= new NoExpressionContext();
+    ///<inherit/>
+    public object GetBody() => throw new NotImplementedException();
+  }
+
 
 }

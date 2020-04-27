@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 
 using Tlabs.Data.Entity;
-using Tlabs.Data.Serialize;
 using Tlabs.Dynamic;
 
 namespace Tlabs.Data.Processing.Intern {
@@ -30,7 +29,7 @@ namespace Tlabs.Data.Processing.Intern {
 
   /// <summary>Generic compiled schema implementation.</summary>
   public class CompiledDocSchema<TVx, TCx> : ICompiledDocSchema where TVx : class, IExpressionCtx  where TCx : class, IExpressionCtx {
-    private static readonly ILogger<ICompiledDocSchema> log= App.Logger<ICompiledDocSchema>();
+    static readonly ILogger<ICompiledDocSchema> log= App.Logger<ICompiledDocSchema>();
     readonly IEnumerable<CompiledValidation> compValidations;
     readonly IEnumerable<CompiledFieldFomula> compFieldFormulas;
 
@@ -55,6 +54,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     /// <summary>Ctor form <paramref name="schema"/>, <paramref name="docClassFactory"/> and optional context templates.</summary>
     public CompiledDocSchema(DocumentSchema schema, IDocumentClassFactory docClassFactory, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) {
+      log.LogDebug("Compiling schema: {sid}", schema.TypeId);
       if (null == (this.Schema= schema)) throw new ArgumentNullException(nameof(schema));
       if (null == (schema.Fields)) throw new ArgumentException(nameof(schema.Fields));
       var validations= schema.Validations;
@@ -65,25 +65,34 @@ namespace Tlabs.Data.Processing.Intern {
 
       this.compValidations= compiledValidation(validations, valCfac);
       this.compFieldFormulas= compiledFormulas(schema.Fields, evaCfac);
+      log.LogDebug("Schema {sid} compiled into class: {cls}", this.Sid, this.BodyType.Name);
     }
 
     ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
     public bool CheckValidation(object body, object vx, out DocumentSchema.ValidationRule rule) {
       rule= null;
+      var vcx= vx as TVx;
+      if (null == vcx) throw (ArgumentException)(null == vx ? new ArgumentNullException(nameof(vx)) : new ArgumentException($"Can't cast {vx.GetType()} into {typeof(TVx)}"));
       foreach (var v in compValidations) try {
-          rule= v.Rule.NewCopy<DocumentSchema.ValidationRule>();
-          if (!v.Validator.Evaluate((TVx)vx))
-            return false;
-        }
-        catch (Exception e) { throw new DocumentValidationException(rule, e); }
+        rule= v.Rule.NewCopy<DocumentSchema.ValidationRule>();
+        log.LogDebug("Evaluating rule {rule} for body type: {bt}", rule.Key, vcx.GetBody().GetType());
+        if (!v.Validator.Evaluate(vcx))
+          return false;
+      }
+      catch (Exception e) {
+        log.LogDebug(e, "Rule {rule} evaluation failed: {msg}", rule.Key, e.Message);
+        throw new DocumentValidationException(rule, e);
+      }
       rule= null;
       return true;
     }
 
     ///<inherit/>
     public void ComputeFieldFormulas(IExpressionCtx icx) {
-      var cx= (TCx)icx;
+      var cx= icx as TCx;
+      if (null == cx) throw (ArgumentException)(null == icx ? new ArgumentNullException(nameof(icx)) : new ArgumentException($"Can't cast {icx.GetType()} into {typeof(TCx)}"));
+      log.LogDebug("Computing fields for body type: {bt}", cx.GetBody().GetType());
       foreach(var frml in compFieldFormulas)
         frml.Compute(cx.GetBody(), cx);
     }
@@ -112,9 +121,8 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     private IEnumerable<CompiledFieldFomula> compiledFormulas(List<DocumentSchema.Field> fields, CtxConverterFactory evaCfac) {
-      var cxCnv= evaCfac?.Invoke(BodyType) ?? DefaultExpressionContext.GetContextConverter(this.BodyType);
+      var cxCnv= evaCfac?.Invoke(BodyType) ?? DefaultExpressionContext.GetContextConverter(BodyType);
       var compParams= new ParameterExpression[] {
-        // Expression.Parameter(this.BodyType),
         Expression.Parameter(typeof(object), "body"),
         Expression.Parameter(typeof(TCx), "cx")
       };
@@ -132,17 +140,23 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     private Action<object, TCx> compiledFrml(DocumentSchema.Field fld, ParameterExpression[] callParams, IDictionary<string, Type> cxCnv) {
-      var ctxExprInfo= DynXHelper.BuildExpression(fld.CalcFormula, callParams[1], fld.Type, null, cxCnv);
-      var asgnParms= callParams.Select((par, l) => l == 0 ? Expression.Parameter(BodyType, "bdy") : par).ToArray();
-      var convParms= callParams.Select((par, l) => l == 0 ? Expression.Convert(par, BodyType) : (Expression)par).ToArray();
+      try {
+        var ctxExprInfo= DynXHelper.BuildExpression(fld.CalcFormula, callParams[1], fld.Type, null, cxCnv);
+        var asgnParms= callParams.Select((par, l) => l == 0 ? Expression.Parameter(BodyType, "bdy") : par).ToArray();
+        var convParms= callParams.Select((par, l) => l == 0 ? Expression.Convert(par, BodyType) : (Expression)par).ToArray();
 
-      var propAssign= Expression.Lambda(Expression.Assign(
-                      Expression.MakeMemberAccess(asgnParms[0], BodyType.GetProperty(fld.Name, fld.Type)),
-                      ctxExprInfo.Expression), asgnParms);
-      var delType= typeof(Action<,>).MakeGenericType(BodyType, typeof(TCx));
-      var lambda=  Expression.Lambda<Action<object, TCx>>(Expression.Invoke(propAssign, convParms), callParams);
-      log.LogTrace("'{sid}.{fld}= {code}' compiled into: '{lambda}'", Sid, fld.Name, fld.CalcFormula, lambda);
-      return (Action<object, TCx>)lambda.Compile();
+        var propAssign= Expression.Lambda(Expression.Assign(
+                        Expression.MakeMemberAccess(asgnParms[0], BodyType.GetProperty(fld.Name, fld.Type)),
+                        ctxExprInfo.Expression), asgnParms);
+        var delType= typeof(Action<,>).MakeGenericType(BodyType, typeof(TCx));
+        var lambda=  Expression.Lambda<Action<object, TCx>>(Expression.Invoke(propAssign, convParms), callParams);
+        log.LogTrace("'{sid}.{fld}= {code}' compiled into: '{lambda}'", Sid, fld.Name, fld.CalcFormula, lambda);
+        return (Action<object, TCx>)lambda.Compile();
+      }
+      catch (Exception e) {
+        log.LogDebug("Failed to compile (field: '{fld}') calc-foumula: '{fml}' (with body type: {bdy}), message: '{msg}'", fld.Name, fld.CalcFormula, BodyType.Name, e.Message);
+        throw e;
+      }
     }
   }
 

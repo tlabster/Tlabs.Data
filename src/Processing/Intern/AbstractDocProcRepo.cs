@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 
 using Tlabs.Misc;
-using Tlabs.Sync;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Repo;
 
@@ -44,6 +43,7 @@ namespace Tlabs.Data.Processing.Intern {
       if (null == sid) throw new ArgumentNullException(nameof(sid));
       Func<IDocSchemaProcessor> loadSchemaProc= () => {  //helping Omnisharp...
         var docSchema= schemaRepo.GetByTypeId(sid);
+        log.LogDebug("Caching new processsor for document with schema: {sid} with valCfac: {vx} evaCfac: {cx}", sid, valCfac, evaCfac);
         return this.createProcessor<TVx, TCx>(docSchema, valCfac, evaCfac);
       };
       return procCache[new ProcessorKey(sid, typeof(TVx), typeof(TCx)), loadSchemaProc];
@@ -96,24 +96,27 @@ namespace Tlabs.Data.Processing.Intern {
       where TCx : class, IExpressionCtx
     {
       if (null == schema) throw new ArgumentNullException(nameof(schema));
-      return procCache[new ProcessorKey(schema.TypeId, typeof(TVx), typeof(TCx))]= createProcessor<TVx, TCx>(schema, valCfac, evaCfac);
+      var sid= schema.TypeId;
+      log.LogDebug("Creating new processsor for schema: {sid} (Id: {id}) with valCfac: {vx} evaCfac: {cx}", sid, schema.Id, valCfac, evaCfac);
+      return procCache[new ProcessorKey(sid, typeof(TVx), typeof(TCx))]= createProcessor<TVx, TCx>(schema, valCfac, evaCfac);
     }
 
     ///<summary>Create a new <see cref="IDocSchemaProcessor"/> instance for <paramref name="schema"/>.</summary>
     protected abstract IDocSchemaProcessor createProcessor<TVx, TCx>(DocumentSchema schema, CtxConverterFactory valCfac, CtxConverterFactory evaCfac) where TVx : class, IExpressionCtx where TCx : class, IExpressionCtx;
 
     internal struct ProcessorKey : IEquatable<ProcessorKey> {
-      string sid;
-      Type vxt;
-      Type cxt;
       int hash;
 
       internal ProcessorKey(string sid, Type vxt, Type cxt) {
-        this.sid= sid;
-        this.vxt= vxt;
-        this.cxt= cxt;
+        this.Sid= sid;
+        this.Vxt= vxt;
+        this.Cxt= cxt;
         this.hash= sid.GetHashCode() ^ vxt.GetHashCode() ^ cxt.GetHashCode();
       }
+
+      public string Sid { get; }
+      public Type Vxt { get; }
+      public Type Cxt { get; }
 
       public override int GetHashCode() => hash;
 
@@ -123,13 +126,12 @@ namespace Tlabs.Data.Processing.Intern {
       }
 
       public bool Equals(ProcessorKey other) {
-        return this.sid == other.sid
-               && this.vxt == other.vxt
-               && this.cxt == other.cxt;
+        return this.Sid == other.Sid
+               && this.Vxt == other.Vxt
+               && this.Cxt == other.Cxt;
       }
     }
 
   }
-
 
 }

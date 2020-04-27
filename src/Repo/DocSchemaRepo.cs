@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 using Tlabs.Data.Serialize;
 using Tlabs.Data.Entity;
@@ -20,18 +21,23 @@ namespace Tlabs.Data.Repo {
     ///<summary>List of <see cref="DocumentSchema.TypeId"/>(s) optionally filterd by <paramref name="typeIdFilter"/>.</summary>
     IQueryable<string> FilteredTypeIdList(string typeIdFilter= null);
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
+                                          Processing.IDocProcessorRepo docProcRepo,
+                                          Action<DocumentSchema> validateSchemaDependencies= null) where TDoc : Entity.Intern.BaseDocument<TDoc>;
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, Processing.CtxConverterFactory valCfac, Processing.CtxConverterFactory evaCfac)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, Processing.IExpressionCtx
-      where TCx : class, Processing.IExpressionCtx;
-
+    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams,
+                                                     Processing.IDocProcessorRepo docProcRepo,
+                                                     Action<DocumentSchema> validateSchemaDependencies= null,
+                                                     Processing.CtxConverterFactory valCfac= null,
+                                                     Processing.CtxConverterFactory evaCfac= null) where TDoc : Entity.Intern.BaseDocument<TDoc>
+                                                                                                   where TVx : class, Processing.IExpressionCtx
+                                                                                                   where TCx : class, Processing.IExpressionCtx;
   }
 
 
   ///<summary>>see cref="DocumentSchema"/> spcific repository implementation.</summary>
   public class DocSchemaRepo : Intern.BaseRepo<DocumentSchema>, IDocSchemaRepo {
+    static readonly ILogger<DocSchemaRepo> log= App.Logger<DocSchemaRepo>();
     ISerializer<DocumentSchema> schemaSeri;
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
@@ -48,6 +54,7 @@ namespace Tlabs.Data.Repo {
                                    .LoadRelated(store, s => s.Validations)
                                    .Single(s => s.TypeName == typeName && s.TypeVers == typeVers);
         DocumentSchema.AltNameCache[typeId]= docSchema.TypeAltName;
+        log.LogDebug("{id} schema loaded from store.", typeId);
         return docSchema;
       };
       return DocumentSchema.Cache[typeId, loadSchema];
@@ -113,30 +120,41 @@ namespace Tlabs.Data.Repo {
     public IQueryable<string> FilteredTypeIdList(string typeIdFilter = null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc> {
+    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
+                                                  Processing.IDocProcessorRepo docProcRepo,
+                                                  Action<DocumentSchema> validateSchemaDependencies= null) where TDoc : Entity.Intern.BaseDocument<TDoc> {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
       docProcRepo.CreateDocumentProcessor<TDoc>(schema);
-      DocumentSchema oldSchema;
-      if (TryGetByTypeId(schema.TypeId, out oldSchema))
-        Delete(oldSchema);
-      Insert(schema);
-      Store.CommitChanges();
-      return schema;
+      if (null != validateSchemaDependencies)
+        validateSchemaDependencies(schema);
+
+      return upsertSchema(schema);
     }
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo, Processing.CtxConverterFactory valCfac, Processing.CtxConverterFactory evaCfac)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, Processing.IExpressionCtx
-      where TCx : class, Processing.IExpressionCtx
+    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams,
+                                                            Processing.IDocProcessorRepo docProcRepo,
+                                                            Action<DocumentSchema> validateSchemaDependencies,
+                                                            Processing.CtxConverterFactory valCfac,
+                                                            Processing.CtxConverterFactory evaCfac) where TDoc : Entity.Intern.BaseDocument<TDoc>
+                                                                                                    where TVx : class, Processing.IExpressionCtx
+                                                                                                    where TCx : class, Processing.IExpressionCtx
     {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
       docProcRepo.CreateDocumentProcessor<TDoc, TVx, TCx>(schema, valCfac, evaCfac);
+      if (null != validateSchemaDependencies)
+        validateSchemaDependencies(schema);
+
+      return upsertSchema(schema);
+    }
+
+    private DocumentSchema upsertSchema(DocumentSchema schema) {
       DocumentSchema oldSchema;
+      log.LogDebug("Upserting schema: {s}", schema.TypeId);
       if (TryGetByTypeId(schema.TypeId, out oldSchema))
         Delete(oldSchema);
       Insert(schema);
@@ -177,6 +195,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override DocumentSchema Insert(DocumentSchema schema) {
+      log.LogDebug("Inserting schema: {s}", schema.TypeId);
       schema= base.Insert(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
@@ -185,6 +204,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override DocumentSchema Update(DocumentSchema schema) {
+      log.LogDebug("Updating schema: {s}", schema.TypeId);
       schema= base.Update(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
@@ -193,6 +213,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override void Delete(DocumentSchema schema) {
+      log.LogDebug("Deleting schema: {s}", schema.TypeId);
       base.Delete(schema);
       DocumentSchema.Cache.Evict(schema.TypeId);
       DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
@@ -200,6 +221,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override DocumentSchema Attach(DocumentSchema schema) {
+      log.LogDebug("Attaching schema: {s}", schema.TypeId);
       schema= base.Attach(schema);
       DocumentSchema.Cache[schema.TypeId]= LoadRelated(schema);
       DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
@@ -208,6 +230,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override void Evict(DocumentSchema schema) {
+      log.LogDebug("Evicting schema: {s}", schema.TypeId);
       base.Evict(schema);
       DocumentSchema.Cache.Evict(schema.TypeId);
       DocumentSchema.AltNameCache.Evict(schema.TypeAltName);

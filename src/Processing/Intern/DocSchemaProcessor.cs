@@ -6,7 +6,6 @@ using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 
-using Tlabs.Data;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Serialize;
@@ -17,7 +16,7 @@ namespace Tlabs.Data.Processing.Intern {
   /// <summary><see cref="DocumentSchema"/> processor.</summary>
   public class DocSchemaProcessor : IDocSchemaProcessor {
     /// <summary><see cref="ILogger"/>.</summary>
-    public static readonly ILogger<DocSchemaProcessor> Log= App.Logger<DocSchemaProcessor>();
+    protected static readonly ILogger<DocSchemaProcessor> log= App.Logger<DocSchemaProcessor>();
 
     /// <summary>Schema id.</summary>
     protected ICompiledDocSchema compSchema;
@@ -28,6 +27,7 @@ namespace Tlabs.Data.Processing.Intern {
     public DocSchemaProcessor(ICompiledDocSchema compSchema, IDynamicSerializer docSeri) {
       if (null == (this.compSchema= compSchema)) throw new ArgumentNullException(nameof(compSchema));
       if (null == (this.docSeri= docSeri)) throw new ArgumentNullException(nameof(docSeri));
+      log.LogDebug("Created new DocSchemaProcessor({sid}) for bodyType: {bodyType}.", compSchema.Sid, compSchema.BodyType.Name);
     }
 
     ///<inherit/>>
@@ -94,15 +94,25 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inheritdoc/>
-    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props) where TDoc : BaseDocument<TDoc> {
+    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, object cx= null) where TDoc : BaseDocument<TDoc> {
       if (null == props) return props;
       var body= LoadBodyObject(doc);
+      if (body.GetType() != BodyType) log.LogWarning("Doc. body type {bt} not matching processor type: {pt}", body.GetType(), BodyType);
       var bodyProps= BodyAccessor.ToDictionary(body);
-      foreach (var pair in props)
+      log.LogDebug("BodyAccessor.ToDictionary({bt}) succeeded.", body.GetType());
+      foreach (var pair in props) try{
         bodyProps[pair.Key]= pair.Value;
+      }
+      catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type)", pair.Key, pair.Value?.GetType()); throw e;}
+
+      if (!(cx is NoExpressionContext)) {
+        var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(BodyType, body);
+        if (!CheckValidation(body, ecx, out var offendingRule)) 
+          throw new FieldValidationException(offendingRule);
+        EvaluateComputedFields(ecx);
+      }
       return UpdateBodyObject(doc, body);
     }
-
     private void checkDocument<DocT>(DocT doc) where DocT : BaseDocument<DocT> {
       if (null == doc) throw new ArgumentNullException(nameof(doc));
       if (null == doc.Body) throw new ArgumentException(nameof(doc.Body));

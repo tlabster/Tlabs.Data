@@ -7,16 +7,6 @@ using Tlabs.Dynamic;
 
 namespace Tlabs.Data.Processing {
 
-  /// <summary>Document validation exception.</summary>
-  public class DocumentValidationException : GeneralException {
-    /// <summary>Rule for which validation failed.</summary>
-    public DocumentSchema.ValidationRule Rule { get; }
-    /// <summary>Default ctor</summary>
-    public DocumentValidationException(DocumentSchema.ValidationRule rule, Exception e) : base(e.Message, e) {
-      this.Rule= rule;
-    }
-  }
-
   /// <summary><see cref="DocumentSchema"/> processor interface.</summary>
   public interface IDocSchemaProcessor {
 
@@ -42,9 +32,10 @@ namespace Tlabs.Data.Processing {
     /// </remarks>
     object UpdateBodyObject<TDoc>(TDoc doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz = 10*1024) where TDoc : BaseDocument<TDoc>;
 
-    ///<summary>Merge <paramref name="props"/> into <paramref name="doc"/>'s Body.</summary>
+    ///<summary>Merge <paramref name="props"/> into <paramref name="doc"/>'s Body with optional<paramref name="cx"/>.</summary>
+    ///<remarks>To omit any validation and field computation pass <see cref="NoExpressionContext.Instance"/> as <paramref name="cx"/></remarks>
     ///<returns>Updated body object.</returns>
-    object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props) where TDoc : BaseDocument<TDoc>;
+    object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, object cx= null) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>
     /// Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="vx"/>)

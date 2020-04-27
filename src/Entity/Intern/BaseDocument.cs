@@ -14,7 +14,7 @@ namespace Tlabs.Data.Entity.Intern {
     }
     private State state;
     private DocBody docBody;
-    private object bodyObj;    //cached body object
+    private object cachedBodyObj;
 
     public virtual string Title { get; set; }
     public virtual string Summary { get; set; }
@@ -34,8 +34,11 @@ namespace Tlabs.Data.Entity.Intern {
       get => docBody ?? (docBody= new DocBody { Document= (T)this });
       set => docBody= value;
     }
-    public object GetBodyObject(Func<DocBody, object> loadObj) => bodyObj ?? SetBodyObject(loadObj(this.Body));
-    public virtual object SetBodyObject(object bodyObj) => this.bodyObj= bodyObj;
+    public object GetBodyObject(Func<DocBody, object> loadObj) => cachedBodyObj ?? cacheBodyObj(loadObj(this.Body));
+
+    public virtual object SetBodyObject(object bodyObj) => cacheBodyObj(bodyObj);
+
+    private object cacheBodyObj(object bdy) => this.cachedBodyObj= bdy;
 
     //implicitly not mapped
     public bool IsValid {

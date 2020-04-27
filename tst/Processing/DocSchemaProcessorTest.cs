@@ -5,12 +5,19 @@ using System.Dynamic;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Serialize.Json;
+using Tlabs.Dynamic;
 using Xunit;
 
 namespace Tlabs.Data.Processing.Tests {
   public class DocSchemaProcessorTest {
     public class TstDocument : BaseDocument<TstDocument> {
       public TstDocument(string sid) { this.Sid= sid; }
+      public override object SetBodyObject(object bodyObj) {
+        var body= new DynamicAccessor(bodyObj.GetType()).ToDictionary(bodyObj);
+        StatusDetails=    body["TxtProp01"] as string
+                       ?? StatusDetails;
+        return bodyObj;
+      }
     }
 
     private static readonly JsonFormat.DynamicSerializer tstSer= JsonFormat.CreateDynSerializer();
@@ -42,12 +49,13 @@ namespace Tlabs.Data.Processing.Tests {
     }
 
     static readonly List<DocumentSchema.Field> SAMPLE_SCHEMA_FIELDS= new List<DocumentSchema.Field>() {
-      new DocumentSchema.Field() {Name= "TxtProp01", TypeName= "TEXT", ExtMappingInfo = "path=PID/01"},
-      new DocumentSchema.Field() {Name= "NumProp01", TypeName= "NUMBER"},
-      new DocumentSchema.Field() {Name= "DateProp01", TypeName= "DATETIME"},
-      new DocumentSchema.Field() {Name= "BoolProp01", TypeName= "BooleAN"},  //must be case insensitive
-      new DocumentSchema.Field() {Name= "TxtLst01", TypeName= "TEXT[]"},
-      new DocumentSchema.Field() {Name= "NumLst01", TypeName= "NUMBER[]"}
+      new DocumentSchema.Field {Name= "TxtProp01", TypeName= "TEXT", ExtMappingInfo = "path=PID/01"},
+      new DocumentSchema.Field {Name= "NumProp01", TypeName= "NUMBER"},
+      new DocumentSchema.Field {Name= "DateProp01", TypeName= "DATETIME"},
+      new DocumentSchema.Field {Name= "BoolProp01", TypeName= "BooleAN"},  //must be case insensitive
+      new DocumentSchema.Field {Name= "TxtLst01", TypeName= "TEXT[]"},
+      new DocumentSchema.Field {Name= "NumLst01", TypeName= "NUMBER[]"},
+      new DocumentSchema.Field {Name= "CmpTxt01", TypeName= "TEXT", CalcFormula= "d.TxtProp01 + \"-\" + DateTime.Now.Ticks.ToString()" }
     };
 
     public static List<DocumentSchema.ValidationRule> CreateRulesList(DocumentSchema schema) {
@@ -91,8 +99,8 @@ namespace Tlabs.Data.Processing.Tests {
         new DocumentSchema.ValidationRule() {
           Schema= schema,
           Key= "#06",
-          Description= "empty string prop validation failed",
-          Code= "{ d.TxtProp01.length == 0 }"
+          Description= "string prop length validation failed",
+          Code= "{ d.TxtProp01.length > 2 }"
         }
       };
     }
@@ -155,6 +163,8 @@ namespace Tlabs.Data.Processing.Tests {
       
       DocumentSchema.ValidationRule rule;
       object bodyObj= proc.EmptyBody;
+      var body= new DynamicAccessor(bodyObj.GetType()).ToDictionary(bodyObj);
+      body["TxtProp01"]= "_TXT_";
       var vcx= new DefaultExpressionContext(proc.BodyType, bodyObj);
       var res= proc.CheckValidation(bodyObj, vcx, out rule);
       Assert.True(res);
@@ -187,17 +197,6 @@ namespace Tlabs.Data.Processing.Tests {
       Assert.True(proc.CheckValidation((object) obj, vcx, out rule));
       Assert.Null(rule);
 
-    }
-
-    [Fact]
-    public void ValidateSid() {
-      var docSchema= CreateDocSchema();
-      var proc= CreateDocSchemaProcessor(docSchema);
-      var doc= new TstDocument(proc.Sid);
-
-      dynamic dyn= new Object();
-      Exception ex= Assert.Throws<ArgumentException>(() => proc.UpdateBodyObject(doc, dyn));
-      Assert.Contains(nameof(doc.Sid), ex.Message);
     }
 
     [Fact]
@@ -248,10 +247,10 @@ namespace Tlabs.Data.Processing.Tests {
       var proc= CreateDocSchemaProcessor(docSchema);
       var doc= new TstDocument(docSchema.TypeId);
 
-      dynamic obj= Activator.CreateInstance(proc.BodyType);
-      obj.TxtProp01= "TST0";
-      obj.NumProp01= 27.182818285M;
-      proc.UpdateBodyObject(doc, obj);  //set some initial body properties
+      // dynamic obj= Activator.CreateInstance(proc.BodyType);
+      // obj.TxtProp01= "TST0";
+      // obj.NumProp01= 27.182818285M;
+      // proc.UpdateBodyObject(doc, obj);  //set some initial body properties
 
       var txtLst= new string[] {"1", "2"};
       var props= new Dictionary<string, object> {
@@ -266,6 +265,7 @@ namespace Tlabs.Data.Processing.Tests {
       Assert.Equal(txtLst.Length, body.TxtLst01.Count);
       IDictionary<string, object> dict= proc.BodyAccessor.ToDictionary(body);
       Assert.False(dict.ContainsKey("ToBeIgnored"));
+      Assert.StartsWith("TST-", body.CmpTxt01);
     }
   }
 }
