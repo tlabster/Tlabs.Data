@@ -79,7 +79,7 @@ namespace Tlabs.Data.Processing.Intern {
       if (null == vcx) throw (ArgumentException)(null == vx ? new ArgumentNullException(nameof(vx)) : new ArgumentException($"Can't cast {vx.GetType()} into {typeof(TVx)}"));
       foreach (var v in compValidations) try {
         rule= v.Rule.NewCopy<DocumentSchema.ValidationRule>();
-        log.LogDebug("Evaluating rule {rule} for body type: {bt}", rule.Key, vcx.GetBody().GetType());
+        log.LogTrace("Evaluating rule {rule} for body type: {bt}", rule.Key, vcx.GetBody().GetType());
         if (!v.Validator.Evaluate(vcx))
           return false;
       }
@@ -102,7 +102,7 @@ namespace Tlabs.Data.Processing.Intern {
       }
       foreach(var frml in compFieldFormulas) {
         frml.Compute(cx.GetBody(), cx);
-        if (log.IsEnabled(LogLevel.Debug)) log.LogDebug("{fld}[{calc}]]: {val}", frml.Field.Name, frml.Field.CalcFormula, bdyProps[frml.Field.Name]);
+        if (log.IsEnabled(LogLevel.Trace)) log.LogTrace("{fld}[{calc}]]: {val}", frml.Field.Name, frml.Field.CalcFormula, bdyProps[frml.Field.Name]);
       }
     }
 
