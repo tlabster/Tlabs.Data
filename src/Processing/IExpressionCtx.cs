@@ -11,19 +11,20 @@ namespace Tlabs.Data.Processing {
     //Note: This methods must not be properties for not getting confused with 'real' context properties!!!
     ///<summary>Return the body object.</summary>
     object GetBody();
+
+    ///<summary>Property type map.</summary>
+    IDictionary<string, Type> TypeMap(Type bdyType);
   }
 
   /// <summary>Default validation data context type.</summary>
   public class DefaultExpressionContext : IExpressionCtx {
-    /// <summary>Ctor from document body type.</summary>
-    public DefaultExpressionContext(Type objType, object bdyObj= null) {
+    /// <summary>Ctor from document <paramref name="bdyObj"/>.</summary>
+    public DefaultExpressionContext(object bdyObj= null) {
       this.d= bdyObj;
     }
 
-    /// <summary>Default context converter.</summary>
-    public static IDictionary<string, Type> GetContextConverter(Type objType) => new Dictionary<string, Type> {
-      [nameof(d)]= objType
-    };
+    ///<inheritdoc/>
+    public IDictionary<string, Type> TypeMap(Type bdyType) => new Dictionary<string, Type> { [nameof(d)]= bdyType };
 
     /// <summary>Document exposed as d.</summary>
     public object d { get; }
@@ -36,6 +37,8 @@ namespace Tlabs.Data.Processing {
   public class NoExpressionContext : IExpressionCtx {
     /// <summary>Singleton instance.</summary>
     public static readonly NoExpressionContext Instance= new NoExpressionContext();
+    ///<inheritdoc/>
+    public IDictionary<string, Type> TypeMap(Type bdyType) => throw new NotImplementedException();
     ///<inherit/>
     public object GetBody() => throw new NotImplementedException();
   }

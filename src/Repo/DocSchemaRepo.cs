@@ -22,16 +22,10 @@ namespace Tlabs.Data.Repo {
     IQueryable<string> FilteredTypeIdList(string typeIdFilter= null);
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
     DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                          Processing.IDocProcessorRepo docProcRepo,
-                                          Action<DocumentSchema> validateSchemaDependencies= null) where TDoc : Entity.Intern.BaseDocument<TDoc>;
-    ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams,
-                                                     Processing.IDocProcessorRepo docProcRepo,
-                                                     Action<DocumentSchema> validateSchemaDependencies= null,
-                                                     Processing.CtxConverterFactory valCfac= null,
-                                                     Processing.CtxConverterFactory evaCfac= null) where TDoc : Entity.Intern.BaseDocument<TDoc>
-                                                                                                   where TVx : class, Processing.IExpressionCtx
-                                                                                                   where TCx : class, Processing.IExpressionCtx;
+                                           Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    ///<summary>Create schema from <paramref name="defStreams"/> using <paramref name="validateSchemaSyntax"/> callback for schema syntax validation.</summary>
+    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
+                                           Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax) where TDoc : Entity.Intern.BaseDocument<TDoc>;
   }
 
 
@@ -121,34 +115,24 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                                  Processing.IDocProcessorRepo docProcRepo,
-                                                  Action<DocumentSchema> validateSchemaDependencies= null) where TDoc : Entity.Intern.BaseDocument<TDoc> {
+                                                  Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc> {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
       docProcRepo.CreateDocumentProcessor<TDoc>(schema);
-      if (null != validateSchemaDependencies)
-        validateSchemaDependencies(schema);
 
       return upsertSchema(schema);
     }
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc, TVx, TCx>(SchemaDefinitionStreams defStreams,
-                                                            Processing.IDocProcessorRepo docProcRepo,
-                                                            Action<DocumentSchema> validateSchemaDependencies,
-                                                            Processing.CtxConverterFactory valCfac,
-                                                            Processing.CtxConverterFactory evaCfac) where TDoc : Entity.Intern.BaseDocument<TDoc>
-                                                                                                    where TVx : class, Processing.IExpressionCtx
-                                                                                                    where TCx : class, Processing.IExpressionCtx
+    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
+                                                  Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax) where TDoc : Entity.Intern.BaseDocument<TDoc>
     {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
-      docProcRepo.CreateDocumentProcessor<TDoc, TVx, TCx>(schema, valCfac, evaCfac);
-      if (null != validateSchemaDependencies)
-        validateSchemaDependencies(schema);
-
+      var docProcRepo= validateSchemaSyntax(schema);
+      log.LogInformation("Creating schema '{sid}' with body type: {btype}", schema.TypeId, docProcRepo.BodyType.Name);
       return upsertSchema(schema);
     }
 
