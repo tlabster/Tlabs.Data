@@ -107,6 +107,7 @@ namespace Tlabs.Data.Processing.Intern {
 
       if (!(cx is NoExpressionContext)) {
         var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(body);
+        ecx.SetBody(body);
         if (!CheckValidation(body, ecx, out var offendingRule)) 
           throw new FieldValidationException(offendingRule);
         EvaluateComputedFields(ecx);

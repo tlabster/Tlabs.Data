@@ -11,6 +11,8 @@ namespace Tlabs.Data.Processing {
     //Note: This methods must not be properties for not getting confused with 'real' context properties!!!
     ///<summary>Return the body object.</summary>
     object GetBody();
+    /// <summary>Set body of context.</summary>
+    void SetBody(object body);
 
     ///<summary>Property type map.</summary>
     IDictionary<string, Type> TypeMap(Type bdyType);
@@ -27,10 +29,13 @@ namespace Tlabs.Data.Processing {
     public IDictionary<string, Type> TypeMap(Type bdyType) => new Dictionary<string, Type> { [nameof(d)]= bdyType };
 
     /// <summary>Document exposed as d.</summary>
-    public object d { get; }
+    public object d { get; private set;}
 
     ///<inherit/>
     public object GetBody() => d;
+    ///<inherit/>
+    public void SetBody(object body) => d= body;
+
   }
 
   /// <summary>No data context type.</summary>
@@ -41,6 +46,8 @@ namespace Tlabs.Data.Processing {
     public IDictionary<string, Type> TypeMap(Type bdyType) => throw new NotImplementedException();
     ///<inherit/>
     public object GetBody() => throw new NotImplementedException();
+    ///<inherit/>
+    public void SetBody(object body) => throw new NotImplementedException();
   }
 
 
