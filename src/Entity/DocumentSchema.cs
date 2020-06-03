@@ -123,6 +123,7 @@ namespace Tlabs.Data.Entity {
         this.Schema= other.Schema;
         this.ExtMappingInfo= other.ExtMappingInfo;
         this.Sensitive= other.Sensitive;
+        this.CalcFormula= other.CalcFormula;
       }
 
       public string Name { get; set; }

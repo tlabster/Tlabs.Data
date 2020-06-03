@@ -106,7 +106,8 @@ namespace Tlabs.Data.Processing.Intern {
       catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type)", pair.Key, pair.Value?.GetType()); throw e;}
 
       if (!(cx is NoExpressionContext)) {
-        var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(BodyType, body);
+        var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(body);
+        ecx.SetBody(body);
         if (!CheckValidation(body, ecx, out var offendingRule)) 
           throw new FieldValidationException(offendingRule);
         EvaluateComputedFields(ecx);
