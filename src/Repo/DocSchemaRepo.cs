@@ -151,20 +151,22 @@ namespace Tlabs.Data.Repo {
       var schema= schemaSeri.LoadObj(defStreams.Schema);
 
       using (var memStrm= new MemoryStream()) {
-        memStrm.Position= 0;
         if (null != defStreams.CalcModel) {
           memStrm.Position= 0;
           defStreams.CalcModel.CopyTo(memStrm);
+          memStrm.SetLength(memStrm.Position);
           schema.CalcModelData= memStrm.ToArray();
         }
         if (null != defStreams.Form) {
           memStrm.Position= 0;
           defStreams.Form.CopyTo(memStrm);
+          memStrm.SetLength(memStrm.Position);
           schema.FormData= memStrm.ToArray();
         }
         if (null != defStreams.Style) {
           memStrm.Position= 0;
           defStreams.Style.CopyTo(memStrm);
+          memStrm.SetLength(memStrm.Position);
           schema.FormStyleData= memStrm.ToArray();
         }
       }
