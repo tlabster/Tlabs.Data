@@ -15,11 +15,11 @@ namespace Tlabs.Data.Entity.Intern {
       EditableEntity ent= ev.Entity;
       ent.Modified= App.TimeInfo.Now;
       var usr= (Identity.IIdentityAccessor)App.ServiceProv.GetService(typeof(Identity.IIdentityAccessor));
-      ent.Editor= usr?.Id ?? -1; //Identity.IIdentityAccessor service could be missing
+      ent.Editor= string.IsNullOrEmpty(usr?.Name) ? "Anonymous" : usr.AuthenticationType + "/" + usr.Name; //Identity.IIdentityAccessor service could be missing
     }
 
-    ///<summary>Editor user id.</summary>
-    public int Editor { get; set; }
+    ///<summary>Editor user identifier.</summary>
+    public string Editor { get; set; }
 
     ///<summary>Last modified date.</summary>
     public DateTime Modified { get; set; }
