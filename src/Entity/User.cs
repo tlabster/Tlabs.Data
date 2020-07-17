@@ -34,6 +34,9 @@ namespace Tlabs.Data.Entity {
     ///<summary>Number of failed login attempts</summary>
     public int AccessFailedCount { get; set; }
 
+    ///<summary>User preferred locale</summary>
+    public Locale Locale { get; set; }
+
     ///<summary>Role reference</summary>
     public class RoleRef {
       ///<summary>Assigned user role</summary>
