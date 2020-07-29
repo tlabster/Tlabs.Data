@@ -2,8 +2,24 @@
 using System.Collections.Generic;
 
 namespace Tlabs.Data.Entity {
-  ///<summary>Insured person.</summary>
+  ///<summary>User account profile.</summary>
   public class User : Intern.EditableEntity {
+    ///<summary>Account state.</summary>
+    public enum State : uint {
+      ///<summary>ACTIVE (default)</summary>
+      ACTIVE= 0,        //default ACTIVE
+      ///<summary>DEACTIVATED (login disabled)</summary>
+      DEACTIVATED= 1    //login disabled
+    }
+
+    private State state;
+
+    ///<summary>Account status</summary>
+    public string Status {
+      get => state.ToString();
+      set { if (!Enum.TryParse<State>(value, out this.state)) this.state= default(State); }
+    }
+
     ///<summary>Username</summary>
     public string UserName { get; set; }
 
@@ -33,6 +49,9 @@ namespace Tlabs.Data.Entity {
 
     ///<summary>Number of failed login attempts</summary>
     public int AccessFailedCount { get; set; }
+
+    ///<summary>User preferred locale</summary>
+    public Locale Locale { get; set; }
 
     ///<summary>Role reference</summary>
     public class RoleRef {
