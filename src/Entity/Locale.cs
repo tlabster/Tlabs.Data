@@ -13,6 +13,9 @@ namespace Tlabs.Data.Entity {
     ///<summary>Thousand separator</summary>
     public string ThousandSep { get; set; }
 
+    ///<summary>List separator</summary>
+    public string ListSep { get; set; }
+
     ///<summary>Date only format</summary>
     public string DateFormat { get; set; }
 
