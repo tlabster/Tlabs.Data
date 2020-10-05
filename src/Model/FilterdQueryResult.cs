@@ -36,4 +36,25 @@ namespace Tlabs.Data.Model {
     IList<T> Data { get; }
   }
 
+  ///<summary>Query result list returned from a filtered query.</summary>
+  public class QueryResult<T> : IResultList<T> {
+    ///<summary>Default max result count</summary>
+    public const int MAX_RESULT_COUNT= 1111;
+    ///<summary>Unlimited result count</summary>
+    public const int UNLIMITED_RESULT_COUNT= -1;
+    ///<summary>Default ctor.</summary>
+    public QueryResult() { }
+    ///<summary>Ctor from <paramref name="query"/>.</summary>
+    public QueryResult(IQueryable<T> query) : this(query, query, UNLIMITED_RESULT_COUNT) { }
+    ///<summary>Ctor from <paramref name="query"/>.</summary>
+    public QueryResult(IQueryable<T> query, IQueryable<T> unlimitedQuery, int maxCount= MAX_RESULT_COUNT) {
+      this.Total= maxCount > UNLIMITED_RESULT_COUNT ? unlimitedQuery.Take(maxCount).Count() : query.Count();
+      this.Data= query.ToList();
+    }
+    ///<inheritdoc/>
+    public int Total { get; set; }
+    ///<inheritdoc/>
+    public IList<T> Data { get; set; }
+  }
+
 }
