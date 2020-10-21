@@ -90,6 +90,10 @@ namespace Tlabs.Data.Processing.Intern {
         body.BodyData= strm.ToArray();
         body.Encoding= docSeri.Encoding;
       }
+
+      // Touch doc modified date
+      doc.Modified= App.TimeInfo.Now;
+
       return doc.SetBodyObject(bodyObj);
     }
 
@@ -108,7 +112,7 @@ namespace Tlabs.Data.Processing.Intern {
       if (!(cx is NoExpressionContext)) {
         var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(body);
         ecx.SetBody(body);
-        if (!CheckValidation(body, ecx, out var offendingRule)) 
+        if (!CheckValidation(body, ecx, out var offendingRule))
           throw new FieldValidationException(offendingRule);
         EvaluateComputedFields(ecx);
       }
