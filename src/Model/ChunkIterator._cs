@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
+
+namespace Tlabs.Data.Model {
+
+  ///<summary>Iterates over the potential huge result-set from a <see cref="QueryFilter"/> with chunks of <see cref="IResultList{T}"/>.</summary>
+  public class ChunkIterator<TEntity> : IEnumerable<IResultList<TEntity>> where TEntity : Tlabs.Data.Entity.Intern.BaseEntity {
+    ///<summary>Delegate used to get the elements of a chunk</summary>
+    public Func<QueryFilter<TEntity>, IResultList<TEntity>> obtainResultChunk;
+    QueryFilter<TEntity> current;
+    CancellationToken ctok;
+    TEntity lastPrev;
+
+    ///<summary>Ctor. from <paramref name="filter"/> and <paramref name="obtainResultChunk"/>.</summary>
+    public ChunkIterator(QueryFilter<TEntity> filter, Func<QueryFilter<TEntity>, IResultList<TEntity>> obtainResultChunk) : this(filter, CancellationToken.None, obtainResultChunk) { }
+
+    ///<summary>Ctor. from <paramref name="filter"/>, <paramref name="cancellationToken"/> and <paramref name="obtainResultChunk"/>.</summary>
+    public ChunkIterator(QueryFilter<TEntity> filter, CancellationToken cancellationToken, Func<QueryFilter<TEntity>, IResultList<TEntity>> obtainResultChunk) {
+      this.obtainResultChunk= obtainResultChunk;
+      this.current= filter;
+      this.current.Limit= this.current.Limit ?? 1000;
+      this.ctok= cancellationToken;
+    }
+
+    ///<inheritdoc/>
+    public IEnumerator<IResultList<TEntity>> GetEnumerator() {
+      IResultList<TEntity> chunk= default(IResultList<TEntity>);
+      while (true) {
+        ctok.ThrowIfCancellationRequested();
+
+        chunk= obtainResultChunk(current);
+        if (!chunk.Data.Any()) break;
+        lastPrev= chunk.Data.Last();
+
+        yield return chunk;
+      }
+    }
+
+    ///<inheritdoc/>
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+      return this.GetEnumerator();
+    }
+  }
+
+}

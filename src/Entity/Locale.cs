@@ -23,7 +23,7 @@ namespace Tlabs.Data.Entity {
     public string TimeFormat { get; set; }
 
     ///<summary>Date-Time format</summary>
-    public bool DateTimeFormat { get; set; }
+    public string DateTimeFormat { get; set; }
 
     ///<summary>Integer format</summary>
     public string IntegerFormat { get; set; }

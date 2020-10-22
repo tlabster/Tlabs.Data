@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +6,31 @@ namespace Tlabs.Data.Model {
 
   ///<summary>Generic filter paramters for a data query.</summary>
   public class QueryFilter {
+    ///<summary>Default ctor.</summary>
+    public QueryFilter() { }
+
+    ///<summary>Copy ctor from <paramref name="other"/>.</summary>
+    public QueryFilter(QueryFilter other) {
+      if (null == other) return;
+      this.Start= other.Start;
+      this.Limit= other.Limit;
+      this.NoTotalCount= other.NoTotalCount;
+      this.PrecursorOffset= other.PrecursorOffset;
+      if (null != other.Properties)
+        this.Properties= new Dictionary<string, IConvertible>(other.Properties);
+      if (null != other.SortAscBy)
+        this.SortAscBy= new Dictionary<string, bool>(other.SortAscBy);
+    }
+
+    ///<summary>Precursor property name.</summary>
+    public const string Precursor= nameof(Precursor);
+
+    ///<summary>Indicator that the query resulting from this filter can omit to determine a total count value.</summary>
+    public virtual bool NoTotalCount { get; set; }
+
+    ///<summary>Indicator to use <c>Properties[nameof(Precursor)]</c> as offset criterion.</summary>
+    public virtual bool PrecursorOffset { get; set; }
+
     ///<summary>Limit result to start at position (used with result paging).</summary>
     public virtual int? Start { get; set; }
 
@@ -27,9 +50,46 @@ namespace Tlabs.Data.Model {
     public delegate IQueryable<T> SorterExpression<T>(IQueryable<T> q, bool isAsc);
   }
 
+  ///<summary>Time constraint <see cref="QueryFilter"/>.</summary>
+  public class TimeQueryFilter : QueryFilter {
+    ///<summary>Default ctor.</summary>
+    public TimeQueryFilter() {
+      this.Properties= new Dictionary<string, IConvertible> {
+        [nameof(Since)]= null,
+        [nameof(Until)]= null
+      };
+      this.SortAscBy= new Dictionary<string, bool>();
+    }
+    ///<summary>Default ctor.</summary>
+    public TimeQueryFilter(QueryFilter qfilter) : this() {
+      if (null == qfilter) return;
+      this.Start= qfilter.Start;
+      this.Limit= qfilter.Limit;
+      this.NoTotalCount= qfilter.NoTotalCount;
+      this.PrecursorOffset= qfilter.PrecursorOffset;
+      if (null != qfilter.Properties) foreach(var prop in qfilter.Properties)
+        this.Properties[prop.Key]= prop.Value;
+    }
+    ///<summary>Filter by <see cref="Since"/>.</summary>
+    public virtual DateTime? Since {
+      get => Properties[nameof(Since)] as DateTime?;
+      set => Properties[nameof(Since)]= value;
+    }
+    ///<summary>Filter by <see cref="Until"/>.</summary>
+    public virtual DateTime? Until{
+      get => Properties[nameof(Until)] as DateTime?;
+      set => Properties[nameof(Until)]= value;
+    }
+  }
+
+  ///<summary>Result with identifiable last entry.</summary>
+  public interface ILastResultIdentifiable {
+    ///<summary>Property value of the last entry in <see cref="Data"/> to be used to identify any successive data.</summary>
+    IConvertible LastId { get; }
+  }
 
   ///<summary>Result list returned from a filtered query.</summary>
-  public interface IResultList<T> {
+  public interface IResultList<T> : ILastResultIdentifiable {
     ///<summary>Total (unfiltered) result size.</summary>
     int Total { get; }
     ///<summary>Filtered result of <typeparamref name="T"/>.</summary>
@@ -44,17 +104,26 @@ namespace Tlabs.Data.Model {
     public const int UNLIMITED_RESULT_COUNT= -1;
     ///<summary>Default ctor.</summary>
     public QueryResult() { }
-    ///<summary>Ctor from <paramref name="query"/>.</summary>
+    ///<summary>Ctor to provide result <see cref="Data"/> with full <see cref="Total"/> from unlimitted <paramref name="query"/>.</summary>
     public QueryResult(IQueryable<T> query) : this(query, query, UNLIMITED_RESULT_COUNT) { }
-    ///<summary>Ctor from <paramref name="query"/>.</summary>
-    public QueryResult(IQueryable<T> query, IQueryable<T> unlimitedQuery, int maxCount= MAX_RESULT_COUNT) {
-      this.Total= maxCount > UNLIMITED_RESULT_COUNT ? unlimitedQuery.Take(maxCount).Count() : query.Count();
-      this.Data= query.ToList();
+    ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
+    public QueryResult(IQueryable<T> query, IQueryable<T> limitedQuery, int maxCount= MAX_RESULT_COUNT) {
+      this.Total= maxCount > UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
+      this.Data= limitedQuery.ToList();
+    }
+    ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
+    public QueryResult(IQueryable<T> query, QueryFilter filter, int maxCount= MAX_RESULT_COUNT) {
+      if (!filter.NoTotalCount)
+        this.Total= maxCount > UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
+      else this.Total= -1;
+      this.Data= filter.ApplyLimit(query).ToList();
     }
     ///<inheritdoc/>
     public int Total { get; set; }
     ///<inheritdoc/>
     public IList<T> Data { get; set; }
+    ///<inheritdoc/>
+    public IConvertible LastId { get; set; }
   }
 
 }
