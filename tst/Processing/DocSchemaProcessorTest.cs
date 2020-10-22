@@ -160,7 +160,7 @@ namespace Tlabs.Data.Processing.Tests {
     public void SchemaValidationTest() {
       var docSchema= CreateDocSchema();
       var proc= CreateDocSchemaProcessor(docSchema);
-      
+
       DocumentSchema.ValidationRule rule;
       object bodyObj= proc.EmptyBody;
       var body= new DynamicAccessor(bodyObj.GetType()).ToDictionary(bodyObj);
@@ -222,7 +222,15 @@ namespace Tlabs.Data.Processing.Tests {
         TxtProp01= "TST",
         NumProp01= 2.7182818285M
       };
+
+      var origModified= doc.Modified;
+      Assert.NotNull(origModified);
+      Assert.True(origModified < App.TimeInfo.Now);
+
       proc.UpdateBodyObject(doc, obj);
+
+      Assert.True(origModified < doc.Modified);
+
       body= proc.LoadBodyObject(doc);
       Assert.IsType(proc.BodyType, body);
       Assert.Equal(txtVal, body.TxtProp01);
