@@ -1,6 +1,4 @@
-﻿using System;
-using Tlabs.Test.Common;
-using Tlabs.Data.Entity.Intern;
+﻿using Tlabs.Test.Common;
 using Xunit;
 
 namespace Tlabs.Data.Intern.Tests {
