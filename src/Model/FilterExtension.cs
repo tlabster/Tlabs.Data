@@ -14,6 +14,7 @@ namespace Tlabs.Data.Model {
                                          IDictionary<string, QueryFilter.FilterExpression<T>> filterMap,
                                          IDictionary<string, QueryFilter.SorterExpression<T>> sorterMap= null) where T : Entity.Intern.BaseEntity
     {
+      if (null == filter) return query;
       var filteredQuery= query;
       if (null != filter.Properties) foreach (var kv in filter.Properties) {
         if (filterMap.TryGetValue(kv.Key, out var fx))
@@ -30,13 +31,15 @@ namespace Tlabs.Data.Model {
 
     ///<summary>Apply the limit (start, limit) of this <paramref name="filter"/> on <paramref name="query"/>.</summary>
     public static IQueryable<T> ApplyLimit<T>(this QueryFilter filter, IQueryable<T> query) {
+      if (null == filter) return query;
       var limit= query;
-      if (filter.Start.HasValue)
+      if (filter.Start.HasValue) {
         limit= limit.Skip(filter.Start.Value);
+      }
       if (filter.Limit.HasValue)
         limit= limit.Take(filter.Limit.Value);
       return limit;
     }
-  }
 
+  }
 }
