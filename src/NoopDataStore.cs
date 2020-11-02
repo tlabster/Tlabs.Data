@@ -40,6 +40,9 @@ namespace Tlabs.Data {
       public void Delete<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
       ///<inherit/>
+      public void Delete<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
+
+      ///<inherit/>
       public void Dispose() { }
 
       ///<inherit/>
@@ -58,7 +61,13 @@ namespace Tlabs.Data {
       public E Insert<E>(E ent) where E : class => ent;
 
       ///<inherit/>
+      public IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
+
+      ///<inherit/>
       public E Update<E>(E ent) where E : class => ent;
+
+      ///<inherit/>
+      public IEnumerable<E> Update<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
       ///<inherit/>
       public TEntity Merge<TEntity>(TEntity entity) where TEntity : class, new() => throw new NotImplementedException();

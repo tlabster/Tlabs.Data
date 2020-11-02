@@ -48,6 +48,9 @@ namespace Tlabs.Data {
     ///<summary>Add <paramref name="ent"/> for inserting to the store.</summary>
     E Insert<E>(E ent) where E : class;
 
+    ///<summary>Add an <see cref="IEnumerable{E}"/> of <paramref name="entities"/> for inserting to the store.</summary>
+    IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class;
+
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>
     /// A merge is especially usefull when persisting data updated from an input form that typically
@@ -69,8 +72,14 @@ namespace Tlabs.Data {
     ///<summary>Track given <paramref name="ent"/> as modified for updating with the store.</summary>
     E Update<E>(E ent) where E : class;
 
+    ///<summary>Track <see cref="IEnumerable{E}"/> of <paramref name="entities"/> as modified for updating with the store.</summary>
+    IEnumerable<E> Update<E>(IEnumerable<E> entities) where E : class;
+
     ///<summary>Mark given <paramref name="ent"/> as deleted for removing from the store.</summary>
     void Delete<E>(E ent) where E : class;
+
+    ///<summary>Mark <see cref="IEnumerable{E}"/> of  <paramref name="entities"/> as deleted for removing from the store.</summary>
+    void Delete<E>(IEnumerable<E> entities) where E : class;
 
     ///<summary>Attach given <paramref name="ent"/> as unchanged (but tracked).</summary>
     E Attach<E>(E ent) where E : class;

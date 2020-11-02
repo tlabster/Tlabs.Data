@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Tlabs.Data.Repo.Intern {
 
@@ -35,13 +36,22 @@ namespace Tlabs.Data.Repo.Intern {
     public virtual TEntity Insert(TEntity ent) => store.Insert<TEntity>(ent);
 
     ///<Inherit/>
+    public virtual IEnumerable<TEntity> Insert(IEnumerable<TEntity> entities) => store.Insert(entities);
+
+    ///<Inherit/>
     public virtual TEntity Merge(TEntity ent) => store.Merge<TEntity>(ent);
 
     ///<Inherit/>
     public virtual TEntity Update(TEntity ent) => store.Update<TEntity>(ent);
 
     ///<Inherit/>
+    public virtual IEnumerable<TEntity> Update(IEnumerable<TEntity> entities) => store.Update(entities);
+
+    ///<Inherit/>
     public virtual void Delete(TEntity ent) => store.Delete<TEntity>(ent);
+
+    ///<Inherit/>
+    public virtual void Delete(IEnumerable<TEntity> entities) => store.Delete(entities);
 
     ///<Inherit/>
     public virtual TEntity Attach(TEntity ent) => store.Attach<TEntity>(ent);

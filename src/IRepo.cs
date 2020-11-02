@@ -27,6 +27,9 @@ namespace Tlabs.Data {
     ///<summary>Add <paramref name="entity"/> for inserting to the store.</summary>
     TEntity Insert(TEntity entity);
 
+    ///<summary>Add an <see cref="IEnumerable{TEntity}"/> of <paramref name="entities"/> for inserting to the store.</summary>
+    IEnumerable<TEntity> Insert(IEnumerable<TEntity> entities);
+
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>
     ///Only properties with non default values are set on the persistent entity. Any property changed by the merge operation marks the entity
@@ -37,8 +40,14 @@ namespace Tlabs.Data {
     ///<summary>Track given <paramref name="entity"/> as modified for updating with the store.</summary>
     TEntity Update(TEntity entity);
 
+    ///<summary>Track <see cref="IEnumerable{TEntity}"/> of <paramref name="entities"/> as modified for updating with the store.</summary>
+    IEnumerable<TEntity> Update(IEnumerable<TEntity> entities);
+
     ///<summary>Mark given <paramref name="entity"/> as deleted for removing from the store.</summary>
     void Delete(TEntity entity);
+
+    ///<summary>Mark <see cref="IEnumerable{TEntity}"/> of  <paramref name="entities"/> as deleted for removing from the store.</summary>
+    void Delete(IEnumerable<TEntity> entities);
 
     ///<summary>Attach given <paramref name="entity"/> as unchanged (but tracked).</summary>
     TEntity Attach(TEntity entity);
