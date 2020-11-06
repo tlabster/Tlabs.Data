@@ -51,7 +51,13 @@ namespace Tlabs.Data.Repo.Intern {
     ///<summary>Ctor from <paramref name="opt"/>.</summary>
     public AbstractObjectCache(IOptions<Options> opt) : base(opt ?? new Options()) {
       this.CfgOptions= (opt ?? new Options()).Value;
+
+      DataStoreEvent<E>.Deleted+= evictObj;
+      DataStoreEvent<E>.Updated+= evictObj;
+      DataStoreEvent<E>.Inserted+= evictObj;
     }
+
+    void evictObj(Event.IEvent<E> ev) => Remove(GetKey(ev.Entity));
 
     ///<inheritdoc/>
     public abstract K GetKey(E tmplObj);
@@ -80,14 +86,7 @@ namespace Tlabs.Data.Repo.Intern {
 
       if (cache.CfgOptions.SizeLimit.HasValue)
         entryOpt.Size= 1;
-
-      DataStoreEvent<TDoc>.Deleted+= evictObj;
-      DataStoreEvent<TDoc>.Updated+= addObj;
-      DataStoreEvent<TDoc>.Inserted+= addObj;
     }
-
-    void evictObj(Event.IEvent<TDoc> ev) => this[ev.Entity]= null;
-    void addObj(Event.IEvent<TDoc> ev) => this[ev.Entity]= ev.Entity;
 
     ///<summary>Document <see cref="IRepo{TDoc}"/>.</summary>
     public IRepo<TDoc> DocRepo { get; }
@@ -120,7 +119,7 @@ namespace Tlabs.Data.Repo.Intern {
     protected virtual object ConvertBodyObj(object doc) {
       var docObj= doc as TDoc;
       if (null != docObj)
-        return DocProcessorRepo.GetDocumentProcessorBySid<TDoc>(docObj.Sid)?.LoadBodyObject<TDoc>(docObj);
+        return DocProcessorRepo.GetDocumentProcessorBySid<TDoc>(docObj.Sid).LoadBodyObject<TDoc>(docObj);
       return doc; //no convertion
     }
 
