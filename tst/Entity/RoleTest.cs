@@ -1,5 +1,4 @@
 using Xunit;
-using Tlabs.Data.Entity;
 using System;
 
 namespace Tlabs.Data.Entity.Tests {

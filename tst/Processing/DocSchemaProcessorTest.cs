@@ -224,7 +224,7 @@ namespace Tlabs.Data.Processing.Tests {
       };
 
       var origModified= doc.Modified;
-      Assert.NotNull(origModified);
+      Assert.NotEqual(default(DateTime), origModified);
       Assert.True(origModified < App.TimeInfo.Now);
 
       proc.UpdateBodyObject(doc, obj);

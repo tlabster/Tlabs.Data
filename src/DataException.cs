@@ -31,11 +31,16 @@ namespace Tlabs.Data {
 
   /// <summary>Data entity not found exception.</summary>
   public class DataEntityNotFoundException : GeneralException {
-    static string notFoundMsg(string ent, string key) => $"No valid {ent} with key: '{key}'";
+    const string TMPL_MSG= "No valid {entity} with key: '{key}'";
+
     /// <summary>Ctor from <paramref name="ent"/> and <paramref name="key"/>.</summary>
-    public DataEntityNotFoundException(string ent, string key) : base(notFoundMsg(ent, key)) { }
+    public DataEntityNotFoundException(string ent, string key) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key)) {
+      this.SetMsgData(tmpData);
+    }
     /// <summary>Ctor from <paramref name="ent"/>, <paramref name="key"/> and inner exception <paramref name="e"/>.</summary>
-    public DataEntityNotFoundException(string ent, string key, Exception e) : base(notFoundMsg(ent, key), e) { }
+    public DataEntityNotFoundException(string ent, string key, Exception e) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key), e) {
+      this.SetMsgData(tmpData);
+    }
   }
 
   /// <summary>Data entity not found exception.</summary>
