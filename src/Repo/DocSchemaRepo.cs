@@ -60,7 +60,7 @@ namespace Tlabs.Data.Repo {
       try {
         schema= GetByTypeId(typeId);
       }
-      catch (InvalidOperationException) {
+      catch (DataEntityNotFoundException<DocumentSchema>) {
         schema= null;
         return false;
       }
@@ -92,7 +92,7 @@ namespace Tlabs.Data.Repo {
       try {
         schema= GetByAltTypeName(altName);
       }
-      catch(InvalidOperationException) {
+      catch (DataEntityNotFoundException<DocumentSchema>) {
         schema= null;
         return false;
       }
