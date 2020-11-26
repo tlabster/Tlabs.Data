@@ -46,7 +46,8 @@ namespace Tlabs.Data.Repo {
         DocumentSchema.ParseTypeId(typeId, out typeName, out typeVers);
         var docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
                                    .LoadRelated(store, s => s.Validations)
-                                   .Single(s => s.TypeName == typeName && s.TypeVers == typeVers);
+                                   .SingleOrDefault(s => s.TypeName == typeName && s.TypeVers == typeVers);
+        if (null == docSchema) throw new DataEntityNotFoundException<DocumentSchema>(typeId);
         DocumentSchema.AltNameCache[typeId]= docSchema.TypeAltName;
         log.LogDebug("{id} schema loaded from store.", typeId);
         return docSchema;
@@ -74,7 +75,8 @@ namespace Tlabs.Data.Repo {
       Func<string> loadSchema= () => {
         docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
                                .LoadRelated(store, s => s.Validations)
-                               .Single(s => s.TypeAltName == typeAltName && s.TypeVers == typeVers);
+                               .SingleOrDefault(s => s.TypeAltName == typeAltName && s.TypeVers == typeVers);
+        if (null == docSchema) throw new DataEntityNotFoundException<DocumentSchema>(altName);
         DocumentSchema.Cache[docSchema.TypeId]= docSchema;
         return docSchema.TypeId;
       };
@@ -175,7 +177,8 @@ namespace Tlabs.Data.Repo {
 
     ///<inherit/>
     public override DocumentSchema Get(params object[] keys) {
-      var typeId= AllUntracked.Where(s => (int)keys[0] == s.Id).Select(s => s.TypeId).Single();
+      var typeId= AllUntracked.Where(s => (int)keys[0] == s.Id).Select(s => s.TypeId).SingleOrDefault();
+      if (null == typeId) throw new DataEntityNotFoundException<DocumentSchema>(keys[0]?.ToString());
       return GetByTypeId(typeId); //cached schema
     }
 
