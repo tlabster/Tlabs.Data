@@ -139,14 +139,17 @@ namespace Tlabs.Data.Repo.Intern {
       if (   !cfg.Warming
           || cfg.SizeLimit.HasValue && cfg.SizeLimit < (cnt= DocRepo.AllUntracked.Count())) return false;
 
-      /* Fetch first to initialize IDocProcessorRepo's IDocSchemaProcessor cache to avoid a nasty
-       *  "A second operation started on this context before a previous operation completed" error from EF...
-       */
-      var d= DocRepo.AllUntracked.FirstOrDefault();
-      this[d]= ConvertBodyObj(d);
+      var allDocs= DocRepo.AllUntracked.LoadRelated(DocRepo.Store, docItm => docItm.Body);
+      var d= allDocs.FirstOrDefault();
+      if (null != d) {
+        /* Fetch first to initialize IDocProcessorRepo's IDocSchemaProcessor cache to avoid a nasty
+         *  "A second operation started on this context before a previous operation completed" error from EF...
+         */
+        this[d]= ConvertBodyObj(d);
 
-      foreach(var doc in DocRepo.AllUntracked.AsEnumerable())
-        this[doc]= ConvertBodyObj(doc);   //add to cache
+        foreach(var doc in allDocs.AsEnumerable())
+          this[doc]= ConvertBodyObj(doc);   //add to cache
+      }
       return true;
     }
 
