@@ -4,12 +4,30 @@ using System.Collections.Generic;
 namespace Tlabs.Data.Repo.Intern {
 
   ///<summary>Base data repository for <typeparamref name="TEntity"/>.</summary>
-  public class BaseRepo<TEntity> : IRepo<TEntity> where TEntity : class, new() {//where TEntity : Entity.Support.BaseEntity {
+  public class BaseRepo<TEntity> : BaseNonQueryRepo<TEntity>, IRepo<TEntity> where TEntity : class, new() {
+
+    ///<summary>Ctor from <paramref name="store"/>.</summary>
+    public BaseRepo(IDataStore store) : base(store) { }
+
+    ///<Inherit/>
+    public virtual System.Linq.IQueryable<TEntity> All {
+      get => store.Query<TEntity>();
+    }
+
+    ///<Inherit/>
+    public virtual System.Linq.IQueryable<TEntity> AllUntracked {
+      get => store.UntrackedQuery<TEntity>();
+    }
+
+  }
+
+  ///<summary>Base data repository for <typeparamref name="TEntity"/>.</summary>
+  public class BaseNonQueryRepo<TEntity> : INonQueryRepo<TEntity> where TEntity : class, new() {
     /// <summary>Data store</summary>
     protected IDataStore store;
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
-    public BaseRepo(IDataStore store) {
+    public BaseNonQueryRepo(IDataStore store) {
       if (null == (this.store= store)) throw new ArgumentNullException(nameof(store));
     }
 
@@ -21,16 +39,6 @@ namespace Tlabs.Data.Repo.Intern {
 
     ///<Inherit/>
     public virtual object GetIdentifier(TEntity ent) => store.GetIdentifier<TEntity>(ent);
-
-    ///<Inherit/>
-    public virtual System.Linq.IQueryable<TEntity> All {
-      get => store.Query<TEntity>();
-    }
-
-    ///<Inherit/>
-    public virtual System.Linq.IQueryable<TEntity> AllUntracked {
-      get => store.UntrackedQuery<TEntity>();
-    }
 
     ///<Inherit/>
     public virtual TEntity Insert(TEntity ent) => store.Insert<TEntity>(ent);
@@ -69,4 +77,5 @@ namespace Tlabs.Data.Repo.Intern {
       store.LoadExplicit<TEntity, P>(ent, prop);
     }
   }
+
 }

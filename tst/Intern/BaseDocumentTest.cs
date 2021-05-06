@@ -32,7 +32,7 @@ namespace Tlabs.Data.Intern.Tests {
 
       Assert.NotNull(doc.Body);
       Assert.Equal(doc.Body.Document, doc);
-      Assert.Null(doc.Body.BodyData);
+      Assert.Null(doc.Body.Data);
     }
   }
 }

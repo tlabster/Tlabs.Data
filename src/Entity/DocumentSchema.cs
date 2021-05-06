@@ -82,6 +82,18 @@ namespace Tlabs.Data.Entity {
         ParseTypeName(TypeName, out this.baseType, out this.subType);
     }
 
+    string ctxType;
+    public string EvalContextType {
+      get => ctxType;
+      set => ctxType= string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    string selfProp;
+    public string EvalCtxSelfProp {
+      get => selfProp;
+      set => selfProp= string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
     public byte[] FormData { get; set; }
 
     public byte[] FormStyleData { get; set; }
@@ -102,6 +114,7 @@ namespace Tlabs.Data.Entity {
     
     public List<Field> Fields { get; set; }
     public List<ValidationRule> Validations { get; set; }
+    public List<EvaluationRef> EvalReferences { get; set; }
 
     public class Field : Intern.EditableEntity {
       private string typeName;
@@ -199,5 +212,10 @@ namespace Tlabs.Data.Entity {
       }
     } //class ValidationRule
 
+    public class EvaluationRef : Intern.BaseEntity {
+      public string PropName { get; set; }
+      public string ReferenceSid { get; set; }
+      public DocumentSchema Schema { get; set; }
+    }
   }
 }

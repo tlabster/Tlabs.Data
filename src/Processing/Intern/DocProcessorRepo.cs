@@ -11,12 +11,13 @@ namespace Tlabs.Data.Processing.Intern {
     ///<summary>Ctor from services.</summary>
     public DocProcessorRepo(Repo.IDocSchemaRepo schemaRepo,
                             IDocumentClassFactory docClassFactory,
-                            Serialize.IDynamicSerializer docSeri) : base(schemaRepo, docClassFactory, docSeri)
+                            Serialize.IDynamicSerializer docSeri,
+                            SchemaCtxDescriptorResolver ctxDescResolver) : base(schemaRepo, docClassFactory, docSeri, ctxDescResolver)
     { }
 
     ///<inherit/>
-    protected override IDocSchemaProcessor createProcessor<TVx, TCx>(DocumentSchema schema, TVx vx, TCx cx)
-      => new DocSchemaProcessor(new CompiledDocSchema<TVx, TCx>(schema, docClassFactory, vx, cx), docSeri);
+    protected override IDocSchemaProcessor createProcessor(ICompiledDocSchema compSchema)
+      => new DocSchemaProcessor(compSchema, docSeri);
   }
 
 }

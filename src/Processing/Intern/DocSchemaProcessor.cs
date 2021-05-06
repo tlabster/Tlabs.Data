@@ -30,15 +30,17 @@ namespace Tlabs.Data.Processing.Intern {
       log.LogDebug("Created new DocSchemaProcessor({sid}) for bodyType: {bodyType}.", compSchema.Sid, compSchema.BodyType.Name);
     }
 
-    ///<inherit/>>
+    ///<inherit/>
     public DocumentSchema Schema => compSchema.Schema;
-    ///<inherit/>>
+    ///<inherit/>
     public string Sid => compSchema.Sid;
-    ///<inherit/>>
+    ///<inherit/>
     public Type BodyType => compSchema.BodyType;
-    ///<inherit/>>
+    ///<inherit/>
     public DynamicAccessor BodyAccessor => compSchema.BodyAccessor;
-    ///<inherit/>>
+    ///<inherit/>
+    public IReadOnlyDictionary<string, Type> EvalTypeIndex => compSchema.EvalTypeIdx;
+    ///<inherit/>
     public object EmptyBody {
       get {
         var emptyBody= Activator.CreateInstance(BodyType);
@@ -51,18 +53,21 @@ namespace Tlabs.Data.Processing.Intern {
       }
     }
 
-    ///<inherit/>>
+    ///<inherit/>
     public object LoadBodyObject<DocT>(DocT doc) where DocT : BaseDocument<DocT> {
       checkDocument(doc);
-      return doc.GetBodyObject((body) => {
-        var bodyData= body.BodyData;
-        return   null != bodyData
-               ? docSeri.LoadObj(new MemoryStream(body.BodyData), BodyType)
-               : EmptyBody;
-      });
+      return doc.GetBodyObject((body)
+        =>   null != body.Data
+           ? docSeri.LoadObj(new MemoryStream(body.Data), BodyType)
+           : EmptyBody
+      );
     }
 
-    ///<inherit/>>
+    ///<inherit/>
+    public IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>
+      => BodyAccessor.ToDictionary(LoadBodyObject(doc));
+
+    ///<inherit/>
     public object UpdateBodyObject<DocT>(DocT doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz= 10*1024) where DocT : BaseDocument<DocT> {
       checkDocument(doc);
 
@@ -73,7 +78,7 @@ namespace Tlabs.Data.Processing.Intern {
           */
         using (var strm= new MemoryStream(bufSz)) {
           docSeri.WriteObj(strm, bodyObj);
-          body.BodyData= strm.ToArray();
+          body.Data= strm.ToArray();
           body.Encoding= docSeri.Encoding;
 
           strm.Position= 0;
@@ -87,7 +92,7 @@ namespace Tlabs.Data.Processing.Intern {
         strm.SetLength(0);
         strm.Position= 0;
         docSeri.WriteObj(strm, bodyObj);
-        body.BodyData= strm.ToArray();
+        body.Data= strm.ToArray();
         body.Encoding= docSeri.Encoding;
       }
 
@@ -98,7 +103,7 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inheritdoc/>
-    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, object cx= null) where TDoc : BaseDocument<TDoc> {
+    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, ISchemaEvalContext cx= null) where TDoc : BaseDocument<TDoc> {
       if (null == props) return props;
       var body= LoadBodyObject(doc);
       if (body.GetType() != BodyType) log.LogWarning("Doc. body type {bt} not matching processor type: {pt}", body.GetType(), BodyType);
@@ -107,10 +112,10 @@ namespace Tlabs.Data.Processing.Intern {
       foreach (var pair in props) try{
         bodyProps[pair.Key]= pair.Value;
       }
-      catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type)", pair.Key, pair.Value?.GetType()); throw e;}
+      catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type)", pair.Key, pair.Value?.GetType()); throw;}
 
-      if (!(cx is NoExpressionContext)) {
-        var ecx= cx as IExpressionCtx ?? new DefaultExpressionContext(body);
+      if (!(cx is NoEvaluationContext)) {
+        var ecx= cx ?? new DefaultSchemaEvalContext(body);
         ecx.SetBody(body);
         if (!CheckValidation(body, ecx, out var offendingRule))
           throw new FieldValidationException(offendingRule);
@@ -124,34 +129,31 @@ namespace Tlabs.Data.Processing.Intern {
       if (this.Sid != doc.Sid) throw new ArgumentException(nameof(doc.Sid));
     }
 
-    ///<inherit/>>
+    ///<inherit/>
     protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) => bodyObj;
 
-    ///<inherit/>>
-    public void ApplyValidation<DocT>(DocT doc, object vx, out object body) where DocT : BaseDocument<DocT> {
+    ///<inherit/>
+    public void ApplyValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out object body) where DocT : BaseDocument<DocT> {
       DocumentSchema.ValidationRule rule;
       body= LoadBodyObject(doc);
       doc.StatusDetails= null;
       doc.Status= BaseDocument<DocT>.State.VALID.ToString();
-      if (!compSchema.CheckValidation(body, vx, out rule)) {
+      if (!compSchema.CheckValidation(body, ecx, out rule)) {
         doc.StatusDetails= $"{rule.Key} - {rule.Description}";
         doc.Status= BaseDocument<DocT>.State.IMPLAUSIBLE.ToString();
       }
     }
 
-
     ///<inherit/>
-    public bool CheckValidation<DocT>(DocT doc, object vx, out DocumentSchema.ValidationRule rule) where DocT : BaseDocument<DocT> {
-      return compSchema.CheckValidation(LoadBodyObject(doc), vx, out rule);
+    public bool CheckValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) where DocT : BaseDocument<DocT> {
+      return compSchema.CheckValidation(LoadBodyObject(doc), ecx, out rule);
     }
 
     ///<inherit/>
-    public bool CheckValidation(object body, object vx, out DocumentSchema.ValidationRule rule) => compSchema.CheckValidation(body, vx, out rule);
+    public bool CheckValidation(object body, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) => compSchema.CheckValidation(body, ecx, out rule);
 
     ///<inherit/>
-    public void EvaluateComputedFields<TCx>(TCx cx) where TCx : class, IExpressionCtx {
-      compSchema.ComputeFieldFormulas(cx);
-    }
+    public void EvaluateComputedFields(ISchemaEvalContext ecx) => compSchema.ComputeFieldFormulas(ecx);
   }
 
 }

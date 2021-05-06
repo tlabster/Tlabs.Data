@@ -25,6 +25,14 @@ namespace Tlabs.Data.Serialize.Tests {
     public void SchemaDeserializationTest() {
       var docSchema= DocSchemaSerializer.LoadObj(TST_SCHEMA_XML);
 
+      Assert.NotEmpty(docSchema.EvalContextType);
+      Assert.Equal("self", docSchema.EvalCtxSelfProp);
+      Assert.NotEmpty(docSchema.EvalReferences);
+      foreach (var r in docSchema.EvalReferences) {
+        Assert.NotNull(r.PropName);
+        Assert.NotEmpty(r.ReferenceSid);
+      }
+
       Assert.NotEmpty(docSchema.Validations);
       foreach (var valid in docSchema.Validations) {
         Assert.NotEmpty(valid.Key);
@@ -67,6 +75,13 @@ namespace Tlabs.Data.Serialize.Tests {
     const string TST_SCHEMA_XML= @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <form name=""MY_FORM"" version=""1"" generator=""tool-o-mat v3.5.1"" >
 	<source>DB1-ED.xls</source>
+  <evalContextType>EvalContextName</evalContextType>
+  <evalCtxSelfProp>self</evalCtxSelfProp>
+  <evalReferences>
+    <ref prop=""x"">REFERENCED-SCHEMA:1</ref>
+    <ref prop=""y"">REFERENCED-SCHEMA:2</ref>
+  </evalReferences>
+
 	<validations>
 		<rule id=""R17C41"" desc=""Diabetis Symptome nicht eindeutig"">{true &amp;&amp; @OneOf2(d.symptomsTrue, d.symptomsFalse) || 1 &lt; 2}</rule>
 		<rule id=""R29C41"" desc=""Insulin Therapie nicht eindeutig"">{@OneOf2(d.InsuFalse, d.InsuYes)}</rule>

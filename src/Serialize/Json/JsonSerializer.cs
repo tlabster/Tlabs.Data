@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 using Tlabs.Misc;
 using Tlabs.Config;
@@ -17,119 +16,72 @@ namespace Tlabs.Data.Serialize.Json {
   ///<summary>Json format serialization.</summary>
   public class JsonFormat {
 
-    ///<summary>Singleton Newton JsonSerializer.</summary>
-    public sealed class NewtonJsonSingleton {
-      ///<summary>Common settings.</summary>
-      public static readonly JsonSerializerSettings Settings= BuildSettings();
-      ///<summary>Build common settings.</summary>
-      public static JsonSerializerSettings BuildSettings() {
-        var s= new JsonSerializerSettings();
-        var cr= new DefaultContractResolver();
-        // cr.NamingStrategy= new DefaultNamingStrategy();
-        cr.NamingStrategy= new CamelCaseNamingStrategy();
-        s.ContractResolver= cr;
-        s.NullValueHandling= NullValueHandling.Ignore;
-        s.Converters.Add(new DateTimeConverter());
-        s.DateFormatHandling= DateFormatHandling.IsoDateFormat;
-        s.ReferenceLoopHandling= ReferenceLoopHandling.Ignore;
-        s.Formatting= Formatting.Indented;
-        return s;
-      }
-      NewtonJsonSingleton() { } //private ctor
-      ///<summary>Singleton instance</summary>
-      public static JsonSerializer Instance {
-        get { return Lazy.instance; }
-      }
-      class Lazy {
-        static Lazy() { } //Explicit static ctor for *NOT* to marking type with beforefieldinit
-        internal static readonly JsonSerializer instance= JsonSerializer.Create(Settings);
-      }
+    ///<summary>Json format default options.</summary>
+    public static JsonSerializerOptions DefaultOptions { get; }
+    static ILogger<JsonFormat> log= App.Logger<JsonFormat>();
+
+    static JsonFormat() {
+      DefaultOptions= new JsonSerializerOptions();
+      ApplyDefaultOptions(DefaultOptions);
     }
 
-    ///<summary>Logger.</summary>
-    protected ILogger<JsonFormat> log;
-    ///<summary>Text encoding.</summary>
-    protected static readonly Encoding encoding= new UTF8Encoding(false); //no BOM!
-    ///<summary>internal JsonSerializer.</summary>
-    protected JsonSerializer json;
-
-    ///<summary>Default Ctor.</summary>
-    public JsonFormat() {
-      this.json= JsonFormat.NewtonJsonSingleton.Instance;   //use ONE central JsonSerializer !
-      this.log= App.Logger<JsonFormat>();
+    ///<summary>Apply Json format default options to <paramref name="opt"/>.</summary>
+    public static void ApplyDefaultOptions(JsonSerializerOptions opt) {
+      opt.IncludeFields= true;
+      opt.IgnoreNullValues= true;
+      opt.ReadCommentHandling= JsonCommentHandling.Skip;
+      opt.PropertyNameCaseInsensitive= true;
+      opt.PropertyNamingPolicy= JsonNamingPolicy.CamelCase;
+      opt.AllowTrailingCommas= true;
+      opt.Converters.Add(new AppTimeJsonConverter());
+      opt.Converters.Add(new PropertyDictionaryJsonConverter());
+      opt.WriteIndented= true;
     }
+
+    ///<summary>Default ctor</summary>
+    public JsonFormat() { }
+
 
     ///<summary>Create a <see cref="JsonFormat.Serializer{T}"/> for <typeparamref name="T"/>.</summary>
-    public static Serializer<T> CreateSerializer<T>() where T : class, new() => new JsonFormat.Serializer<T>(Singleton<JsonFormat>.Instance);
+    public static Serializer<T> CreateSerializer<T>() => new Serializer<T>(Singleton<JsonFormat>.Instance);
 
-    ///<summary>Create an untyped <see cref="JsonFormat.DynamicSerializer"/>.</summary>
-    public static DynamicSerializer CreateDynSerializer() => new JsonFormat.DynamicSerializer(Singleton<JsonFormat>.Instance);
+    ///<summary>Create an untyped <see cref="DynamicSerializer"/>.</summary>
+    public static DynamicSerializer CreateDynSerializer() => new DynamicSerializer(Singleton<JsonFormat>.Instance);
 
     ///<summary>Json format serializer for <typeparamref name="T"/>.</summary>
-    public class Serializer<T> : ISerializer<T> where T : class, new() {
+    public class Serializer<T> : ISerializer<T> {
       private JsonFormat format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
       public Serializer(JsonFormat format) {
         this.format= format;
       }
-
-      ///<inherit/>
+      ///<inheritdoc/>
       public string Encoding => "Json";
 
-      ///<summary>Load object from JSON <paramref name="strm"/>.</summary>
-      public T LoadObj(Stream strm) {
-        using (var sr= new StreamReader(strm, JsonFormat.encoding, true)) {
-          using (var rd= new JsonTextReader(sr)) {
-            return format.json.Deserialize<T>(rd);
-          }
-        }
-      }
+      ///<inheritdoc/>
+      public IEnumerable<T> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
-      ///<summary>Load object from JSON <paramref name="text"/>.</summary>
-      public T LoadObj(string text) {
-        using (var rd= new JsonTextReader(new StringReader(text))) {
-          return format.json.Deserialize<T>(rd);
-        }
-      }
+      ///<inheritdoc/>
+      public T LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
 
-      ///<summary>Write object to JSON <paramref name="strm"/>.</summary>
-      public void WriteObj(Stream strm, T obj) {
-        using (var sw= new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
-          using (var wr= new JsonTextWriter(sw)) {
-            format.json.Serialize(wr, obj, typeof(T));
-          }
-        }
-      }
+      ///<inheritdoc/>
+      public T LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).GetAwaiter().GetResult();
 
-      ///<inherit/>
-      public IEnumerable<T> LoadIEnumerable(Stream stream) {
-        using (var sr = new StreamReader(stream, JsonFormat.encoding, true)) {
-          using (var rd = new JsonTextReader(sr)) {
-            while (rd.Read()) {
-              if (rd.TokenType == JsonToken.StartObject) {
-                var deserializedItem= format.json.Deserialize<T>(rd);
-                yield return deserializedItem;
-              }
-            }
-          }
-        }
-      }
+      ///<inheritdoc/>
+      public T LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
 
-      /// <inherit/>
-      public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
-        using (var sw = new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
-          using (var wr = new JsonTextWriter(sw)) {
-            wr.WriteStartArray();
-            foreach (T item in itemsToSerialize) {
-              format.json.Serialize(wr, callback(item), typeof(T));
-            }
-            wr.WriteEndArray();
-          }
-        }
-      }
+      // ///<inheritdoc/>
+      // public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+      //   throw new NotImplementedException();
+      // }
 
-    } //class Serializer<T>
+      ///<inheritdoc/>
+      public byte[] WriteObj(T obj) => JsonSerializer.SerializeToUtf8Bytes<T>(obj, DefaultOptions);
+
+      ///<inheritdoc/>
+      public void WriteObj(Stream strm, T obj) => JsonSerializer.SerializeAsync<T>(strm, obj, DefaultOptions).GetAwaiter().GetResult();
+    }
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
     public class DynamicSerializer : IDynamicSerializer {
@@ -140,72 +92,44 @@ namespace Tlabs.Data.Serialize.Json {
         this.format= format;
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public string Encoding => "Json";
 
-      ///<inherit/>
-      public object LoadObj(Stream strm, Type type) {
-        using (var sr = new StreamReader(strm, JsonFormat.encoding, true)) {
-          using (var rd = new JsonTextReader(sr)) {
-            return format.json.Deserialize(rd, type);
-          }
-        }
+      ///<inheritdoc/>
+      public IEnumerable LoadIEnumerable(Stream strm) {
+        throw new NotImplementedException();
       }
 
-      ///<inherit/>
-      public object LoadObj(string text, Type type) {
-        using (var rd = new JsonTextReader(new StringReader(text))) {
-          return format.json.Deserialize(rd, type);
-        }
-      }
+      ///<inheritdoc/>
+      public object LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
 
-      ///<inherit/>
-      public void WriteObj(Stream strm, object obj) {
-        using (var sw = new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
-          using (var wr = new JsonTextWriter(sw)) {
-            format.json.Serialize(wr, obj, obj.GetType());
-          }
-        }
-      }
+      ///<inheritdoc/>
+      public object LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).GetAwaiter().GetResult();
 
-      ///<inherit/>
-      public IEnumerable LoadIEnumerable(Stream stream) {
-        using (var sr = new StreamReader(stream, JsonFormat.encoding, true)) {
-          using (var rd = new JsonTextReader(sr)) {
-            while (rd.Read()) {
-              if (rd.TokenType == JsonToken.StartObject) {
-                var deserializedItem= format.json.Deserialize(rd);
-                yield return deserializedItem;
-              }
-            }
-          }
-        }
-      }
+      ///<inheritdoc/>
+      public object LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);
 
-      /// <inherit/>
+      ///<inheritdoc/>
       public void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback) {
-        using (var sw = new StreamWriter(strm, JsonFormat.encoding, 2*1024, true)) {
-          using (var wr = new JsonTextWriter(sw)) {
-            wr.WriteStartArray();
-            foreach(var item in itemsToSerialize) {
-              format.json.Serialize(wr, callback(item));
-            }
-            wr.WriteEndArray();
-          }
-        }
+        throw new NotImplementedException();
       }
-    } //class DynamicSerializer
-  }
 
-  ///<summary>Json serializer configurator.</summary>
-  public class SerializationConfigurator : IConfigurator<IServiceCollection> {
-    ///<summary>Add Json serializer to <paramref name="target"/>.</summary>
-    public void AddTo(IServiceCollection target, IConfiguration cfg) {
-      target.AddSingleton<JsonFormat>(Singleton<JsonFormat>.Instance);
-      target.AddSingleton<IDynamicSerializer, JsonFormat.DynamicSerializer>();
-      target.AddSingleton(typeof(ISerializer<>), typeof(JsonFormat.Serializer<>));
-      //Do we need this: target.AddSingleton(typeof(JsonFormat.Serializer<>));
+      ///<inheritdoc/>
+      public byte[] WriteObj(object obj) => JsonSerializer.SerializeToUtf8Bytes(obj, obj.GetType(), DefaultOptions);
+
+      ///<inheritdoc/>
+      public void WriteObj(Stream strm, object obj) => JsonSerializer.SerializeAsync(strm, obj, obj.GetType(), DefaultOptions).GetAwaiter().GetResult();
+
     }
-  }
+    ///<summary>Json serializer configurator.</summary>
+    public class Configurator : IConfigurator<IServiceCollection> {
+      ///<summary>Add Json serializer to <paramref name="target"/>.</summary>
+      public void AddTo(IServiceCollection target, IConfiguration cfg) {
+        target.AddSingleton<JsonFormat>(Singleton<JsonFormat>.Instance);
+        target.AddSingleton<IDynamicSerializer, JsonFormat.DynamicSerializer>();
+        target.AddSingleton(typeof(ISerializer<>), typeof(JsonFormat.Serializer<>));
+      }
+    }
 
+  }
 }

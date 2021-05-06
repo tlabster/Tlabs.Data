@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Tlabs.Data.Entity;
 
 namespace Tlabs.Data.Processing {
@@ -10,50 +10,30 @@ namespace Tlabs.Data.Processing {
     Repo.IDocSchemaRepo SchemaRepo { get; }
 
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId).</summary>
-    IDocSchemaProcessor GetDocumentProcessorBySid<TDoc>(string sid)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>;
-
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId) and template context factoriess.</summary>
-    IDocSchemaProcessor GetDocumentProcessorBySid<TDoc, TVx, TCx>(string sid, TVx vx, TCx cx)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, IExpressionCtx
-      where TCx : class, IExpressionCtx;
+    IDocSchemaProcessor GetDocumentProcessorBySid(string sid);
 
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <see cref="DocumentSchema"/>'s alternate name.</summary>
-    IDocSchemaProcessor GetDocumentProcessorByAltName<TDoc>(string altName) where TDoc : Entity.Intern.BaseDocument<TDoc>;
-
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <see cref="DocumentSchema"/>'s alternate name and template context factoriess.</summary>
-    IDocSchemaProcessor GetDocumentProcessorByAltName<TDoc, TVx, TCx>(string altName, TVx vx, TCx cx)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, IExpressionCtx
-      where TCx : class, IExpressionCtx;
+    IDocSchemaProcessor GetDocumentProcessorByAltName(string altName);
 
     ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="doc"/>.</summary>
     IDocSchemaProcessor GetDocumentProcessor<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
-    ///<summary>Returns a <see cref="IDocSchemaProcessor"/> for <paramref name="doc"/> and template context factoriess.</summary>
-    IDocSchemaProcessor GetDocumentProcessor<TDoc, TVx, TCx>(TDoc doc, TVx vx, TCx cx)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, IExpressionCtx
-      where TCx : class, IExpressionCtx;
+    ///<summary>Returns a <see cref="SchemaEvalCtxProcessor"/> for <paramref name="sid"/> (DocumentSchema.TypeId).</summary>
+    SchemaEvalCtxProcessor GetSchemaEvalCtxProcessor(string sid);
 
     ///<summary>Return <paramref name="doc"/>'s Body as object (according to its <see cref="DocumentSchema"/>).</summary>
     object LoadDocumentBodyObject<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+
+    ///<summary>Return <paramref name="doc"/> body's properties (according to its <see cref="DocumentSchema"/>).</summary>
+    IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
     ///<summary>Update <paramref name="doc"/>'s body with <paramref name="bodyObj"/>.</summary>
     object UpdateDocumentBodyObject<TDoc>(TDoc doc, object bodyObj) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
     ///<summary>Create a new <see cref="IDocSchemaProcessor"/> for <paramref name="schema"/> (with optional expression eval. contexts).</summary>
     ///<exception cref="Tlabs.Dynamic.ExpressionSyntaxException">Thrown if any syntax error(s) in the validation code are detected.</exception>
-    IDocSchemaProcessor CreateDocumentProcessor<TDoc>(DocumentSchema schema) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    IDocSchemaProcessor CreateDocumentProcessor(DocumentSchema schema);
 
-    ///<summary>Create a new <see cref="IDocSchemaProcessor"/> for <paramref name="schema"/> and template context factoriess.</summary>
-    ///<exception cref="Tlabs.Dynamic.ExpressionSyntaxException">Thrown if any syntax error(s) in the validation code are detected.</exception>
-    IDocSchemaProcessor CreateDocumentProcessor<TDoc, TVx, TCx>(DocumentSchema schema, TVx vx, TCx cx)
-      where TDoc : Entity.Intern.BaseDocument<TDoc>
-      where TVx : class, IExpressionCtx
-      where TCx : class, IExpressionCtx;
   }
-
 
 }

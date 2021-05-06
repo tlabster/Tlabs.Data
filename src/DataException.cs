@@ -34,11 +34,11 @@ namespace Tlabs.Data {
     const string TMPL_MSG= "No valid {entity} with key: '{key}'";
 
     /// <summary>Ctor from <paramref name="ent"/> and <paramref name="key"/>.</summary>
-    public DataEntityNotFoundException(string ent, string key) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key)) {
+    public DataEntityNotFoundException(string ent, object key) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key)) {
       this.SetMsgData(tmpData);
     }
     /// <summary>Ctor from <paramref name="ent"/>, <paramref name="key"/> and inner exception <paramref name="e"/>.</summary>
-    public DataEntityNotFoundException(string ent, string key, Exception e) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key), e) {
+    public DataEntityNotFoundException(string ent, object key, Exception e) : base(ExceptionDataKey.ResolvedMsgParams(TMPL_MSG, out var tmpData, ent, key), e) {
       this.SetMsgData(tmpData);
     }
   }
@@ -46,9 +46,9 @@ namespace Tlabs.Data {
   /// <summary>Data entity not found exception.</summary>
   public class DataEntityNotFoundException<T> : DataEntityNotFoundException {
     /// <summary>Ctor from <paramref name="key"/>.</summary>
-    public DataEntityNotFoundException(string key) : base(typeof(T).Name, key) { }
+    public DataEntityNotFoundException(object key) : base(typeof(T).Name, key) { }
     /// <summary>Ctor from <paramref name="key"/> and inner exception <paramref name="e"/>.</summary>
-    public DataEntityNotFoundException(string key, Exception e) : base(typeof(T).Name, key, e) { }
+    public DataEntityNotFoundException(object key, Exception e) : base(typeof(T).Name, key, e) { }
   }
 
 }

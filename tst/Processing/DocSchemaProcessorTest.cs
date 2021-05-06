@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-
+using System.Text;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Entity.Intern;
 using Tlabs.Data.Serialize.Json;
@@ -27,6 +26,8 @@ namespace Tlabs.Data.Processing.Tests {
         TypeName= "TST-DOC",
         TypeVers= "0",
         Comment= "comment text",
+        FormData= Encoding.UTF8.GetBytes("<html></html>"),
+        FormStyleData= Encoding.UTF8.GetBytes("html {margin: 0; padding: 0;}"),
 
         Fields= new List<DocumentSchema.Field> {
           new DocumentSchema.Field { Name= "txtProp", TypeName= "TEXT" },
@@ -119,7 +120,7 @@ namespace Tlabs.Data.Processing.Tests {
     public static IDocSchemaProcessor CreateDocSchemaProcessor(DocumentSchema schema) {
       var dynSerializer= JsonFormat.CreateDynSerializer();
       return new Processing.Intern.DocSchemaProcessor(
-        new Processing.Intern.CompiledDocSchema<DefaultExpressionContext, DefaultExpressionContext>(schema, new DocumentClassFactory(null), null, null), dynSerializer
+        Processing.Intern.CompiledDocSchema<DefaultSchemaEvalContext>.Compile(schema, DefaultSchemaCtxDescriptor.Instance, new DocumentClassFactory(), newSchema: true), dynSerializer
       );
     }
 
@@ -129,7 +130,7 @@ namespace Tlabs.Data.Processing.Tests {
 
       var proc= CreateDocSchemaProcessor(CreateTestSchema());
       dynamic bodyObj= proc.EmptyBody;
-      var vcx= new DefaultExpressionContext(bodyObj);
+      var vcx= new DefaultSchemaEvalContext(bodyObj);
       DocumentSchema.ValidationRule rule;
       Assert.False(proc.CheckValidation((object)bodyObj, vcx, out rule));
 
@@ -137,9 +138,9 @@ namespace Tlabs.Data.Processing.Tests {
       bodyObj.txtLstProp= new List<string>{ "tstText01", "tstText02" };
       var doc= new TstDocument(proc.Sid);
       dynamic bodyObj2= proc.UpdateBodyObject(doc, bodyObj);
-      vcx= new DefaultExpressionContext(bodyObj2);
+      vcx= new DefaultSchemaEvalContext(bodyObj2);
 
-      var cx= new DefaultExpressionContext(bodyObj2);
+      var cx= new DefaultSchemaEvalContext(bodyObj2);
       proc.EvaluateComputedFields(cx);
       Assert.True(proc.CheckValidation<TstDocument>(doc, vcx, out rule), rule?.Description ?? "RULE???");
 
@@ -165,7 +166,7 @@ namespace Tlabs.Data.Processing.Tests {
       object bodyObj= proc.EmptyBody;
       var body= new DynamicAccessor(bodyObj.GetType()).ToDictionary(bodyObj);
       body["TxtProp01"]= "_TXT_";
-      var vcx= new DefaultExpressionContext(bodyObj);
+      var vcx= new DefaultSchemaEvalContext(bodyObj);
       var res= proc.CheckValidation(bodyObj, vcx, out rule);
       Assert.True(res);
       Assert.Null(rule);
@@ -191,7 +192,7 @@ namespace Tlabs.Data.Processing.Tests {
       var proc= CreateDocSchemaProcessor(docSchema);
       dynamic obj= proc.EmptyBody;
       obj.NumProp01= 123;
-      var vcx= new DefaultExpressionContext(obj);
+      var vcx= new DefaultSchemaEvalContext(obj);
 
       DocumentSchema.ValidationRule rule;
       Assert.True(proc.CheckValidation((object) obj, vcx, out rule));

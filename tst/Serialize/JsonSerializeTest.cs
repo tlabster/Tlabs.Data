@@ -1,18 +1,13 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Newtonsoft.Json;
-using Tlabs.Test.Common;
+using System.Text.Json;
 using Xunit;
 
 namespace Tlabs.Data.Serialize.Tests {
-  [Collection("MemoryDB")]
   public class JsonSerializeTest {
-    private MemoryDBEnvironment appTimeEnv;
-    public JsonSerializeTest(MemoryDBEnvironment appTimeEnvironment) {
-      this.appTimeEnv= appTimeEnvironment;
-    }
-
 
     [Fact]
     public void BasicJsonSerializeTest() {
@@ -20,11 +15,12 @@ namespace Tlabs.Data.Serialize.Tests {
 
       var strm= new MemoryStream();
       var d0=  DateTime.Parse("2018-12-01T09:00:00.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
-      dynamic originalObj= new {
+      var originalObj= new {
         StrProp= "abc",
         NumProp= 2.718281828,
         DateProp= Tlabs.App.TimeInfo.ToAppTime(d0)
       };
+
       ser.WriteObj(strm, originalObj);
       strm.Position= 0;
       var json= Encoding.UTF8.GetString(strm.ToArray());
@@ -34,13 +30,13 @@ namespace Tlabs.Data.Serialize.Tests {
       // Returns UTC
       Assert.Contains("2018-12-01T09:00:00.0000000Z", json);
 
-      dynamic deserializedObj= ser.LoadObj(strm, ((object)originalObj).GetType());
+      TestClass deserializedObj= ser.LoadObj(strm, typeof(TestClass)) as TestClass;
       Assert.Equal(originalObj.StrProp, deserializedObj.StrProp);
       Assert.Equal(originalObj.NumProp, deserializedObj.NumProp);
       Assert.Equal(originalObj.DateProp, deserializedObj.DateProp);
 
       // De-serializes from UTC in application time zone
-      dynamic deserializedFromUtc= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000Z\"}", ((object)originalObj).GetType());
+      TestClass deserializedFromUtc= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000Z\"}", typeof(TestClass)) as TestClass;
       var d=  DateTime.Parse("1996-12-19T17:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
       Assert.Equal(d, deserializedFromUtc.DateProp);
 
@@ -52,18 +48,52 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.Contains("1996-12-19T16:39:57.0000000Z", json);
 
       // De-serializes from -06:00 in application time zone
-      dynamic deserializedFromTZ= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.000000-06:00\"}", ((object)originalObj).GetType());
-      var d4=  DateTime.Parse("1996-12-19T22:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
+      TestClass deserializedFromTZ= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000-06:00\"}", typeof(TestClass)) as TestClass;
+      var d4=  DateTime.Parse("1996-12-19T22:39:57.0000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
       Assert.Equal(App.TimeInfo.ToAppTime(d4), deserializedFromTZ.DateProp);
 
       // Allows timestamp
-      dynamic deserializedFromTS= ser.LoadObj("{\"dateProp\": 1563197860271}", ((object)originalObj).GetType());
+      TestClass deserializedFromTS= ser.LoadObj("{\"dateProp\": 1563197860271}", typeof(TestClass)) as TestClass;
       var d5=  DateTime.Parse("2019-07-15T13:37:40.2710000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
       Assert.Equal(Tlabs.App.TimeInfo.ToAppTime(d5), deserializedFromTS.DateProp);
 
       // Rejects only date
-      Assert.Throws<JsonSerializationException>(() => ser.LoadObj("{\"dateProp\": \"2019-20-10\"}", ((object)originalObj).GetType()));
+      Assert.Throws<JsonException>(() => ser.LoadObj("{\"dateProp\": \"2019-20-10\"}", typeof(TestClass)));
+      Assert.Throws<JsonException>(() => ser.LoadObj("{\"dateProp\": 1.2E3}", typeof(TestClass)));
     }
 
+    [Fact]
+    public void EnumerationTest() {
+      var json= Json.JsonFormat.CreateSerializer<TestClassCover>();
+      var strm = new MemoryStream();
+      var cover= new TestClassCover { Data= new TestClassEnum() };
+      json.WriteObj(strm, cover);
+      var jsonStr= Encoding.UTF8.GetString(strm.ToArray());
+      Assert.Contains("prop#001", jsonStr);
+    }
+
+    public class TestClass {
+      public string StrProp { get; set; }
+      public double NumProp { get; set; }
+      public DateTime DateProp { get; set; }
+    }
+
+    public class TestClassCover {
+      public IEnumerable<TestClass> Data;
+    }
+
+    public class TestClassEnum : IEnumerable<TestClass> {
+      public IEnumerator<TestClass> GetEnumerator() {
+        for (var l= 0; l <= 3; ++l) {
+          yield return new TestClass {
+            StrProp= $"prop#{l:D03}",
+            NumProp= l,
+            DateProp= App.TimeInfo.Now.AddDays(l),
+          };
+        }
+      }
+
+      IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
   }
 }

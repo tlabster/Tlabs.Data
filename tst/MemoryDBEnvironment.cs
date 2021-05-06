@@ -61,7 +61,7 @@ namespace Tlabs.Test.Common {
 
     public void SeedSchemas() {
       foreach(var schema in ChachedSchemas) {
-        procRepo.CreateDocumentProcessor<Document>(schema);
+        procRepo.CreateDocumentProcessor(schema);
         docSchemaRepo.Insert(schema);
       }
     }
@@ -71,7 +71,7 @@ namespace Tlabs.Test.Common {
     protected virtual void AddConfigurators(IServiceCollection svcColl) {
       new NoopStoreConfigurator().AddTo(svcColl, Tlabs.Config.Empty.Configuration);
       new RepositoriesConfigurator().AddTo(svcColl, Tlabs.Config.Empty.Configuration);   //add Entity Repos
-      new SerializationConfigurator().AddTo(svcColl, Tlabs.Config.Empty.Configuration);
+      new JsonFormat.Configurator().AddTo(svcColl, Tlabs.Config.Empty.Configuration);
     }
   }
 }
