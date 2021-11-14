@@ -13,7 +13,7 @@ namespace Tlabs.Data.Entity.Intern {
       VALID= 2
     }
     private State state;
-    private DocBody docBody;
+    private BodyData docBody;
     private object cachedBodyObj;
 
     public virtual string Title { get; set; }
@@ -30,11 +30,11 @@ namespace Tlabs.Data.Entity.Intern {
     public string StatusDetails { get; set; }
     public DateTime Created { get; set; }
     public DateTime? Validated { get; set; }
-    public DocBody Body {
-      get => docBody ?? (docBody= new DocBody { Document= (T)this });
+    public BodyData Body {
+      get => docBody??= new BodyData { Document= (T)this };
       set => docBody= value;
     }
-    public object GetBodyObject(Func<DocBody, object> loadObj) => cachedBodyObj ?? cacheBodyObj(loadObj(this.Body));
+    public object GetBodyObject(Func<BodyData, object> loadObj) => cachedBodyObj ?? cacheBodyObj(loadObj(this.Body));
 
     public virtual object SetBodyObject(object bodyObj) => cacheBodyObj(bodyObj);
 
@@ -45,11 +45,11 @@ namespace Tlabs.Data.Entity.Intern {
       get { return State.VALID == state && null != Validated; } // && Validated >= this.Modified; }
     }
 
-    public class DocBody : Intern.BaseEntity {
+    public class BodyData : Intern.BaseEntity {
       private Enc enc;
 
       public T Document { get; set; }
-      public byte[] BodyData { get; set; }
+      public byte[] Data { get; set; }
       public string Encoding {
         get => enc.ToString();
         set => Enc.TryParse<Enc>(value, true, out enc);

@@ -14,6 +14,8 @@ namespace Tlabs.Data.Repo {
     DocumentSchema GetByTypeId(string typeId);
     ///<summary>Try to get <paramref name="schema"/> by <paramref name="typeId"/>.</summary>
     bool TryGetByTypeId(string typeId, out DocumentSchema schema);
+    ///<summary>Get schema def. streams by <paramref name="typeId"/>.</summary>
+    SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false);
     ///<summary>>Get schema by <paramref name="altName"/>.</summary>
     DocumentSchema GetByAltTypeName(string altName);
     ///<summary>Try to get <paramref name="schema"/> by <paramref name="altName"/>.</summary>
@@ -21,13 +23,29 @@ namespace Tlabs.Data.Repo {
     ///<summary>List of <see cref="DocumentSchema.TypeId"/>(s) optionally filterd by <paramref name="typeIdFilter"/>.</summary>
     IQueryable<string> FilteredTypeIdList(string typeIdFilter= null);
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                           Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo);
     ///<summary>Create schema from <paramref name="defStreams"/> using <paramref name="validateSchemaSyntax"/> callback for schema syntax validation.</summary>
-    DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                           Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax);
+
+    ///<summary>Create schema from streams (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
+    DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null);
+
+    ///<summary>Create schema from streams (using <paramref name="validateSchemaSyntax"/> callback for schema syntax validation).</summary>
+    DocumentSchema CreateFromStreams(Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax,
+                                     Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null);
+
+    ///<summary>Returns form data for <paramref name="schemaId"/> of <paramref name="type"/>.</summary>
+    ///<returns>Data <see cref="Stream"/>.</returns>
+    Stream FormData(string schemaId, FormDataType type);
   }
 
+  ///<summary>Form data type enum.</summary>
+  public enum FormDataType {
+    ///<summary>Markup form data.</summary>
+    Markup,
+    ///<summary>Style form data.</summary>
+    Style
+  }
 
   ///<summary>>see cref="DocumentSchema"/> spcific repository implementation.</summary>
   public class DocSchemaRepo : Intern.BaseRepo<DocumentSchema>, IDocSchemaRepo {
@@ -46,6 +64,7 @@ namespace Tlabs.Data.Repo {
         DocumentSchema.ParseTypeId(typeId, out typeName, out typeVers);
         var docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
                                    .LoadRelated(store, s => s.Validations)
+                                   .LoadRelated(Store, s => s.EvalReferences)
                                    .SingleOrDefault(s => s.TypeName == typeName && s.TypeVers == typeVers);
         if (null == docSchema) throw new DataEntityNotFoundException<DocumentSchema>(typeId);
         DocumentSchema.AltNameCache[typeId]= docSchema.TypeAltName;
@@ -65,6 +84,14 @@ namespace Tlabs.Data.Repo {
         return false;
       }
       return true;
+    }
+
+    ///<inherit/>
+    public SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false) {
+      Stream stream= null;
+      var schema= GetByTypeId(typeId);
+      if (schemaStream) schemaSeri.WriteObj(stream= new MemoryStream(4096), schema);
+      return new SchemaDefinitionStreams(schema, stream);
     }
 
     ///<inherit/>
@@ -113,22 +140,46 @@ namespace Tlabs.Data.Repo {
     }
 
     ///<inherit/>
-    public IQueryable<string> FilteredTypeIdList(string typeIdFilter = null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
+    public IQueryable<string> FilteredTypeIdList(string typeIdFilter= null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                                  Processing.IDocProcessorRepo docProcRepo) where TDoc : Entity.Intern.BaseDocument<TDoc> {
+    public DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null) {
+      using (var defStreams= new SchemaDefinitionStreams {  //also cares about disposing streams
+        Schema= schemaStrm,
+        Form= formStrm,
+        Style= styleStrm,
+        CalcModel= calcModelStrm
+      }) {
+        return CreateFromStreams(defStreams, docProcRepo);
+      }
+    }
+
+    ///<inherit/>
+    public DocumentSchema CreateFromStreams(Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax,
+                                            Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null)
+    {
+      using (var defStreams= new SchemaDefinitionStreams {  //also cares about disposing streams
+        Schema= schemaStrm,
+        Form= formStrm,
+        Style= styleStrm,
+        CalcModel= calcModelStrm
+      }) {
+        return CreateFromStreams(defStreams, validateSchemaSyntax);
+      }
+    }
+
+    ///<inherit/>
+    public DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
        */
-      docProcRepo.CreateDocumentProcessor<TDoc>(schema);
+      docProcRepo.CreateDocumentProcessor(schema);
 
       return upsertSchema(schema);
     }
 
     ///<inherit/>
-    public DocumentSchema CreateFromStreams<TDoc>(SchemaDefinitionStreams defStreams,
-                                                  Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax) where TDoc : Entity.Intern.BaseDocument<TDoc>
+    public DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams,  Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax)
     {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
@@ -173,6 +224,21 @@ namespace Tlabs.Data.Repo {
         }
       }
       return schema;
+    }
+
+    ///<inheritdoc/>
+    public Stream FormData(string schemaId, FormDataType type) {
+      var schema= GetByTypeId(schemaId);
+      switch (type) {
+        case FormDataType.Markup:
+          return new MemoryStream(schema.FormData);
+
+        case FormDataType.Style:
+          return new MemoryStream(schema.FormStyleData);
+
+        default:
+          throw new ArgumentException($"Unsupported {nameof(FormDataType)}: {type}");
+      }
     }
 
     ///<inherit/>

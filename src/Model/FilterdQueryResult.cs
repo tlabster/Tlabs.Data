@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Tlabs.Data.Model {
 
@@ -122,6 +123,23 @@ namespace Tlabs.Data.Model {
     public int Total { get; set; }
     ///<inheritdoc/>
     public IList<T> Data { get; set; }
+    ///<inheritdoc/>
+    public IConvertible LastId { get; set; }
+  }
+
+    ///<summary>Query result list returned from a filtered query transformed into <typeparamref name="T2"/> .</summary>
+    public class QueryResult<T1, T2> : IResultList<T2> {
+    ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
+    public QueryResult(IQueryable<T1> query, QueryFilter filter, Expression<Func<T1, T2>> selector, int maxCount= QueryResult<T1>.MAX_RESULT_COUNT) {
+      if (!filter.NoTotalCount)
+        this.Total= maxCount > QueryResult<T1>.UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
+      else this.Total= -1;
+      this.Data= filter.ApplyLimit(query).Select(selector).ToList();
+    }
+    ///<inheritdoc/>
+    public int Total { get; set; }
+    ///<inheritdoc/>
+    public IList<T2> Data { get; set; }
     ///<inheritdoc/>
     public IConvertible LastId { get; set; }
   }

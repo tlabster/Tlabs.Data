@@ -1,4 +1,6 @@
-﻿using Tlabs.Test.Common;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using Tlabs.Test.Common;
 using Tlabs.Data.Processing;
 using Tlabs.Data.Repo;
 using Tlabs.Data.Serialize.Json;
@@ -16,27 +18,28 @@ namespace Tlabs.Data.Intern.Tests {
   [Collection("MemoryDB")]
   public class DocProcessorRepoTest {
     private MemoryDBEnvironment dBEnvironment;
-    private DocSchemaRepo docSchemaRepo;
+    private IDocSchemaRepo docSchemaRepo;
     private DocumentClassFactory docClassFactory;
     private IDocProcessorRepo repo;
 
     public DocProcessorRepoTest(MemoryDBEnvironment dBEnvironment) {
       this.dBEnvironment= dBEnvironment;
-      this.docSchemaRepo= (DocSchemaRepo)dBEnvironment.svcProv.GetService(typeof(IDocSchemaRepo));
-      this.docClassFactory= (DocumentClassFactory)dBEnvironment.svcProv.GetService(typeof(IDocumentClassFactory));
+      this.docSchemaRepo= dBEnvironment.svcProv.GetService<IDocSchemaRepo>();
+      this.docClassFactory= dBEnvironment.svcProv.GetService<DocumentClassFactory>();
       var dynSerializer= JsonFormat.CreateDynSerializer();
-      this.repo= new Processing.Intern.DocProcessorRepo(this.docSchemaRepo, this.docClassFactory, dynSerializer);
+      var descResolver= dBEnvironment.svcProv.GetService<Processing.SchemaCtxDescriptorResolver>();
+      this.repo= new Processing.Intern.DocProcessorRepo(this.docSchemaRepo, this.docClassFactory, dynSerializer, descResolver);
     }
 
     [Fact]
     void GetDocumentProcessorBySidTest() {
-      var proc= repo.GetDocumentProcessorBySid<Document>("SAMPLE:1");
+      var proc= repo.GetDocumentProcessorBySid("SAMPLE:1");
       Assert.Equal("SAMPLE:1", proc.Sid);
     }
 
     [Fact]
     void GetDocumentProcessorByAltNameTest() {
-      var proc= repo.GetDocumentProcessorByAltName<Document>("ALT-SAMPLE:1");
+      var proc= repo.GetDocumentProcessorByAltName("ALT-SAMPLE:1");
       Assert.Equal("SAMPLE:1", proc.Sid);
     }
 

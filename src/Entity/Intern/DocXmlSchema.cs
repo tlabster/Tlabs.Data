@@ -20,46 +20,50 @@ namespace Tlabs.Data.Entity.Intern {
       //form element 'name' attribute <form name=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("name");
-      this.Add(typeof(DocumentSchema), "TypeName", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.TypeName), xmlAttr);
 
       //form element 'version' attribute <form version=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("version");
-      this.Add(typeof(DocumentSchema), "TypeVers", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.TypeVers), xmlAttr);
 
       //form element 'alternatename' attribute <form alternatename=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("alternatename");
-      this.Add(typeof(DocumentSchema), "TypeAltName", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.TypeAltName), xmlAttr);
 
       //form element 'generator' attribute <form generator=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("generator");
-      this.Add(typeof(DocumentSchema), "Comment", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.Comment), xmlAttr);
 
       xmlAttr= new XmlAttributes();
-      xmlAttr.XmlElements.Add(new XmlElementAttribute("date"));
-      this.Add(typeof(DocumentSchema), "SampleDate", xmlAttr);
+      xmlAttr.XmlElements.Add(new XmlElementAttribute("evalContextType"));
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.EvalContextType), xmlAttr);
+
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlElements.Add(new XmlElementAttribute("evalCtxSelfProp"));
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.EvalCtxSelfProp), xmlAttr);
 
       //form child element <form><field>...
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlElements.Add(new XmlElementAttribute("field", typeof(AnyChildXmlField)));
-      this.Add(typeof(DocumentSchema), "Fields", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.Fields), xmlAttr);
 
       //field element 'name' attribute <field name=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("name");
-      this.Add(typeof(DocumentSchema.Field), "Name", xmlAttr);
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.Name), xmlAttr);
 
       //field element 'type' attribute <field type=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("type");
-      this.Add(typeof(DocumentSchema.Field), "TypeName", xmlAttr);
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.TypeName), xmlAttr);
 
       //field element 'sensible' attribute <field name=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("sensitive");
-      this.Add(typeof(DocumentSchema.Field), "Sensitive", xmlAttr);
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.Sensitive), xmlAttr);
 
 
       //calculation attrib <calculation desc=...>
@@ -75,34 +79,56 @@ namespace Tlabs.Data.Entity.Intern {
       //Ignore field properties 'Types', 'Schema'...
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlIgnore= true;
-      this.Add(typeof(DocumentSchema.Field), "Type", xmlAttr);
-      this.Add(typeof(DocumentSchema.Field), "Schema", xmlAttr);
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.Type), xmlAttr);
+      this.Add(typeof(DocumentSchema.Field), nameof(DocumentSchema.Field.Schema), xmlAttr);
 
       //form child elements <form><validations><rule>...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlArray= new XmlArrayAttribute("validations");
       xmlAttr.XmlArrayItems.Add(new XmlArrayItemAttribute("rule"));
-      this.Add(typeof(DocumentSchema), "Validations", xmlAttr);
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.Validations), xmlAttr);
 
       //rule element 'id' attribute <rule id=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("id");
-      this.Add(typeof(DocumentSchema.ValidationRule), "Key", xmlAttr);
+      this.Add(typeof(DocumentSchema.ValidationRule), nameof(DocumentSchema.ValidationRule.Key), xmlAttr);
 
       //rule element 'desc' attribute <rule desc=...>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlAttribute= new XmlAttributeAttribute("desc");
-      this.Add(typeof(DocumentSchema.ValidationRule), "Description", xmlAttr);
+      this.Add(typeof(DocumentSchema.ValidationRule), nameof(DocumentSchema.ValidationRule.Description), xmlAttr);
 
       //rule element inner 'code' <rule>code</rule>
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlText= new XmlTextAttribute();
-      this.Add(typeof(DocumentSchema.ValidationRule), "Code", xmlAttr);
+      this.Add(typeof(DocumentSchema.ValidationRule), nameof(DocumentSchema.ValidationRule.Code), xmlAttr);
 
-      //rule ignore BodyType property
+      //rule ignore Schema property
       xmlAttr= new XmlAttributes();
       xmlAttr.XmlIgnore= true;
-      this.Add(typeof(DocumentSchema.ValidationRule), "BodyType", xmlAttr);
+      this.Add(typeof(DocumentSchema.ValidationRule), nameof(DocumentSchema.ValidationRule.Schema), xmlAttr);
+
+      //form child elements <form><evalReferences><ref>...>
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlArray= new XmlArrayAttribute("evalReferences");
+      xmlAttr.XmlArrayItems.Add(new XmlArrayItemAttribute("ref"));
+      this.Add(typeof(DocumentSchema), nameof(DocumentSchema.EvalReferences), xmlAttr);
+
+      //ref element 'prop' attribute ref <prop=...>
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlAttribute= new XmlAttributeAttribute("prop");
+      this.Add(typeof(DocumentSchema.EvaluationRef), nameof(DocumentSchema.EvaluationRef.PropName), xmlAttr);
+
+      //ref element text content <ref>Sid</ref>
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlText= new XmlTextAttribute();
+      this.Add(typeof(DocumentSchema.EvaluationRef), nameof(DocumentSchema.EvaluationRef.ReferenceSid), xmlAttr);
+
+      //ref ignore Schema property
+      xmlAttr= new XmlAttributes();
+      xmlAttr.XmlIgnore= true;
+      this.Add(typeof(DocumentSchema.EvaluationRef), nameof(DocumentSchema.EvaluationRef.Schema), xmlAttr);
+
     }
 
 

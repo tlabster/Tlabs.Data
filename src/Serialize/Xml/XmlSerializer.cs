@@ -3,12 +3,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-using Tlabs.Config;
 
 namespace Tlabs.Data.Serialize.Xml {
 
@@ -42,8 +37,11 @@ namespace Tlabs.Data.Serialize.Xml {
         this.format= format;
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public string Encoding => "XML";
+
+      ///<inheritdoc/>
+      public T LoadObj(byte[] utf8Json) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8Json));
 
       ///<summary>Load object from XML <paramref name="strm"/>.</summary>
       public T LoadObj(Stream strm) {
@@ -65,6 +63,13 @@ namespace Tlabs.Data.Serialize.Xml {
         }
       }
 
+      ///<inheritdoc/>
+      public byte[] WriteObj(T obj) {
+        var strm= new MemoryStream();
+        WriteObj(strm, obj);
+        return strm.ToArray();
+      }
+
       ///<summary>Write object to XML <paramref name="strm"/>.</summary>
       public void WriteObj(Stream strm, T obj) {
         format.xml.Serialize(strm, obj);
@@ -75,10 +80,11 @@ namespace Tlabs.Data.Serialize.Xml {
         throw new NotImplementedException();
       }
 
-      /// <inherit/>
-      public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
-        throw new NotImplementedException();
-      }
+      // /// <inherit/>
+      // public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
+      //   throw new NotImplementedException();
+      // }
+
     } //class Serializer<T, S>
   } //class XmlFormat<T, S>
 

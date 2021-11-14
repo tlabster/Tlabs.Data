@@ -18,12 +18,16 @@ namespace Tlabs.Data.Processing {
     Type BodyType { get; }
     ///<summary><see cref="DynamicAccessor"/> to the body type.</summary>
     DynamicAccessor BodyAccessor { get; }
-
+    /// <summary>Evaluation context type index.</summary>
+    IReadOnlyDictionary<string, Type> EvalTypeIndex { get; }
     /// <summary>Empty body object of Type: <see cref="BodyType"/>.</summary>
     object EmptyBody { get; }
 
     ///<summary>Return <paramref name="doc"/>'s Body as object (according to its <see cref="DocumentSchema"/>).</summary>
     object LoadBodyObject<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>;
+
+    ///<summary>Return <paramref name="doc"/>'s <see cref="BaseDocument{T}.Body"/> properties (according to its <see cref="DocumentSchema"/>).</summary>
+    IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>Update <paramref name="doc"/>'s Body with <paramref name="bodyObj"/>.</summary>
     /// <remarks>
@@ -33,27 +37,27 @@ namespace Tlabs.Data.Processing {
     object UpdateBodyObject<TDoc>(TDoc doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz = 10*1024) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>Merge <paramref name="props"/> into <paramref name="doc"/>'s Body with optional<paramref name="cx"/>.</summary>
-    ///<remarks>To omit any validation and field computation pass <see cref="NoExpressionContext.Instance"/> as <paramref name="cx"/></remarks>
+    ///<remarks>To omit any validation and field computation pass <see cref="NoEvaluationContext.Instance"/> as <paramref name="cx"/></remarks>
     ///<returns>Updated body object.</returns>
-    object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, object cx= null) where TDoc : BaseDocument<TDoc>;
+    object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, ISchemaEvalContext cx= null) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>
-    /// Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="vx"/>)
+    /// Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="ecx"/>)
     /// and applies the result to the document status properties.
     ///</summary>
-    void ApplyValidation<TDoc>(TDoc doc, object vx, out object body) where TDoc : BaseDocument<TDoc>;
+    void ApplyValidation<TDoc>(TDoc doc, ISchemaEvalContext ecx, out object body) where TDoc : BaseDocument<TDoc>;
 
 
-    ///<summary>Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="vx"/>).</summary>
+    ///<summary>Check <paramref name="doc"/> against the validation rules (with validation context <paramref name="ecx"/>).</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    bool CheckValidation<TDoc>(TDoc doc, object vx, out DocumentSchema.ValidationRule rule) where TDoc : BaseDocument<TDoc>;
+    bool CheckValidation<TDoc>(TDoc doc, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) where TDoc : BaseDocument<TDoc>;
 
     ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    bool CheckValidation(object body, object vx, out DocumentSchema.ValidationRule rule);
+    bool CheckValidation(object body, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule);
 
     ///<summary>Evaluate computed schema fields.</summary>
-    void EvaluateComputedFields<TCx>(TCx cx) where TCx : class, IExpressionCtx;
+    void EvaluateComputedFields(ISchemaEvalContext ecx) ;
   }
 
 

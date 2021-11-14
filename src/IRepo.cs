@@ -5,7 +5,19 @@ using System.Linq.Expressions;
 namespace Tlabs.Data {
 
   ///<summary>Interface of an <typeparamref name="TEntity"/> repository.</summary>
-  public interface IRepo<TEntity> {
+  public interface IRepo<TEntity> : INonQueryRepo<TEntity> {
+
+    ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
+    ///<remarks>Any changes to returned entities are beeing tracked (for potential commit with the underlying store). </remarks>
+    System.Linq.IQueryable<TEntity> All { get; }
+
+    ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
+    ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
+    System.Linq.IQueryable<TEntity> AllUntracked { get; }
+  }
+
+  ///<summary>Interface of an non queryable <typeparamref name="TEntity"/> repository.</summary>
+  public interface INonQueryRepo<TEntity> {
 
     ///<summary>Get the underlying <see ref="IDataStore"/>.</summary>
     IDataStore Store { get; }
@@ -15,14 +27,6 @@ namespace Tlabs.Data {
 
     ///<summary>Get the data store identifier value(s) of the given <paramref name="entity"/>.</summary>
     object GetIdentifier(TEntity entity);
-
-    ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
-    ///<remarks>Any changes to returned entities are beeing tracked (for potential commit with the underlying store). </remarks>
-    System.Linq.IQueryable<TEntity> All { get; }
-
-    ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
-    ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
-    System.Linq.IQueryable<TEntity> AllUntracked { get; }
 
     ///<summary>Add <paramref name="entity"/> for inserting to the store.</summary>
     TEntity Insert(TEntity entity);
@@ -61,4 +65,5 @@ namespace Tlabs.Data {
     ///<summary>Explicitly load referenced <paramref name="prop">property</paramref> from <paramref name="ent"/> (if not already loaded).</summary>
     void LoadExplicit<P>(TEntity ent, Expression<Func<TEntity, P>> prop) where P : class;
   }
+
 }

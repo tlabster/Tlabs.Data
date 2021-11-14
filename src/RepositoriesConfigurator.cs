@@ -43,20 +43,21 @@ namespace Tlabs.Data {
       configureCustomRepos(services);
       services.AddSingleton<XmlFormat<DocumentSchema, Entity.Intern.DocXmlSchema>>();
       services.AddSingleton<ISerializer<DocumentSchema>, XmlFormat<DocumentSchema, Entity.Intern.DocXmlSchema>.Serializer>();
+      services.TryAddSingleton<IDocumentClassFactory, DocumentClassFactory>();
+      services.TryAddSingleton<Processing.SchemaCtxDescriptorResolver>();
+      services.AddScoped<Processing.IDocProcessorRepo, Processing.Intern.DocProcessorRepo>();
 
-      services.AddSingleton<JsonSchemaFormat<SerializationSchema>>();
-      services.AddSingleton<JsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
-      services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>>();
-      services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
+
+      // services.AddSingleton<JsonSchemaFormat<SerializationSchema>>();
+      // services.AddSingleton<JsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
+      // services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>>();
+      // services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
 
       configureAppTime(services);
       log.LogDebug("Repository services added.");
     }
 
     private void configureAppTime(IServiceCollection services) {
-      services.TryAddSingleton<IDocumentClassFactory, DocumentClassFactory>();
-      services.AddScoped<Processing.IDocProcessorRepo, Processing.Intern.DocProcessorRepo>();
-
       string tzid= null;
       if (   !config.TryGetValue("timeZone", out tzid)
           || string.IsNullOrWhiteSpace(tzid)) {
