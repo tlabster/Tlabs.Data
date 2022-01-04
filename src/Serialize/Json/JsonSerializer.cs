@@ -28,7 +28,7 @@ namespace Tlabs.Data.Serialize.Json {
     ///<summary>Apply Json format default options to <paramref name="opt"/>.</summary>
     public static void ApplyDefaultOptions(JsonSerializerOptions opt) {
       opt.IncludeFields= true;
-      opt.IgnoreNullValues= true;
+      opt.DefaultIgnoreCondition= System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
       opt.ReadCommentHandling= JsonCommentHandling.Skip;
       opt.PropertyNameCaseInsensitive= true;
       opt.PropertyNamingPolicy= JsonNamingPolicy.CamelCase;

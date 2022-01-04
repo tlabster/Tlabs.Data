@@ -16,7 +16,7 @@ namespace Tlabs.Data.Repo.Tests {
   public class DocSchemaRepoTest : IClassFixture<DocSchemaRepoTest.TestFixture> {
     TestFixture fix;
     public DocSchemaRepoTest(TestFixture fix) => this.fix= fix;
-    public static readonly ISerializer<DocumentSchema> DocSchemaSerializer= new XmlSchemaFormat.Serializer(new XmlSchemaFormat(Tlabs.App.Logger<XmlSchemaFormat>()));
+    public static readonly ISerializer<DocumentSchema> DocSchemaSerializer= new XmlSchemaFormat.Serializer(new XmlSchemaFormat());
 
     [Fact]
     void SchemaByTypeIdTest() {

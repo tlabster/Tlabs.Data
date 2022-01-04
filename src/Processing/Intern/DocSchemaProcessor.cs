@@ -112,7 +112,7 @@ namespace Tlabs.Data.Processing.Intern {
       foreach (var pair in props) try{
         bodyProps[pair.Key]= pair.Value;
       }
-      catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type)", pair.Key, pair.Value?.GetType()); throw;}
+      catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type: {type})", pair.Key, pair.Value?.GetType()); throw;}
 
       if (!(cx is NoEvaluationContext)) {
         var ecx= cx ?? new DefaultSchemaEvalContext(body);

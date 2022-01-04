@@ -8,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Tlabs.Config;
-using Tlabs.Data.Store;
-using Tlabs.Data.Repo.Intern;
 using System.Collections;
 
 namespace Tlabs.Data {
