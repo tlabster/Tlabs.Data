@@ -7,17 +7,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Tlabs.Data.Serialize.Xml {
 
+  ///<summary>Abstract Xml base format.</summary>
+  public abstract class XmlFormat {
+    ///<summary>Logger.</summary>
+    protected static readonly ILogger<XmlFormat> log= App.Logger<XmlFormat>();
+    ///<summary>Xml reader settings.</summary>
+    protected XmlReaderSettings xmlSettings;
+    ///<summary>Xml serializer.</summary>
+    protected XmlSerializer xml;
+    ///<summary>Xml serializer namespaces (for writing).</summary>
+    protected XmlSerializerNamespaces ns;
+  }
+
   ///<summary>Xml format serialization.</summary>
-  public class XmlFormat<T, S> where T : class, new() where S : XmlFormat<T, S>.Schema, new() {
-    private ILogger<XmlFormat<T, S>> log;
-    private readonly XmlReaderSettings xmlSettings= new XmlReaderSettings();
-    private readonly XmlSerializer xml;
+  public class XmlFormat<T, S> : XmlFormat where T : class, new() where S : XmlFormat<T, S>.Schema, new() {
     private readonly S schema= new S();
 
-    ///<summary>Ctor from <paramref name="log"/>.</summary>
-    public XmlFormat(ILogger<XmlFormat<T, S>> log) {
-      this.log= log;
+    ///<summary>Default Ctor.</summary>
+    ///<remarks>This ctor is to be used if no <see cref="XmlSerializerOptions{T}"/> are registered with any DI service provider.</remarks>
+    public XmlFormat() : this(null) { }
+
+    ///<summary>Ctor from <paramref name="options"/>.</summary>
+    public XmlFormat(XmlSerializerOptions<T> options) {
+      this.xmlSettings= options?.ReaderSettings ?? new XmlReaderSettings();
       this.xmlSettings.CloseInput= true;
+      this.ns= options?.Namespaces;
+      if (null == ns) {
+        this.ns= new XmlSerializerNamespaces();
+        this.ns.Add("", "");    //omit the xmlns:xsi xmlns:xsd decalrations by default...
+      }
       this.xml= new XmlSerializer(typeof(T), this.schema);
     }
 
@@ -41,25 +59,26 @@ namespace Tlabs.Data.Serialize.Xml {
       public string Encoding => "XML";
 
       ///<inheritdoc/>
-      public T LoadObj(byte[] utf8Json) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8Json));
+      public T LoadObj(byte[] utf8Xml) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8Xml));
 
       ///<summary>Load object from XML <paramref name="strm"/>.</summary>
       public T LoadObj(Stream strm) {
         using (var sr= new StreamReader(strm, System.Text.Encoding.UTF8, true)) {
-          using (var rd= XmlReader.Create(sr, format.xmlSettings)) {
-            var obj= (T)format.xml.Deserialize(rd);
-            return format.schema.Finished(obj);
-          }
+          return loadObj(sr);
         }
       }
 
       ///<summary>Load object from XML <paramref name="text"/>.</summary>
       public T LoadObj(string text) {
-        using (var sr = new StringReader(text)) {
-          using (var rd = XmlReader.Create(sr, format.xmlSettings)) {
-            var obj= (T)format.xml.Deserialize(rd);
-            return format.schema.Finished(obj);
-          }
+        using (var sr= new StringReader(text)) {
+          return loadObj(sr);
+        }
+      }
+
+      T loadObj(TextReader txtRd) {
+        using (var rd = XmlReader.Create(txtRd, format.xmlSettings)) {
+          var obj= (T)format.xml.Deserialize(rd);
+          return format.schema.Finished(obj);
         }
       }
 
@@ -72,7 +91,7 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Write object to XML <paramref name="strm"/>.</summary>
       public void WriteObj(Stream strm, T obj) {
-        format.xml.Serialize(strm, obj);
+        format.xml.Serialize(strm, obj, format.ns);
       }
 
       ///<inherit/>

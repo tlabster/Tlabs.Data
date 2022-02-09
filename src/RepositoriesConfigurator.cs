@@ -11,7 +11,6 @@ using Tlabs.Config;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Repo;
 using Tlabs.Data.Serialize;
-using Tlabs.Data.Serialize.Json;
 using Tlabs.Data.Serialize.Xml;
 
 namespace Tlabs.Data {

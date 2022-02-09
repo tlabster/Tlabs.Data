@@ -9,7 +9,7 @@ namespace Tlabs.Data.Serialize.Tests {
   using XmlSchemaFormat = XmlFormat<DocumentSchema, Entity.Intern.DocXmlSchema>;
 
   public class XmlSchemaSerialzeTest {
-    public static readonly ISerializer<DocumentSchema> DocSchemaSerializer= new XmlSchemaFormat.Serializer(new XmlSchemaFormat(Tlabs.App.Logger<XmlSchemaFormat>()));
+    public static readonly ISerializer<DocumentSchema> DocSchemaSerializer= new XmlSchemaFormat.Serializer(new XmlSchemaFormat());
 
 
     [Fact]
