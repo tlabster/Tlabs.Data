@@ -13,6 +13,8 @@ namespace Tlabs.Data.Serialize.Xml {
     protected static readonly ILogger<XmlFormat> log= App.Logger<XmlFormat>();
     ///<summary>Xml reader settings.</summary>
     protected XmlReaderSettings xmlSettings;
+    ///<summary>Xml writer settings.</summary>
+    protected XmlWriterSettings wrSettings;
     ///<summary>Xml serializer.</summary>
     protected XmlSerializer xml;
     ///<summary>Xml serializer namespaces (for writing).</summary>
@@ -31,6 +33,11 @@ namespace Tlabs.Data.Serialize.Xml {
     public XmlFormat(XmlSerializerOptions<T> options) {
       this.xmlSettings= options?.ReaderSettings ?? new XmlReaderSettings();
       this.xmlSettings.CloseInput= true;
+      this.wrSettings= new XmlWriterSettings();
+      this.wrSettings.CloseOutput= true;
+      this.wrSettings.OmitXmlDeclaration= true;
+      this.wrSettings.Indent= true;
+
       this.ns= options?.Namespaces;
       if (null == ns) {
         this.ns= new XmlSerializerNamespaces();
@@ -91,7 +98,8 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Write object to XML <paramref name="strm"/>.</summary>
       public void WriteObj(Stream strm, T obj) {
-        format.xml.Serialize(strm, obj, format.ns);
+        var xw= XmlWriter.Create(strm, format.wrSettings);
+        format.xml.Serialize(xw, obj, format.ns);
       }
 
       ///<inherit/>
