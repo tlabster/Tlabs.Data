@@ -12,13 +12,22 @@ namespace Tlabs.Data.Serialize.Xml {
     ///<summary>Logger.</summary>
     protected static readonly ILogger<XmlFormat> log= App.Logger<XmlFormat>();
     ///<summary>Xml reader settings.</summary>
-    protected XmlReaderSettings xmlSettings;
+    protected XmlReaderSettings rdSettings;
     ///<summary>Xml writer settings.</summary>
     protected XmlWriterSettings wrSettings;
     ///<summary>Xml serializer.</summary>
     protected XmlSerializer xml;
     ///<summary>Xml serializer namespaces (for writing).</summary>
     protected XmlSerializerNamespaces ns;
+
+    ///<summary>Default <see cref="XmlWriterSettings"/>.</summary>
+    public static XmlWriterSettings DFLTwrSettings() {
+      var wrs= new XmlWriterSettings();
+      wrs.OmitXmlDeclaration= true;
+      wrs.CloseOutput= true;
+      wrs.Indent= true;
+      return wrs;
+    }
   }
 
   ///<summary>Xml format serialization.</summary>
@@ -31,12 +40,9 @@ namespace Tlabs.Data.Serialize.Xml {
 
     ///<summary>Ctor from <paramref name="options"/>.</summary>
     public XmlFormat(XmlSerializerOptions<T> options) {
-      this.xmlSettings= options?.ReaderSettings ?? new XmlReaderSettings();
-      this.xmlSettings.CloseInput= true;
-      this.wrSettings= new XmlWriterSettings();
-      this.wrSettings.CloseOutput= true;
-      this.wrSettings.OmitXmlDeclaration= true;
-      this.wrSettings.Indent= true;
+      this.rdSettings= options?.ReaderSettings ?? new XmlReaderSettings();
+      this.rdSettings.CloseInput= true;
+      this.wrSettings= options?.WriterSettings ?? DFLTwrSettings();
 
       this.ns= options?.Namespaces;
       if (null == ns) {
@@ -83,7 +89,7 @@ namespace Tlabs.Data.Serialize.Xml {
       }
 
       T loadObj(TextReader txtRd) {
-        using (var rd = XmlReader.Create(txtRd, format.xmlSettings)) {
+        using (var rd = XmlReader.Create(txtRd, format.rdSettings)) {
           var obj= (T)format.xml.Deserialize(rd);
           return format.schema.Finished(obj);
         }
@@ -98,8 +104,9 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Write object to XML <paramref name="strm"/>.</summary>
       public void WriteObj(Stream strm, T obj) {
-        var xw= XmlWriter.Create(strm, format.wrSettings);
-        format.xml.Serialize(xw, obj, format.ns);
+        using (var xw= XmlWriter.Create(strm, format.wrSettings)) {
+          format.xml.Serialize(xw, obj, format.ns);
+        }
       }
 
       ///<inherit/>
