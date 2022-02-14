@@ -24,7 +24,7 @@ namespace Tlabs.Data.Serialize.Xml {
     public static XmlWriterSettings DFLTwrSettings() {
       var wrs= new XmlWriterSettings();
       wrs.OmitXmlDeclaration= true;
-      wrs.CloseOutput= true;
+      wrs.CloseOutput= false;
       wrs.Indent= true;
       return wrs;
     }
