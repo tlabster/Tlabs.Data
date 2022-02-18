@@ -55,5 +55,10 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.Equal(TestEnum.NoName, tstEnm);
     }
 
+    [Fact]
+    public void EnumCastTest() {
+      Enum e= TestEnum.One;
+      Assert.Equal(1, Convert.ToInt32(e));
+    }
   }
 }
