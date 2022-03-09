@@ -8,7 +8,7 @@ namespace Tlabs.Data.Serialize.Xml {
 
   ///<summary>Enum with <see cref="System.Xml.Serialization.XmlEnumAttribute"/> helper.</summary>
   public static class XmlEnum {
-    internal static readonly LookupTable<Type, IReadOnlyDictionary<string, Enum>> enumMap= new (t => Enum.GetValues(t).Cast<Enum>().ToDictionary(e => e.XmlEnumAttributeValue()));
+    internal static readonly LookupTable<Type, IReadOnlyDictionary<string, Enum>> enumMap= new (t => Enum.GetValues(t).Cast<Enum>().ToDictionary(e => e.XmlEnumAttributeValue(), StringComparer.OrdinalIgnoreCase));
 
     ///<summary>Try parse <paramref name="s"/> into enum with <paramref name="targetType"/> using <see cref="XmlEnumAttribute"/>.</summary>
     public static bool TryParse(string s, Type targetType, out Enum enm) {
