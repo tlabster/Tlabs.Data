@@ -47,11 +47,14 @@ namespace Tlabs.Data.Repo.Tests {
 
         var schemaFieldsQuery= new EagerLoadedQueryable<DocumentSchema, List<DocumentSchema.Field>>(this.TestSchemas.AsQueryable());
         var schemaValidsQuery= new EagerLoadedQueryable<DocumentSchema, List<DocumentSchema.ValidationRule>>(this.TestSchemas.AsQueryable());
+        var schemaEvalRefs= new EagerLoadedQueryable<DocumentSchema, List<DocumentSchema.EvaluationRef>>(this.TestSchemas.AsQueryable());
         var storeMock= new Mock<IDataStore>();
         storeMock.Setup(s => s.LoadRelated<DocumentSchema, List<DocumentSchema.Field>>(It.IsAny<IQueryable<DocumentSchema>>(), It.IsAny<Expression<Func<DocumentSchema, List<DocumentSchema.Field>>>>()))
                  .Returns(schemaFieldsQuery);
         storeMock.Setup(s => s.LoadRelated<DocumentSchema, List<DocumentSchema.ValidationRule>>(It.IsAny<IQueryable<DocumentSchema>>(), It.IsAny<Expression<Func<DocumentSchema, List<DocumentSchema.ValidationRule>>>>()))
                  .Returns(schemaValidsQuery);
+        storeMock.Setup(s => s.LoadRelated<DocumentSchema, List<DocumentSchema.EvaluationRef>>(It.IsAny<IQueryable<DocumentSchema>>(), It.IsAny<Expression<Func<DocumentSchema, List<DocumentSchema.EvaluationRef>>>>()))
+                 .Returns(schemaEvalRefs);
         storeMock.Setup(s => s.UntrackedQuery<DocumentSchema>())
                  .Returns(this.TestSchemas.AsQueryable());
 
