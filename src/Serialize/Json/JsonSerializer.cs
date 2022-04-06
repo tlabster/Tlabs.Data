@@ -35,6 +35,7 @@ namespace Tlabs.Data.Serialize.Json {
       opt.AllowTrailingCommas= true;
       opt.Converters.Add(new AppTimeJsonConverter());
       opt.Converters.Add(new PropertyDictionaryJsonConverter());
+      opt.Converters.Add(new PropertyReadOnlyDictionaryJsonConverter());
       opt.WriteIndented= true;
     }
 

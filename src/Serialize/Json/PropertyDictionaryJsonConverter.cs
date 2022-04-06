@@ -1,22 +1,30 @@
-﻿using System;
-using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Tlabs.Data.Serialize.Json {
   ///<summary>Converter to add support for deserialization into a <c>IDictionary&lt;string, object></c>.</summary>
-  public class PropertyDictionaryJsonConverter : JsonConverter<IDictionary<string, object>> {
+  public class PropertyDictionaryJsonConverter : BasePropDictionaryConverter<IDictionary<string, object>> {
     ///<inheritdoc/>
     public override bool CanConvert(Type type) => typeof(IDictionary<string, object>).IsAssignableFrom(type);
+  }
 
+  ///<summary>Converter to add support for deserialization into a <c>IReadOnlyDictionary&lt;string, object></c>.</summary>
+  public class PropertyReadOnlyDictionaryJsonConverter : BasePropDictionaryConverter<IReadOnlyDictionary<string, object>> {
     ///<inheritdoc/>
-    public override IDictionary<string, object> Read(ref Utf8JsonReader json, Type typeToConvert, JsonSerializerOptions options) {
+    public override bool CanConvert(Type type) => typeof(IReadOnlyDictionary<string, object>).IsAssignableFrom(type);
+  }
+
+  ///<summary>Converter to add support for deserialization into a <c>IDictionary&lt;string, object></c>.</summary>
+  public abstract class BasePropDictionaryConverter<T> : JsonConverter<T> {
+    ///<inheritdoc/>
+    public override T Read(ref Utf8JsonReader json, Type typeToConvert, JsonSerializerOptions options) {
       if (JsonTokenType.StartObject != json.TokenType) throw EX.New<JsonException>("Unexpected token '{tok}' at object start", json.TokStr());
 
-      var dict= new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+      IDictionary<string, object> dict= new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
       while (json.Read()) {
-        if (JsonTokenType.EndObject == json.TokenType) return dict;
+        if (JsonTokenType.EndObject == json.TokenType) return (T)dict;
 
         if (JsonTokenType.PropertyName != json.TokenType) throw EX.New<JsonException>("Token '{tok}' is no valid property name", json.TokStr());
         var propName= json.GetString();
@@ -38,7 +46,7 @@ namespace Tlabs.Data.Serialize.Json {
         JsonTokenType.Null        => null,
         _                         => throw EX.New<JsonException>("Invalid token: '{tok}'", json.TokStr())
       };
-    
+
     List<object> getArray(ref Utf8JsonReader json, JsonSerializerOptions options) {
       var lst= new List<object>();
       while (json.Read() && JsonTokenType.EndArray != json.TokenType)
@@ -47,7 +55,7 @@ namespace Tlabs.Data.Serialize.Json {
     }
 
     ///<inheritdoc/>
-    public override void Write(Utf8JsonWriter writer, IDictionary<string, object> dict, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, T dict, JsonSerializerOptions options)
       => JsonSerializer.Serialize(writer, dict, removeThisConverter(options));  //remove our self from an options copy to avoid getting called recursively...
 
     JsonSerializerOptions removeThisConverter(JsonSerializerOptions options) {

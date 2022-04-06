@@ -51,6 +51,18 @@ namespace Tlabs.Data.Serialize.Json.Tests {
       Assert.IsAssignableFrom<IList>(mapMap["obj3"]["p3_1"]);
     }
 
+    [Fact]
+    public void TestReadOnlyDict() {
+      string t = "{\"Dict\": {\"test\" : \"test1\", \"test2\": [1,2,3], \"1\": \"323\" }}";
+      var json= JsonFormat.CreateSerializer<TestReadOnlyDictObj>();
+      var obj= json.LoadObj(t);
+      obj.ToString();
+    }
+
+    public class TestReadOnlyDictObj {
+      public IReadOnlyDictionary<string, object> Dict { get; set; }
+    }
+
     const string NESTEDOBJ= @"
 {
   ""obj1"": { ""p1_1"": 1, ""p1_2"": 2},
