@@ -30,14 +30,13 @@ namespace Tlabs.Data.Serialize {
       public Dictionary<string, PropertyAttribs> pMap;
       ///<summary>Attribute setter.</summary>
       public PropAttribSetter<T> Set<P>(Expression<Func<T, P>> ex, PropertyAttribs attr) {
-        var prop= ex.Body as MemberExpression;
-        if (null == prop) throw new ArgumentException("No member access expression");
+        if (ex.Body is not MemberExpression prop) throw new ArgumentException("No member access expression");
         pMap[prop.Member.Name]= attr;
         return this;
       }
     }
 
-    private Dictionary<Type, Dictionary<string, PropertyAttribs>> typeMap= new Dictionary<Type, Dictionary<string, PropertyAttribs>>();
+    readonly Dictionary<Type, Dictionary<string, PropertyAttribs>> typeMap= new();
 
     ///<summary>Specify properties declaring type.</summary>
     public PropAttribSetter<T> For<T>() {
@@ -48,9 +47,8 @@ namespace Tlabs.Data.Serialize {
     }
     ///<inherit/>
     public PropertyAttribs GetAttributes(Type declType, string name) {
-      Dictionary<string, PropertyAttribs> pMap;
       var attr= PropertyAttribs.None;
-      if (this.typeMap.TryGetValue(declType, out pMap))
+      if (this.typeMap.TryGetValue(declType, out var pMap))
         pMap.TryGetValue(name, out attr);
       return attr;
     }

@@ -127,7 +127,7 @@ namespace Tlabs.Data.Processing.Intern {
       for (var l = 0; l < validations.Count; ++l) try {
           var valid= validations[l];
           var exprCode= valid.Code;
-          if (!exprCode.StartsWith("{") || !exprCode.EndsWith("}")) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
+          if (!exprCode.StartsWith("{", StringComparison.Ordinal) || !exprCode.EndsWith("}", StringComparison.Ordinal)) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
           exprCode= exprCode.Substring(1, exprCode.Length-2);
           validRules[l]= new CompiledValidation {
             Rule= validations[l],
@@ -149,7 +149,6 @@ namespace Tlabs.Data.Processing.Intern {
         Expression.Parameter(typeof(TCx), "cx")
       };
       var compFormulas= new List<CompiledFieldFomula>();
-      var errors= new List<ExpressionSyntaxException>();
 
       foreach (var fld in fields) {
         if (string.IsNullOrEmpty(fld.CalcFormula)) continue;

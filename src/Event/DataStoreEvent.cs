@@ -11,10 +11,10 @@ namespace Tlabs.Data.Event {
     ///<summary>Returns a <see ref="ITrigger"/> for given <paramref name="entityType"/>.</summary>
     public static ITrigger Trigger(Type entityType, Type baseType = null) {
       var tp= new BaseTypePair(entityType, baseType);
-      Func<ITrigger> triggerCreator= () => {
-        var triggerType= typeof(DataStoreEvent<>.Trigger<>).MakeGenericType(tp.EntType, tp.BaseType);
+      ITrigger triggerCreator() {
+        var triggerType = typeof(DataStoreEvent<>.Trigger<>).MakeGenericType(tp.EntType, tp.BaseType);
         return (ITrigger)Activator.CreateInstance(triggerType);
-      };
+      }
       return cache[tp, triggerCreator ];
     }
 

@@ -161,7 +161,7 @@ namespace Tlabs.Data.Event {
       public bool RaiseUpdating(object entity, Func<object> obtainOrg) {
         bool cancelled= (baseTrigger?.RaiseUpdating(entity, obtainOrg) ?? false);
         if (!cancelled) {
-          Func<T> resOrg= () => (T)obtainOrg();
+          T resOrg() => (T)obtainOrg();
           var ev= new BeforeChangeEvent((T)entity, resOrg);
           DataStoreEvent<B>.updatingEnv?.Invoke((IBeforeChangeEvent<B>)ev);
           cancelled= ev.Cancel;
@@ -172,7 +172,7 @@ namespace Tlabs.Data.Event {
       public bool RaiseDeleting(object entity, Func<object> obtainOrg) {
         bool cancelled= (baseTrigger?.RaiseDeleting(entity, obtainOrg) ?? false);
         if (!cancelled) {
-          Func<T> resOrg= () => (T)obtainOrg();
+          T resOrg() => (T)obtainOrg();
           var ev= new BeforeChangeEvent((T)entity, resOrg);
           DataStoreEvent<B>.deletingEnv?.Invoke((IBeforeChangeEvent<B>)ev);
           cancelled= ev.Cancel;
@@ -200,7 +200,7 @@ namespace Tlabs.Data.Event {
         var entityT= (T)entity;
         bool wasSwallowed= (baseTrigger?.RaiseInsertFailed(entityT, ex) ?? false);
         var ev= new FailedEvent(entityT, ex);
-        DataStoreEvent<B>.insertedEnv?.Invoke((IFailedEvent<B>)ev);
+        DataStoreEvent<B>.insertFailedEnv?.Invoke((IFailedEvent<B>)ev);
         return wasSwallowed || ev.Swallow;
       }
 
@@ -224,7 +224,7 @@ namespace Tlabs.Data.Event {
         return wasSwallowed;
       }
 
-      private DataStoreEvent.ITrigger baseTrigger {
+      static DataStoreEvent.ITrigger baseTrigger {
         get {
           Type baseType= typeof(B).GetTypeInfo().BaseType;
           if (null == baseType) return null;

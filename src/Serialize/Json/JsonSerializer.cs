@@ -18,7 +18,7 @@ namespace Tlabs.Data.Serialize.Json {
 
     ///<summary>Json format default options.</summary>
     public static JsonSerializerOptions DefaultOptions { get; }
-    static ILogger<JsonFormat> log= App.Logger<JsonFormat>();
+    // static readonly ILogger<JsonFormat> log= App.Logger<JsonFormat>();
 
     static JsonFormat() {
       DefaultOptions= new JsonSerializerOptions();
@@ -51,7 +51,7 @@ namespace Tlabs.Data.Serialize.Json {
 
     ///<summary>Json format serializer for <typeparamref name="T"/>.</summary>
     public class Serializer<T> : ISerializer<T> {
-      private JsonFormat format;
+      readonly JsonFormat format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
       public Serializer(JsonFormat format) {
@@ -67,7 +67,7 @@ namespace Tlabs.Data.Serialize.Json {
       public T LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
 
       ///<inheritdoc/>
-      public T LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).GetAwaiter().GetResult();
+      public T LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).AsTask().GetAwaiter().GetResult();
 
       ///<inheritdoc/>
       public T LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
@@ -86,7 +86,7 @@ namespace Tlabs.Data.Serialize.Json {
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
     public class DynamicSerializer : IDynamicSerializer {
-      private JsonFormat format;
+      readonly JsonFormat format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
       public DynamicSerializer(JsonFormat format) {
@@ -105,7 +105,7 @@ namespace Tlabs.Data.Serialize.Json {
       public object LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
 
       ///<inheritdoc/>
-      public object LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).GetAwaiter().GetResult();
+      public object LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).AsTask().GetAwaiter().GetResult();
 
       ///<inheritdoc/>
       public object LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);

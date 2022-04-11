@@ -117,8 +117,7 @@ namespace Tlabs.Data.Repo.Intern {
 
     ///<summary>Convert <paramref name="doc"/> into body object.</summary>
     protected virtual object ConvertBodyObj(object doc) {
-      var docObj= doc as TDoc;
-      if (null != docObj)
+      if (doc is TDoc docObj)
         return DocProcessorRepo.LoadDocumentBodyObject<TDoc>(docObj);
       return doc; //no convertion
     }

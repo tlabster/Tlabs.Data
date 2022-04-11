@@ -21,6 +21,7 @@ namespace Tlabs.Data.Processing {
     ///<summary>Chunked processing of <paramref name="query"/> result with a processor of <typeparamref name="TProc"/>>.</summary>
     ///<remarks>The processor receives a chunk of <typeparamref name="TEnt"/> with <paramref name="chunkSz"/> where up to <paramref name="parallelCnt"/> processor being executed in parallel.</remarks>
     public static void ChunkedProcessing<TProc, TEnt>(this IQueryable<TEnt> query, int chunkSz, int parallelCnt= 2) where TProc : IChunkProcessor<TEnt> {
+#pragma warning disable CA1806    //ChunkContext has side effect (and builds the context for the chunk processing...)
       new ChunkContext<TProc, TEnt>(query, chunkSz, parallelCnt);
     }
 
@@ -33,7 +34,7 @@ namespace Tlabs.Data.Processing {
       public int parallelCnt;
       public bool abort;
       public int procCnt;
-      public SyncMonitor<int> syncCnt= new SyncMonitor<int>();
+      public SyncMonitor<int> syncCnt= new();
 
       public ChunkContext(IQueryable<TEnt> query, int chunkSz, int parallelCnt) {
         this.chunkSz= chunkSz;
@@ -48,8 +49,7 @@ namespace Tlabs.Data.Processing {
             continue;
           }
           nextChunk(chunk);
-          chunk= new List<TEnt>(chunkSz);
-          chunk.Add(ent);
+          chunk= new List<TEnt>(chunkSz) { ent };
         }
         if (chunk.Count > 0) nextChunk(chunk);
         while (syncCnt.Value < this.parallelCnt && syncCnt.WaitForSignal() < this.parallelCnt);

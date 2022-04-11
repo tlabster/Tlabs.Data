@@ -10,7 +10,7 @@ namespace Tlabs.Data.Processing {
 
   ///<summary>Schema context descriptor resolver.</summary>
   public class SchemaCtxDescriptorResolver {
-    IReadOnlyDictionary<string, ISchemaCtxDescriptor> evalCtxMap;
+    readonly IReadOnlyDictionary<string, ISchemaCtxDescriptor> evalCtxMap;
 
     ///<summary>Ctor from <paramref name="ctxDescriptors"/>.</summary>
     public SchemaCtxDescriptorResolver(IEnumerable<ISchemaCtxDescriptor> ctxDescriptors) {

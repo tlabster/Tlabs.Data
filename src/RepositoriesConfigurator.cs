@@ -22,8 +22,8 @@ namespace Tlabs.Data {
     ///<summary>Default non-windows time zone</summary>
     public const string DEFAULT_NON_WINDOWS_TIME_ZONE= "Europe/Berlin";
 
-    private ILogger log= App.Logger<RepositoriesConfigurator>();
-    private IDictionary<string, string> config;
+    readonly ILogger log= App.Logger<RepositoriesConfigurator>();
+    readonly IDictionary<string, string> config;
 
     ///<summary>Default ctor.</summary>
     public RepositoriesConfigurator() : this(null) { }
@@ -52,13 +52,12 @@ namespace Tlabs.Data {
       // services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>>();
       // services.AddSingleton<SensitiveJsonSchemaFormat<SerializationSchema>.SchemaSerializer>();
 
-      configureAppTime(services);
+      configureAppTime();
       log.LogDebug("Repository services added.");
     }
 
-    private void configureAppTime(IServiceCollection services) {
-      string tzid= null;
-      if (   !config.TryGetValue("timeZone", out tzid)
+    private void configureAppTime() {
+      if (   !config.TryGetValue("timeZone", out var tzid)
           || string.IsNullOrWhiteSpace(tzid)) {
         tzid=   RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
               ? DEFAULT_WINDOWS_TIME_ZONE
@@ -79,7 +78,7 @@ namespace Tlabs.Data {
       log.LogWarning("Application time zone: '{id}'", timeZoneInfo.Id);
 
     }
-    private void configureCustomRepos(IServiceCollection services) {
+    static void configureCustomRepos(IServiceCollection services) {
 #if false
       var thisAss= this.GetType().GetTypeInfo().Assembly;
       var repo= typeof(Repo.Intern.BaseRepo<>).GetTypeInfo();

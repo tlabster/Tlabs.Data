@@ -21,7 +21,7 @@ namespace Tlabs.Data.Entity {
 
     ///<summary>Request was succesfull</summary>
     public bool Success {
-      get { return string.Equals("200", StatusCode); }
+      get { return "200" == StatusCode; }
     }
   }
 }

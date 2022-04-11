@@ -42,7 +42,7 @@ namespace Tlabs.Data {
 
       string mappingInfo = field.ExtMappingInfo;
 
-      var attributes = mappingInfo.Split('\n').Select(value => value.Split('=')).Where(elem => elem.Count() == 2);
+      var attributes = mappingInfo.Split('\n').Select(value => value.Split('=')).Where(elem => elem.Length == 2);
 
       Dictionary<string,string> keyValuePairs = attributes.ToDictionary(pair => pair[0], pair => pair[1]);
 

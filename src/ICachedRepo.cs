@@ -28,7 +28,7 @@ namespace Tlabs.Data.Repo.Intern {
 
     static readonly ILogger<CachedRepo<TEntity>> log= Tlabs.App.Logger<CachedRepo<TEntity>>();
     static IQueryable<TEntity> cache;
-    static object sync= new object();
+    static readonly object sync= new object();
     static CachedRepo() { 
       DataStoreEvent<TEntity>.Inserting+= evictCache;
       DataStoreEvent<TEntity>.Updating+= evictCache;

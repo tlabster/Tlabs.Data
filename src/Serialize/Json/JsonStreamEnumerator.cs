@@ -19,7 +19,7 @@ namespace Tlabs.Data.Serialize.Json {
     static readonly ILogger log= App.Logger<JsonStreamEnumerator>();
 
     Deserializer.StreamState enumState;
-    Stream stream;
+    readonly Stream stream;
     public JsonStreamEnumerator(Stream strm, JsonSerializerOptions? jsonOpt= default, int bufSz= 4096) {
       this.stream= strm;
       init(strm, jsonOpt, bufSz);
@@ -56,6 +56,7 @@ namespace Tlabs.Data.Serialize.Json {
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public ref struct Deserializer {
+#pragma warning disable CA1001   //StreamState is IDisposable !
       public struct StreamState : IDisposable {
         internal ReadStreamBuffer buffer;
         internal long bufOffset;

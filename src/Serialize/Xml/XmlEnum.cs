@@ -27,9 +27,8 @@ namespace Tlabs.Data.Serialize.Xml {
     ///<summary>Try parse <paramref name="s"/> into <paramref name="enm"/> using <see cref="XmlEnumAttribute"/>.</summary>
     public static bool TryParse<T>(string s, out T enm) where T : Enum {
       lock (enumMap) {
-        Enum e;
         var t= typeof(T);
-        var ret= TryParse(s, t, out e);
+        var ret= TryParse(s, t, out var e);
         enm= (T)(e ?? default(T));
         return ret;
       }

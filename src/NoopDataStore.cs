@@ -17,19 +17,18 @@ namespace Tlabs.Data {
 
     ///<inherit/>
     public void AddTo(IServiceCollection services, IConfiguration cfg) {
-      var log= App.Logger<NoopDataStore>();
       services.AddScoped(typeof(IDataStore), typeof(NoopDataStore));
     }
 
     ///<summary>Non storing data store.<see cref="IDataStore"/>.</summary>
     public class NoopDataStore : IDataStore {
-      static ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
+      static readonly ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
 
       ///<inherit/>
       public bool AutoCommit { get => false; set => throw new NotImplementedException(); }
 
-      ///<inherit/>
-      public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
+      // ///<inherit/>
+      // public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
 
       ///<inherit/>
       public void CommitChanges() {}
@@ -40,8 +39,8 @@ namespace Tlabs.Data {
       ///<inherit/>
       public void Delete<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
-      ///<inherit/>
-      public void Dispose() { }
+      // ///<inherit/>
+      // public void Dispose() { }
 
       ///<inherit/>
       public void EnsureStore(IEnumerable<IDataSeed> seeds) => log.LogInformation("Confirmed to NOT provide ANY storage facility.");
@@ -105,9 +104,7 @@ namespace Tlabs.Data {
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new EagerLoadedQueryable<E,Prop>(query);
 
-      E IDataStore.Attach<E>(E ent) {
-        throw new NotImplementedException();
-      }
+      E IDataStore.Attach<E>(E ent) => ent;
     }
     
     private class EagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {

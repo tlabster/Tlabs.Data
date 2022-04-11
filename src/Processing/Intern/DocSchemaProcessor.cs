@@ -20,7 +20,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     /// <summary>Schema id.</summary>
     protected ICompiledDocSchema compSchema;
-    private IDynamicSerializer docSeri;
+    readonly IDynamicSerializer docSeri;
 
 
     /// <summary>Ctor from <paramref name="compSchema"/> and <paramref name="docSeri"/>.</summary>
@@ -76,14 +76,13 @@ namespace Tlabs.Data.Processing.Intern {
       if (!BodyType.GetTypeInfo().IsAssignableFrom(bodyObj.GetType())) {
         /* coerce obj into bodyType !!!
           */
-        using (var strm= new MemoryStream(bufSz)) {
-          docSeri.WriteObj(strm, bodyObj);
-          body.Data= strm.ToArray();
-          body.Encoding= docSeri.Encoding;
+        using var strm= new MemoryStream(bufSz);
+        docSeri.WriteObj(strm, bodyObj);
+        body.Data= strm.ToArray();
+        body.Encoding= docSeri.Encoding;
 
-          strm.Position= 0;
-          bodyObj= docSeri.LoadObj(strm, BodyType);
-        }
+        strm.Position= 0;
+        bodyObj= docSeri.LoadObj(strm, BodyType);
       }
 
       processBodyObject(bodyObj, setupData);
@@ -114,7 +113,7 @@ namespace Tlabs.Data.Processing.Intern {
       }
       catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type: {type})", pair.Key, pair.Value?.GetType()); throw;}
 
-      if (!(cx is NoEvaluationContext)) {
+      if (cx is not NoEvaluationContext) {
         var ecx= cx ?? new DefaultSchemaEvalContext(body);
         ecx.SetBody(body);
         if (!CheckValidation(body, ecx, out var offendingRule))
@@ -134,11 +133,10 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<inherit/>
     public void ApplyValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out object body) where DocT : BaseDocument<DocT> {
-      DocumentSchema.ValidationRule rule;
       body= LoadBodyObject(doc);
       doc.StatusDetails= null;
       doc.Status= BaseDocument<DocT>.State.VALID.ToString();
-      if (!compSchema.CheckValidation(body, ecx, out rule)) {
+      if (!compSchema.CheckValidation(body, ecx, out var rule)) {
         doc.StatusDetails= $"{rule.Key} - {rule.Description}";
         doc.Status= BaseDocument<DocT>.State.IMPLAUSIBLE.ToString();
       }

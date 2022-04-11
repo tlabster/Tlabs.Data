@@ -23,8 +23,8 @@ namespace Tlabs.Data.Processing.Intern {
     protected IDocumentClassFactory docClassFactory;
     ///<summary>Document</summary>
     protected Serialize.IDynamicSerializer docSeri;
-    SchemaCtxDescriptorResolver ctxDescResolver;
-    private static readonly BasicCache<string, IDocSchemaProcessor> procCache= new BasicCache<string, IDocSchemaProcessor>();
+    readonly SchemaCtxDescriptorResolver ctxDescResolver;
+    static readonly BasicCache<string, IDocSchemaProcessor> procCache= new();
 
     class Doc : Entity.Intern.BaseDocument<Doc> { }
 
@@ -46,12 +46,12 @@ namespace Tlabs.Data.Processing.Intern {
     public IDocSchemaProcessor GetDocumentProcessorBySid(string sid) {
       if (null == sid) throw new ArgumentNullException(nameof(sid));
 
-      Func<IDocSchemaProcessor> loadSchemaProc= () => {  //helping Omnisharp...
-        var docSchema= schemaRepo.GetByTypeId(sid);
-        ISchemaCtxDescriptor ctxDesc= ctxDescResolver.DescriptorByName(docSchema.EvalContextType);
+      IDocSchemaProcessor loadSchemaProc() {  //helping Omnisharp...
+        var docSchema = schemaRepo.GetByTypeId(sid);
+        ISchemaCtxDescriptor ctxDesc = ctxDescResolver.DescriptorByName(docSchema.EvalContextType);
         log.LogDebug("Caching new processsor for document with schema: {sid} and evalType: {type}", sid, ctxDesc.Name);
         return this.createProcessor(CompiledDocSchema<DefaultSchemaEvalContext>.Compile(docSchema, ctxDesc, docClassFactory, newSchema: false));
-      };
+      }
 
       return procCache[sid, loadSchemaProc];
     }
