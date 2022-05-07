@@ -39,10 +39,10 @@ namespace Tlabs.Data.Processing.Intern {
       this.ctxDescResolver= ctxDescResolver;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDocSchemaRepo SchemaRepo => schemaRepo;
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDocSchemaProcessor GetDocumentProcessorBySid(string sid) {
       if (null == sid) throw new ArgumentNullException(nameof(sid));
 
@@ -56,18 +56,18 @@ namespace Tlabs.Data.Processing.Intern {
       return procCache[sid, loadSchemaProc];
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDocSchemaProcessor GetDocumentProcessorByAltName(string altName) {
       return GetDocumentProcessorBySid(schemaRepo.GetByAltTypeName(altName).TypeId);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDocSchemaProcessor GetDocumentProcessor<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc> {
       if (null == doc) throw new ArgumentNullException(nameof(doc));
       return GetDocumentProcessorBySid(doc.Sid);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public SchemaEvalCtxProcessor GetSchemaEvalCtxProcessor(string sid) {
       var docProc= GetDocumentProcessorBySid(sid);
       ISchemaCtxDescriptor ctxDesc= ctxDescResolver.DescriptorByName(docProc.Schema.EvalContextType);
@@ -76,16 +76,16 @@ namespace Tlabs.Data.Processing.Intern {
       return new SchemaEvalCtxProcessor(ctxDesc, docProcIndex);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public object LoadDocumentBodyObject<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc> => GetDocumentProcessor(doc).LoadBodyObject(doc);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public object UpdateDocumentBodyObject<TDoc>(TDoc doc, object bodyObj) where TDoc : Entity.Intern.BaseDocument<TDoc> => GetDocumentProcessor(doc).UpdateBodyObject(doc, bodyObj);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc> => GetDocumentProcessor(doc).LoadBodyProperties(doc);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDocSchemaProcessor CreateDocumentProcessor(DocumentSchema docSchema) {
       if (null == docSchema) throw new ArgumentNullException(nameof(docSchema));
       var sid= docSchema.TypeId;

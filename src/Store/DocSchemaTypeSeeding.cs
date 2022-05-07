@@ -21,10 +21,10 @@ namespace Tlabs.Data.Store {
       this.log= log;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override string Campaign => "Schema type data";
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override void Perform() {
       if (!schemaRepo.AllUntracked.Any())
         SeedDocumentSchemas();

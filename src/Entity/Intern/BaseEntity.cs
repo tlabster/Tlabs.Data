@@ -25,7 +25,7 @@ namespace Tlabs.Data.Entity.Intern {
              : Object.ReferenceEquals(this, o);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override int GetHashCode() {
       return default(int) != Id
              ? Id

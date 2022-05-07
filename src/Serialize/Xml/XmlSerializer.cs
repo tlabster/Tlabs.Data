@@ -106,7 +106,7 @@ namespace Tlabs.Data.Serialize.Xml {
         format.xml.Serialize(xw, obj, format.ns);
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEnumerable<T> LoadIEnumerable(Stream stream) {
         throw new NotImplementedException();
       }

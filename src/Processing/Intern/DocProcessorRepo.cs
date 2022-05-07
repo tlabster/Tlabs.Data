@@ -13,7 +13,7 @@ namespace Tlabs.Data.Processing.Intern {
                             SchemaCtxDescriptorResolver ctxDescResolver) : base(schemaRepo, docClassFactory, docSeri, ctxDescResolver)
     { }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     protected override IDocSchemaProcessor createProcessor(ICompiledDocSchema compSchema)
       => new DocSchemaProcessor(compSchema, docSeri);
   }

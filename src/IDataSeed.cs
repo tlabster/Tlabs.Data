@@ -23,9 +23,9 @@ namespace Tlabs.Data {
     public AbstractDataSeed(IDataStore store) {
       this.store= store;
     }
-    ///<inherit/>
+    ///<inheritdoc/>
     public abstract string Campaign { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public abstract void Perform();
   }
 

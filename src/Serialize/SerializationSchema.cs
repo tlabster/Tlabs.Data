@@ -45,7 +45,7 @@ namespace Tlabs.Data.Serialize {
         setter.pMap= typeMap[typeof(T)]= new Dictionary<string, PropertyAttribs>();
       return setter;
     }
-    ///<inherit/>
+    ///<inheritdoc/>
     public PropertyAttribs GetAttributes(Type declType, string name) {
       var attr= PropertyAttribs.None;
       if (this.typeMap.TryGetValue(declType, out var pMap))

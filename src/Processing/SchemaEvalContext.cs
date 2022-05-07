@@ -107,9 +107,9 @@ namespace Tlabs.Data.Processing {
   public class NoEvaluationContext : ISchemaEvalContext {
     /// <summary>Singleton instance.</summary>
     public static readonly NoEvaluationContext Instance= new NoEvaluationContext();
-    ///<inherit/>
+    ///<inheritdoc/>
     public object GetBody() => throw new NotImplementedException();
-    ///<inherit/>
+    ///<inheritdoc/>
     public void SetBody(object body) => throw new NotImplementedException();
   }
 

@@ -38,13 +38,13 @@ namespace Tlabs.Data.Processing.Intern {
 
     /// <summary><see cref="DocumentSchema"/>.</summary>
     public DocumentSchema Schema { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public string Sid => Schema.TypeId;
-    ///<inherit/>
+    ///<inheritdoc/>
     public Type BodyType { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public DynamicAccessor BodyAccessor { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public IReadOnlyDictionary<string, Type> EvalTypeIdx { get; }
 
     private class CompiledValidation {
@@ -105,7 +105,7 @@ namespace Tlabs.Data.Processing.Intern {
       return true;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public void ComputeFieldFormulas(ISchemaEvalContext cx) {
       IDictionary<string, object> bdyProps= null;
       var evCtx= cx as TCx;
