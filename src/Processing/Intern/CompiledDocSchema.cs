@@ -38,13 +38,13 @@ namespace Tlabs.Data.Processing.Intern {
 
     /// <summary><see cref="DocumentSchema"/>.</summary>
     public DocumentSchema Schema { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public string Sid => Schema.TypeId;
-    ///<inherit/>
+    ///<inheritdoc/>
     public Type BodyType { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public DynamicAccessor BodyAccessor { get; }
-    ///<inherit/>
+    ///<inheritdoc/>
     public IReadOnlyDictionary<string, Type> EvalTypeIdx { get; }
 
     private class CompiledValidation {
@@ -105,7 +105,7 @@ namespace Tlabs.Data.Processing.Intern {
       return true;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public void ComputeFieldFormulas(ISchemaEvalContext cx) {
       IDictionary<string, object> bdyProps= null;
       var evCtx= cx as TCx;
@@ -127,7 +127,7 @@ namespace Tlabs.Data.Processing.Intern {
       for (var l = 0; l < validations.Count; ++l) try {
           var valid= validations[l];
           var exprCode= valid.Code;
-          if (!exprCode.StartsWith("{") || !exprCode.EndsWith("}")) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
+          if (!exprCode.StartsWith("{", StringComparison.Ordinal) || !exprCode.EndsWith("}", StringComparison.Ordinal)) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
           exprCode= exprCode.Substring(1, exprCode.Length-2);
           validRules[l]= new CompiledValidation {
             Rule= validations[l],
@@ -149,7 +149,6 @@ namespace Tlabs.Data.Processing.Intern {
         Expression.Parameter(typeof(TCx), "cx")
       };
       var compFormulas= new List<CompiledFieldFomula>();
-      var errors= new List<ExpressionSyntaxException>();
 
       foreach (var fld in fields) {
         if (string.IsNullOrEmpty(fld.CalcFormula)) continue;

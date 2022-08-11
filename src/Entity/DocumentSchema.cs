@@ -163,7 +163,7 @@ namespace Tlabs.Data.Entity {
             this.mappingInfo= new Dictionary<string, string>();
             return;
           }
-          var mappings= this.extMappingInfo.Split('\n').Select(elem => elem.Split('=')).Where(pair => pair.Count() == 2);
+          var mappings= this.extMappingInfo.Split('\n').Select(elem => elem.Split('=')).Where(pair => pair.Length == 2);
           this.mappingInfo= mappings.ToDictionary(pair => pair[0], pair => pair[1]);
         }
       }

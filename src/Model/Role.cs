@@ -73,13 +73,13 @@ namespace Tlabs.Data.Model {
     private List<AccessPolicy> allowPolicies;
     private List<AccessPolicy> denyPolicies;
     private List<EnforcedParameter> enforcedParams;
-    private static readonly Regex FILTER_REGEX = new Regex(@"^(?<position>\d)>(?<route>.+)\[(?<params>#.+)\]$", RegexOptions.Compiled);
+    private static readonly Regex FILTER_REGEX= new Regex(@"^(?<position>\d)>(?<route>.+)\[(?<params>#.+)\]$", RegexOptions.Compiled);
 
     ///<summary>Route access policy</summary>
     class AccessPolicy {
       public AccessPolicy(string route) {
         var components= route.Split(':');
-        if (2 != components.Count()) throw new FormatException($"Invalid access pattern '{route}'");
+        if (2 != components.Length) throw new FormatException($"Invalid access pattern '{route}'");
         this.Method= components[0];
         this.RouteRegex= new Regex(components[1], RegexOptions.Compiled);
       }
@@ -103,7 +103,7 @@ namespace Tlabs.Data.Model {
         var enforcementParts= FILTER_REGEX.Match(pattern);
         if (!enforcementParts.Success || 4 != enforcementParts.Groups.Count) throw new FormatException($"Invalid enforced filter '{pattern}'");
 
-        this.Position= Int32.Parse(enforcementParts.Groups["position"].Value);
+        this.Position= Int32.Parse(enforcementParts.Groups["position"].Value, App.DfltFormat);
         this.RouteRegex= new Regex(enforcementParts.Groups["route"].Value);
         this.Values= new Dictionary<string, string>();
 

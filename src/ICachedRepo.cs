@@ -28,7 +28,7 @@ namespace Tlabs.Data.Repo.Intern {
 
     static readonly ILogger<CachedRepo<TEntity>> log= Tlabs.App.Logger<CachedRepo<TEntity>>();
     static IQueryable<TEntity> cache;
-    static object sync= new object();
+    static readonly object sync= new object();
     static CachedRepo() { 
       DataStoreEvent<TEntity>.Inserting+= evictCache;
       DataStoreEvent<TEntity>.Updating+= evictCache;
@@ -42,7 +42,7 @@ namespace Tlabs.Data.Repo.Intern {
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public CachedRepo(IDataStore store) : base(store) { }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>> querySupplement= null) {
       IQueryable<TEntity> all= cache;
       if (null == all) lock (sync) {
@@ -56,7 +56,7 @@ namespace Tlabs.Data.Repo.Intern {
       return all;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public TEntity InsertOrUpdate(TEntity ent) => (null == ent) ? Insert(new TEntity()) : Update(ent);
 
   }

@@ -26,7 +26,7 @@ namespace Tlabs.Data.Repo.Intern {
     /// <param name="predicate">The predicate.</param>
     /// <returns>A new <see cref="IDataStoreFilter{E}"/>.</returns>
     public static IDataStoreFilter<E> Where(Expression<Func<E, bool>> predicate) {
-      if (predicate == null) throw new ArgumentNullException("predicate");
+      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
       return new WhereDataStoreFilter<E>(predicate);
     }
@@ -58,8 +58,8 @@ namespace Tlabs.Data.Repo.Intern {
     /// <param name="predicate">The predicate.</param>
     /// <returns>A new <see cref="IDataStoreFilter{E}"/>.</returns>
     public static IDataStoreFilter<E> Where<E>(this IDataStoreFilter<E> baseFilter, Expression<Func<E, bool>> predicate) {
-      if (baseFilter == null) throw new ArgumentNullException("baseFilter");
-      if (predicate == null) throw new ArgumentNullException("predicate");
+      if (baseFilter == null) throw new ArgumentNullException(nameof(baseFilter));
+      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
       return new WhereDataStoreFilter<E>(baseFilter, predicate);
     }

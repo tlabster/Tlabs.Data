@@ -50,19 +50,18 @@ namespace Tlabs.Data.Repo {
   ///<summary>>see cref="DocumentSchema"/> spcific repository implementation.</summary>
   public class DocSchemaRepo : Intern.BaseRepo<DocumentSchema>, IDocSchemaRepo {
     static readonly ILogger<DocSchemaRepo> log= App.Logger<DocSchemaRepo>();
-    ISerializer<DocumentSchema> schemaSeri;
+    readonly ISerializer<DocumentSchema> schemaSeri;
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public DocSchemaRepo(IDataStore store, ISerializer<DocumentSchema> schemaSeri) : base(store) {
       this.schemaSeri= schemaSeri;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema GetByTypeId(string typeId) {
-      Func<DocumentSchema> loadSchema= () => { //helping Omnisharp...
-        string typeName, typeVers;
-        DocumentSchema.ParseTypeId(typeId, out typeName, out typeVers);
-        var docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
+      DocumentSchema loadSchema() { //helping Omnisharp...
+        DocumentSchema.ParseTypeId(typeId, out var typeName, out var typeVers);
+        var docSchema = AllUntracked.LoadRelated(store, s => s.Fields)
                                    .LoadRelated(store, s => s.Validations)
                                    .LoadRelated(Store, s => s.EvalReferences)
                                    .SingleOrDefault(s => s.TypeName == typeName && s.TypeVers == typeVers);
@@ -70,11 +69,11 @@ namespace Tlabs.Data.Repo {
         DocumentSchema.AltNameCache[typeId]= docSchema.TypeAltName;
         log.LogDebug("{id} schema loaded from store.", typeId);
         return docSchema;
-      };
+      }
       return DocumentSchema.Cache[typeId, loadSchema];
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public bool TryGetByTypeId(string typeId, out DocumentSchema schema) {
       try {
         schema= GetByTypeId(typeId);
@@ -86,7 +85,7 @@ namespace Tlabs.Data.Repo {
       return true;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false) {
       Stream stream= null;
       var schema= GetByTypeId(typeId);
@@ -94,19 +93,18 @@ namespace Tlabs.Data.Repo {
       return new SchemaDefinitionStreams(schema, stream);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema GetByAltTypeName(string altName) {
       DocumentSchema docSchema= null;
-      string typeAltName, typeVers;
-      DocumentSchema.ParseTypeId(altName, out typeAltName, out typeVers);
-      Func<string> loadSchema= () => {
+      DocumentSchema.ParseTypeId(altName, out var typeAltName, out var typeVers);
+      string loadSchema() {
         docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
                                .LoadRelated(store, s => s.Validations)
                                .SingleOrDefault(s => s.TypeAltName == typeAltName && s.TypeVers == typeVers);
         if (null == docSchema) throw new DataEntityNotFoundException<DocumentSchema>(altName);
         DocumentSchema.Cache[docSchema.TypeId]= docSchema;
         return docSchema.TypeId;
-      };
+      }
       var typeId= DocumentSchema.AltNameCache[typeAltName, loadSchema];
 
       if (docSchema == null) docSchema= DocumentSchema.Cache[typeId];
@@ -114,7 +112,7 @@ namespace Tlabs.Data.Repo {
       return docSchema;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public bool TryGetByAltTypeName(string altName, out DocumentSchema schema) {
       try {
         schema= GetByAltTypeName(altName);
@@ -139,36 +137,34 @@ namespace Tlabs.Data.Repo {
       return query;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IQueryable<string> FilteredTypeIdList(string typeIdFilter= null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null) {
-      using (var defStreams= new SchemaDefinitionStreams {  //also cares about disposing streams
+      using var defStreams = new SchemaDefinitionStreams {  //also cares about disposing streams
         Schema= schemaStrm,
         Form= formStrm,
         Style= styleStrm,
         CalcModel= calcModelStrm
-      }) {
-        return CreateFromStreams(defStreams, docProcRepo);
-      }
+      };
+      return CreateFromStreams(defStreams, docProcRepo);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema CreateFromStreams(Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax,
                                             Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null)
     {
-      using (var defStreams= new SchemaDefinitionStreams {  //also cares about disposing streams
+      using var defStreams = new SchemaDefinitionStreams {  //also cares about disposing streams
         Schema= schemaStrm,
         Form= formStrm,
         Style= styleStrm,
         CalcModel= calcModelStrm
-      }) {
-        return CreateFromStreams(defStreams, validateSchemaSyntax);
-      }
+      };
+      return CreateFromStreams(defStreams, validateSchemaSyntax);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo) {
       var schema= loadFromStreams(defStreams);
       /* Check validation syntax and calc. model:
@@ -178,7 +174,7 @@ namespace Tlabs.Data.Repo {
       return upsertSchema(schema);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams,  Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax)
     {
       var schema= loadFromStreams(defStreams);
@@ -190,9 +186,8 @@ namespace Tlabs.Data.Repo {
     }
 
     private DocumentSchema upsertSchema(DocumentSchema schema) {
-      DocumentSchema oldSchema;
       log.LogDebug("Upserting schema: {s}", schema.TypeId);
-      if (TryGetByTypeId(schema.TypeId, out oldSchema))
+      if (TryGetByTypeId(schema.TypeId, out var oldSchema))
         Delete(oldSchema);
       Insert(schema);
       Store.CommitChanges();
@@ -229,26 +224,21 @@ namespace Tlabs.Data.Repo {
     ///<inheritdoc/>
     public Stream FormData(string schemaId, FormDataType type) {
       var schema= GetByTypeId(schemaId);
-      switch (type) {
-        case FormDataType.Markup:
-          return new MemoryStream(schema.FormData);
-
-        case FormDataType.Style:
-          return new MemoryStream(schema.FormStyleData);
-
-        default:
-          throw new ArgumentException($"Unsupported {nameof(FormDataType)}: {type}");
-      }
+      return type switch {
+        FormDataType.Markup => new MemoryStream(schema.FormData),
+        FormDataType.Style  => new MemoryStream(schema.FormStyleData),
+        _                   => throw new ArgumentException($"Unsupported {nameof(FormDataType)}: {type}"),
+      };
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override DocumentSchema Get(params object[] keys) {
       var typeId= AllUntracked.Where(s => (int)keys[0] == s.Id).Select(s => s.TypeId).SingleOrDefault();
       if (null == typeId) throw new DataEntityNotFoundException<DocumentSchema>(keys[0]?.ToString());
       return GetByTypeId(typeId); //cached schema
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override DocumentSchema Insert(DocumentSchema schema) {
       log.LogDebug("Inserting schema: {s}", schema.TypeId);
       schema= base.Insert(fixedSchema(schema));
@@ -257,7 +247,7 @@ namespace Tlabs.Data.Repo {
       return schema;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override DocumentSchema Update(DocumentSchema schema) {
       log.LogDebug("Updating schema: {s}", schema.TypeId);
       schema= base.Update(fixedSchema(schema));
@@ -266,7 +256,7 @@ namespace Tlabs.Data.Repo {
       return schema;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override void Delete(DocumentSchema schema) {
       log.LogDebug("Deleting schema: {s}", schema.TypeId);
       base.Delete(schema);
@@ -274,7 +264,7 @@ namespace Tlabs.Data.Repo {
       DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override DocumentSchema Attach(DocumentSchema schema) {
       log.LogDebug("Attaching schema: {s}", schema.TypeId);
       schema= base.Attach(schema);
@@ -283,7 +273,7 @@ namespace Tlabs.Data.Repo {
       return schema;
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override void Evict(DocumentSchema schema) {
       log.LogDebug("Evicting schema: {s}", schema.TypeId);
       base.Evict(schema);

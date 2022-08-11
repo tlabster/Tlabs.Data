@@ -20,7 +20,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     /// <summary>Schema id.</summary>
     protected ICompiledDocSchema compSchema;
-    private IDynamicSerializer docSeri;
+    readonly IDynamicSerializer docSeri;
 
 
     /// <summary>Ctor from <paramref name="compSchema"/> and <paramref name="docSeri"/>.</summary>
@@ -30,17 +30,17 @@ namespace Tlabs.Data.Processing.Intern {
       log.LogDebug("Created new DocSchemaProcessor({sid}) for bodyType: {bodyType}.", compSchema.Sid, compSchema.BodyType.Name);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public DocumentSchema Schema => compSchema.Schema;
-    ///<inherit/>
+    ///<inheritdoc/>
     public string Sid => compSchema.Sid;
-    ///<inherit/>
+    ///<inheritdoc/>
     public Type BodyType => compSchema.BodyType;
-    ///<inherit/>
+    ///<inheritdoc/>
     public DynamicAccessor BodyAccessor => compSchema.BodyAccessor;
-    ///<inherit/>
+    ///<inheritdoc/>
     public IReadOnlyDictionary<string, Type> EvalTypeIndex => compSchema.EvalTypeIdx;
-    ///<inherit/>
+    ///<inheritdoc/>
     public object EmptyBody {
       get {
         var emptyBody= Activator.CreateInstance(BodyType);
@@ -53,7 +53,7 @@ namespace Tlabs.Data.Processing.Intern {
       }
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public object LoadBodyObject<DocT>(DocT doc) where DocT : BaseDocument<DocT> {
       checkDocument(doc);
       return doc.GetBodyObject((body)
@@ -63,11 +63,11 @@ namespace Tlabs.Data.Processing.Intern {
       );
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>
       => BodyAccessor.ToDictionary(LoadBodyObject(doc));
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public object UpdateBodyObject<DocT>(DocT doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz= 10*1024) where DocT : BaseDocument<DocT> {
       checkDocument(doc);
 
@@ -76,14 +76,13 @@ namespace Tlabs.Data.Processing.Intern {
       if (!BodyType.GetTypeInfo().IsAssignableFrom(bodyObj.GetType())) {
         /* coerce obj into bodyType !!!
           */
-        using (var strm= new MemoryStream(bufSz)) {
-          docSeri.WriteObj(strm, bodyObj);
-          body.Data= strm.ToArray();
-          body.Encoding= docSeri.Encoding;
+        using var strm= new MemoryStream(bufSz);
+        docSeri.WriteObj(strm, bodyObj);
+        body.Data= strm.ToArray();
+        body.Encoding= docSeri.Encoding;
 
-          strm.Position= 0;
-          bodyObj= docSeri.LoadObj(strm, BodyType);
-        }
+        strm.Position= 0;
+        bodyObj= docSeri.LoadObj(strm, BodyType);
       }
 
       processBodyObject(bodyObj, setupData);
@@ -114,7 +113,7 @@ namespace Tlabs.Data.Processing.Intern {
       }
       catch (Exception e) { log.LogDebug(e, "Failed to assign prop: {pname}, (type: {type})", pair.Key, pair.Value?.GetType()); throw;}
 
-      if (!(cx is NoEvaluationContext)) {
+      if (cx is not NoEvaluationContext) {
         var ecx= cx ?? new DefaultSchemaEvalContext(body);
         ecx.SetBody(body);
         if (!CheckValidation(body, ecx, out var offendingRule))
@@ -129,30 +128,29 @@ namespace Tlabs.Data.Processing.Intern {
       if (this.Sid != doc.Sid) throw new ArgumentException(nameof(doc.Sid));
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) => bodyObj;
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public void ApplyValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out object body) where DocT : BaseDocument<DocT> {
-      DocumentSchema.ValidationRule rule;
       body= LoadBodyObject(doc);
       doc.StatusDetails= null;
       doc.Status= BaseDocument<DocT>.State.VALID.ToString();
-      if (!compSchema.CheckValidation(body, ecx, out rule)) {
+      if (!compSchema.CheckValidation(body, ecx, out var rule)) {
         doc.StatusDetails= $"{rule.Key} - {rule.Description}";
         doc.Status= BaseDocument<DocT>.State.IMPLAUSIBLE.ToString();
       }
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public bool CheckValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) where DocT : BaseDocument<DocT> {
       return compSchema.CheckValidation(LoadBodyObject(doc), ecx, out rule);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public bool CheckValidation(object body, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) => compSchema.CheckValidation(body, ecx, out rule);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public void EvaluateComputedFields(ISchemaEvalContext ecx) => compSchema.ComputeFieldFormulas(ecx);
   }
 

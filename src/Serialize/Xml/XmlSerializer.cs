@@ -22,17 +22,18 @@ namespace Tlabs.Data.Serialize.Xml {
 
     ///<summary>Default <see cref="XmlWriterSettings"/>.</summary>
     public static XmlWriterSettings DFLTwrSettings() {
-      var wrs= new XmlWriterSettings();
-      wrs.OmitXmlDeclaration= true;
-      wrs.CloseOutput= false;
-      wrs.Indent= true;
+      var wrs= new XmlWriterSettings {
+        OmitXmlDeclaration= true,
+        CloseOutput= false,
+        Indent= true
+      };
       return wrs;
     }
   }
 
   ///<summary>Xml format serialization.</summary>
   public class XmlFormat<T, S> : XmlFormat where T : class, new() where S : XmlFormat<T, S>.Schema, new() {
-    private readonly S schema= new S();
+    private readonly S schema= new();
 
     ///<summary>Default Ctor.</summary>
     ///<remarks>This ctor is to be used if no <see cref="XmlSerializerOptions{T}"/> are registered with any DI service provider.</remarks>
@@ -61,7 +62,7 @@ namespace Tlabs.Data.Serialize.Xml {
 
     ///<summary>Xml format serializer for <typeparamref name="T"/>.</summary>
     public class Serializer : ISerializer<T> {
-      private XmlFormat<T, S> format;
+      readonly XmlFormat<T, S> format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
       public Serializer(XmlFormat<T, S> format) {
@@ -76,23 +77,20 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Load object from XML <paramref name="strm"/>.</summary>
       public T LoadObj(Stream strm) {
-        using (var sr= new StreamReader(strm, System.Text.Encoding.UTF8, true)) {
-          return loadObj(sr);
-        }
+        using var sr= new StreamReader(strm, System.Text.Encoding.UTF8, true);
+        return loadObj(sr);
       }
 
       ///<summary>Load object from XML <paramref name="text"/>.</summary>
       public T LoadObj(string text) {
-        using (var sr= new StringReader(text)) {
-          return loadObj(sr);
-        }
+        using var sr = new StringReader(text);
+        return loadObj(sr);
       }
 
       T loadObj(TextReader txtRd) {
-        using (var rd = XmlReader.Create(txtRd, format.rdSettings)) {
-          var obj= (T)format.xml.Deserialize(rd);
-          return format.schema.Finished(obj);
-        }
+        using var rd= XmlReader.Create(txtRd, format.rdSettings);
+        var obj = (T)format.xml.Deserialize(rd);
+        return format.schema.Finished(obj);
       }
 
       ///<inheritdoc/>
@@ -104,12 +102,11 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Write object to XML <paramref name="strm"/>.</summary>
       public void WriteObj(Stream strm, T obj) {
-        using (var xw= XmlWriter.Create(strm, format.wrSettings)) {
-          format.xml.Serialize(xw, obj, format.ns);
-        }
+        using var xw= XmlWriter.Create(strm, format.wrSettings);
+        format.xml.Serialize(xw, obj, format.ns);
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEnumerable<T> LoadIEnumerable(Stream stream) {
         throw new NotImplementedException();
       }

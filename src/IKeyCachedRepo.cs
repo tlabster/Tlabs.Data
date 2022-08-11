@@ -44,7 +44,7 @@ namespace Tlabs.Data.Repo.Intern {
 
     static readonly ILogger<AbstractKeyCachedRepo<TEntity, K>> log= Tlabs.App.Logger<AbstractKeyCachedRepo<TEntity, K>>();
     static Dictionary<K, TEntity> cache;
-    static object sync= new object();
+    static readonly object sync= new object();
     static AbstractKeyCachedRepo() { 
       DataStoreEvent<TEntity>.Inserting+= evictCache;
       DataStoreEvent<TEntity>.Updating+= evictCache;
@@ -55,14 +55,14 @@ namespace Tlabs.Data.Repo.Intern {
       lock(sync) cache= null;
     }
 
-    Func<TEntity, K> obtainKey;
+    readonly Func<TEntity, K> obtainKey;
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public AbstractKeyCachedRepo(IDataStore store) : base(store) {
       this.obtainKey= this.getKeyExpression.Compile();
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IQueryable<TEntity> AllUntracked { get {
       var cache0= cache;
       IQueryable<TEntity> q= cache0?.Values.AsQueryable();
@@ -76,10 +76,10 @@ namespace Tlabs.Data.Repo.Intern {
       return q;
     }}
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public TEntity InsertOrUpdate(TEntity ent) => (null == ent) ? Insert(new TEntity()) : Update(ent);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public TEntity GetByKey(K key, bool mustExist= false) {
       if (null == key) {
         if (!mustExist) return null;
@@ -118,7 +118,7 @@ namespace Tlabs.Data.Repo.Intern {
 
     static readonly ILogger<AbstractKeyCachedRepo<TEntity, TModel, K>> log= Tlabs.App.Logger<AbstractKeyCachedRepo<TEntity, TModel, K>>();
     static Dictionary<K, TModel> cache;
-    static object sync= new object();
+    static readonly object sync= new object();
     static AbstractKeyCachedRepo() {
       DataStoreEvent<TEntity>.Inserting+= evictCache;
       DataStoreEvent<TEntity>.Updating+= evictCache;
@@ -128,14 +128,14 @@ namespace Tlabs.Data.Repo.Intern {
       lock (sync) cache= null;
     }
 
-    Func<TModel, K> obtainKey;
+    readonly Func<TModel, K> obtainKey;
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public AbstractKeyCachedRepo(IDataStore store) : base(store) {
       this.obtainKey= getKeyExpression.Compile();
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public IQueryable<TModel> AllUntracked { get {
       var cache0= cache;
       IQueryable<TModel> q= cache0?.Values.AsQueryable();
@@ -149,10 +149,10 @@ namespace Tlabs.Data.Repo.Intern {
       return q;
     }}
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public TEntity InsertOrUpdate(TEntity ent) => (null == ent) ? Insert(new TEntity()) : Update(ent);
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public TModel GetByKey(K key, bool mustExist= false) {
       if (null == key) {
         if (!mustExist) return null;

@@ -32,7 +32,7 @@ namespace BriefTempl.Data.Serialize.Bson {
         this.format= format;
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public string Encoding => "BSON";
 
       ///<summary>Load object from BSON <paramref name="strm"/>.</summary>
@@ -59,7 +59,7 @@ namespace BriefTempl.Data.Serialize.Bson {
     public class DynamicSerializer : IDynamicSerializer {
       private BsonFormat format;
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public string Encoding => "BSON";
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
@@ -67,7 +67,7 @@ namespace BriefTempl.Data.Serialize.Bson {
         this.format= format;
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEnumerable<T> LoadIEnumerable<T>(Stream stream) {
         using(var rd= new BsonReader(stream)) {
           while(rd.Read()) {
@@ -79,19 +79,19 @@ namespace BriefTempl.Data.Serialize.Bson {
         }
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public object LoadObj(Stream strm, Type type) {
         using (var rd = new BsonReader(strm)) {
           return format.bson.Deserialize(rd, type);
         }
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public object LoadObj(string base64, Type type) {
         return LoadObj(new MemoryStream(Convert.FromBase64String(base64)), type);
       }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void WriteObj(Stream strm, object obj) {
         using (var wr = new BsonWriter(strm)) {
           format.bson.Serialize(wr, obj, obj.GetType());

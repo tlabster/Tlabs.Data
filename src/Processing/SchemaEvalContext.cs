@@ -10,7 +10,7 @@ namespace Tlabs.Data.Processing {
 
   ///<summary>Schema context descriptor resolver.</summary>
   public class SchemaCtxDescriptorResolver {
-    IReadOnlyDictionary<string, ISchemaCtxDescriptor> evalCtxMap;
+    readonly IReadOnlyDictionary<string, ISchemaCtxDescriptor> evalCtxMap;
 
     ///<summary>Ctor from <paramref name="ctxDescriptors"/>.</summary>
     public SchemaCtxDescriptorResolver(IEnumerable<ISchemaCtxDescriptor> ctxDescriptors) {
@@ -107,9 +107,9 @@ namespace Tlabs.Data.Processing {
   public class NoEvaluationContext : ISchemaEvalContext {
     /// <summary>Singleton instance.</summary>
     public static readonly NoEvaluationContext Instance= new NoEvaluationContext();
-    ///<inherit/>
+    ///<inheritdoc/>
     public object GetBody() => throw new NotImplementedException();
-    ///<inherit/>
+    ///<inheritdoc/>
     public void SetBody(object body) => throw new NotImplementedException();
   }
 

@@ -17,8 +17,7 @@ namespace Tlabs.Data.Entity.Intern {
     ///</para>
     ///</remarks>
     public override bool Equals(object o) {
-      var obj= o as BaseEntity;
-      if (null == obj || GetType() != o.GetType())
+      if (o is not BaseEntity obj || GetType() != o.GetType())
         return false;
 
       return default(int) != Id
@@ -26,7 +25,7 @@ namespace Tlabs.Data.Entity.Intern {
              : Object.ReferenceEquals(this, o);
     }
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public override int GetHashCode() {
       return default(int) != Id
              ? Id

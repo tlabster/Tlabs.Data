@@ -15,99 +15,96 @@ namespace Tlabs.Data {
   ///<summary>Configure a no persitence <see cref="IDataStore"/>.</summary>
   public class NoopStoreConfigurator : IConfigurator<IServiceCollection> {
 
-    ///<inherit/>
+    ///<inheritdoc/>
     public void AddTo(IServiceCollection services, IConfiguration cfg) {
-      var log= App.Logger<NoopDataStore>();
       services.AddScoped(typeof(IDataStore), typeof(NoopDataStore));
     }
 
     ///<summary>Non storing data store.<see cref="IDataStore"/>.</summary>
     public class NoopDataStore : IDataStore {
-      static ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
+      static readonly ILogger<NoopDataStore> log= App.Logger<NoopDataStore>();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public bool AutoCommit { get => false; set => throw new NotImplementedException(); }
 
-      ///<inherit/>
-      public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
+      // ///<inheritdoc/>
+      // public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void CommitChanges() {}
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void Delete<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void Delete<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
-      ///<inherit/>
-      public void Dispose() { }
+      // ///<inheritdoc/>
+      // public void Dispose() { }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void EnsureStore(IEnumerable<IDataSeed> seeds) => log.LogInformation("Confirmed to NOT provide ANY storage facility.");
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void Evict<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public TEntity Get<TEntity>(params object[] keys) where TEntity : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public object GetIdentifier<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public E Insert<E>(E ent) where E : class => ent;
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public E Update<E>(E ent) where E : class => ent;
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEnumerable<E> Update<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public TEntity Merge<TEntity>(TEntity entity) where TEntity : class, new() => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IQueryable<TEntity> Query<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void ResetChanges() { }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void ResetAll() { }
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public void WithTransaction(Action<IDataTransaction> operation) => operation(new NoOpTransaction());
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public E LoadExplicit<E, P>(E entity, Expression<Func<E, P>> prop) where E : class where P : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public E LoadExplicit<E, P>(E entity, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class => throw new NotImplementedException();
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IQueryable<E> LoadRelated<E>(IQueryable<E> query, string navigationPropertyPath) where E : class => query;
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEagerLoadedQueryable<E, P> LoadRelated<E, P>(IQueryable<E> query, Expression<Func<E, P>> navProperty) where E : class => new EagerLoadedQueryable<E,P>(query);
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, IEnumerable<Prev>> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new EagerLoadedQueryable<E,Prop>(query);
 
-      ///<inherit/>
+      ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new EagerLoadedQueryable<E,Prop>(query);
 
-      E IDataStore.Attach<E>(E ent) {
-        throw new NotImplementedException();
-      }
+      E IDataStore.Attach<E>(E ent) => ent;
     }
     
     private class EagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {

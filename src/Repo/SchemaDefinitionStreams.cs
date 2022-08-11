@@ -8,7 +8,7 @@ using Tlabs.Data.Store;
 namespace Tlabs.Data.Repo {
 
   ///<summary>Schema definitions from serialized <see cref="Stream"/>(s).</summary>
-  public class SchemaDefinitionStreams : IDisposable {
+  public sealed class SchemaDefinitionStreams : IDisposable {
     ///<summary>Default ctor.</summary>
     public SchemaDefinitionStreams() { }
     ///<summary>Ctor from <paramref name="schema"/>.</summary>

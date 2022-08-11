@@ -56,7 +56,7 @@ namespace Tlabs.Data.Model {
 
     private Tlabs.Data.Entity.Locale resolveLocale(ICachedRepo<Tlabs.Data.Entity.Locale> locRepo) {
       var loc=   !string.IsNullOrEmpty(this.Lang) && null != locRepo
-                ? locRepo.AllUntracked().Where(l => this.Lang.Equals(l.Lang, StringComparison.InvariantCultureIgnoreCase)).SingleOrDefault()
+                ? locRepo.AllUntracked().Where(l => this.Lang.Equals(l.Lang, StringComparison.OrdinalIgnoreCase)).SingleOrDefault()
                 : null;
       if (null != loc) loc= locRepo?.Attach(loc); // mark as attached (to avoid insert of new Locale)
       return loc;
