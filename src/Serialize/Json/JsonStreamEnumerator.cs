@@ -80,6 +80,7 @@ namespace Tlabs.Data.Serialize.Json {
           buffer?.Dispose();
         }
       }
+#pragma warning restore CA1001   //StreamState is IDisposable !
 
       StreamState myState;
       Utf8JsonReader jsonReader;
