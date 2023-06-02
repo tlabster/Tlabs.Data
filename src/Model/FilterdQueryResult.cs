@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using Tlabs.Misc;
+
 namespace Tlabs.Data.Model {
 
   ///<summary>Generic filter paramters for a data query.</summary>
@@ -91,10 +93,12 @@ namespace Tlabs.Data.Model {
 
   ///<summary>Result list returned from a filtered query.</summary>
   public interface IResultList<T> : ILastResultIdentifiable {
+    ///<summary>Empty result data.</summary>
+    public static readonly IReadOnlyList<T> Empty= Singleton<List<T>>.Instance;
     ///<summary>Total (unfiltered) result size.</summary>
     int Total { get; }
     ///<summary>Filtered result of <typeparamref name="T"/>.</summary>
-    IList<T> Data { get; }
+    IReadOnlyList<T> Data { get; }
   }
 
   ///<summary>Query result list returned from a filtered query.</summary>
@@ -122,7 +126,7 @@ namespace Tlabs.Data.Model {
     ///<inheritdoc/>
     public int Total { get; set; }
     ///<inheritdoc/>
-    public IList<T> Data { get; set; }
+    public IReadOnlyList<T> Data { get; set; }= IResultList<T>.Empty;
     ///<inheritdoc/>
     public IConvertible LastId { get; set; }
   }
@@ -139,7 +143,7 @@ namespace Tlabs.Data.Model {
     ///<inheritdoc/>
     public int Total { get; set; }
     ///<inheritdoc/>
-    public IList<T2> Data { get; set; }
+    public IReadOnlyList<T2> Data { get; set; }= IResultList<T2>.Empty;
     ///<inheritdoc/>
     public IConvertible LastId { get; set; }
   }
