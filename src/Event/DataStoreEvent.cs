@@ -18,7 +18,7 @@ namespace Tlabs.Data.Event {
       return cache[tp, triggerCreator ];
     }
 
-    
+
     ///<summary>Interface of a data store trigger to raise events.</summary>
     public interface ITrigger {
       ///<summary>Raise (before) inserting <paramref name="e"/>> event.</summary>
@@ -49,13 +49,13 @@ namespace Tlabs.Data.Event {
         if (null == (this.EntType= type)) throw new ArgumentNullException(nameof(type));
         this.BaseType= baseType ?? type;
       }
-      public override bool Equals(object o) {
+      public override readonly bool Equals(object o) {
         if (o == null || GetType() != o.GetType()) return false;
         var tp= (BaseTypePair)o;
         return EntType.Equals(tp.EntType) && BaseType.Equals(tp.BaseType);
       }
 
-      public override int GetHashCode() {
+      public override readonly int GetHashCode() {
         return EntType.GetHashCode() ^ BaseType.GetHashCode();
       }
     }

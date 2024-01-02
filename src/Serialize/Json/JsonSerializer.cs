@@ -51,6 +51,7 @@ namespace Tlabs.Data.Serialize.Json {
 
     ///<summary>Json format serializer for <typeparamref name="T"/>.</summary>
     public class Serializer<T> : ISerializer<T> {
+      [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0052:Remove unread private member", Justification = "Might be needed in future")]
       readonly JsonFormat format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>
@@ -86,6 +87,7 @@ namespace Tlabs.Data.Serialize.Json {
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
     public class DynamicSerializer : IDynamicSerializer {
+      [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0052:Remove unread private member", Justification = "Might be needed in future")]
       readonly JsonFormat format;
 
       ///<summary>Ctor from <paramref name="format"/>.</summary>

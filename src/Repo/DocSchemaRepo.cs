@@ -107,7 +107,7 @@ namespace Tlabs.Data.Repo {
       }
       var typeId= DocumentSchema.AltNameCache[typeAltName, loadSchema];
 
-      if (docSchema == null) docSchema= DocumentSchema.Cache[typeId];
+      docSchema??= DocumentSchema.Cache[typeId];
 
       return docSchema;
     }

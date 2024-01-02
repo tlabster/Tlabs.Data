@@ -76,7 +76,7 @@ namespace Tlabs.Data.Serialize.Json {
           return new Utf8JsonReader(seq.Slice(bufOffset), buffer.IsEndOfStream, prevReader.CurrentState);
         }
 
-        public void Dispose() {
+        public readonly void Dispose() {
           buffer?.Dispose();
         }
       }
@@ -104,9 +104,9 @@ namespace Tlabs.Data.Serialize.Json {
         if (log.IsEnabled(LogLevel.Trace)) log.LogTrace("Deserializer start: '{json}'", System.Text.Encoding.UTF8.GetString(seq.Slice(jsonReader.Position).ToArray()));
       }
 
-      public StreamState InternalState => myState;
+      public readonly StreamState InternalState => myState;
 
-      public T? Current => myState.currentElement;
+      public readonly T? Current => myState.currentElement;
 
       public bool MoveNext() {
         if (!this.readToken() || !hasNext()) return false;
