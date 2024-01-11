@@ -5,20 +5,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
 using System.Collections.Generic;
+using Tlabs.Misc;
 
 namespace Tlabs.Data.Processing.Tests {
 
-  public class ChunkedProcessingTest {
+  public class ChunkedProcessingTest : IClassFixture<ChunkedProcessingTest.SvcProvFactory> {
+    public class SvcProvFactory : AbstractServiceProviderFactory { }
+
+    public ChunkedProcessingTest(SvcProvFactory f) { Assert.NotNull(f.SvcProv); }
 
     static int dataSum= 0;
     static int procIdx= 0;
-    static int[,] dataRes= new int[3, 27]; 
+    static int[,] dataRes= new int[3, 27];
 
     [Fact]
     public void BasicTest() {
-      var svcColl= new ServiceCollection().AddLogging();
-      App.ServiceProv= svcColl.BuildServiceProvider();
-
       var data= new int[dataRes.GetLength(1)];
       for (int l= 0; l< data.Length; ++l) data[l]= l;
 

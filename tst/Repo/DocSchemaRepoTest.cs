@@ -35,11 +35,13 @@ namespace Tlabs.Data.Repo.Tests {
     }
 
     public class TestFixture {
+      static int instanceCnt= 0;
 
       public IList<DocumentSchema> TestSchemas;
       public IDataStore DataStore;
 
       public TestFixture() {
+        if (++instanceCnt > 1) throw new InvalidOperationException("Must be created only once.");
         this.TestSchemas= new List<DocumentSchema> {
           DocSchemaProcessorTest.CreateTestSchema(),
           DocSchemaProcessorTest.CreateDocSchema()

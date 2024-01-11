@@ -44,7 +44,10 @@ namespace Tlabs.Data.Serialize.Json {
       init(stream, opt, sz);
     }
 
-    public void Dispose() => enumState.Dispose();
+    public void Dispose() {
+      stream.Dispose();
+      enumState.Dispose();
+    }
 
     void init(Stream strm, JsonSerializerOptions? jsonOpt, int bufSz) {
       var jsonDeserializer= new Deserializer(strm, jsonOpt, bufSz);

@@ -67,12 +67,17 @@ namespace Tlabs.Data.Serialize.Json.Tests {
       IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
+    public class ReusableStream : MemoryStream {
+      protected override void Dispose(bool disposing) {
+        this.Position= 0;   //do not really dispose
+      }
+    }
 
     ITestOutputHelper tstout;
     public JsonStreamEnumeratorTest(ITestOutputHelper tstout) => this.tstout= tstout;
 
     public static Stream JsonStream<T>(int cnt) where T : ITstClassInit, new() {
-      var strm= new MemoryStream();
+      var strm= new ReusableStream();
 
       var json= JsonFormat.CreateSerializer<IEnumerable<T>>();
       json.WriteObj(strm, new Enum<T>(cnt));
