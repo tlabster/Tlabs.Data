@@ -74,7 +74,7 @@ namespace Tlabs.Data.Serialize.Json {
           this.jsonOptions= jsonOptions;
           this.currentElement= default!;
         }
-        internal Utf8JsonReader newJsonReader(ref Utf8JsonReader prevReader, in ReadOnlySequence<byte> seq) {
+        internal Utf8JsonReader newJsonReader(scoped ref Utf8JsonReader prevReader, in ReadOnlySequence<byte> seq) {
           bufOffset+= prevReader.BytesConsumed;
           return new Utf8JsonReader(seq.Slice(bufOffset), buffer.IsEndOfStream, prevReader.CurrentState);
         }
