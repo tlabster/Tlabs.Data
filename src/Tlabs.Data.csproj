@@ -19,6 +19,7 @@
     <IsPackable>true</IsPackable>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://bitbucket.org/tlabster/tlabs.data</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Tlabs.Core/src/Tlabs.Core.csproj" />
+    <None Include="../README.md" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>
