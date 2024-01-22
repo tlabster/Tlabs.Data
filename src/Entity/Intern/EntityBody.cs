@@ -16,7 +16,7 @@ namespace Tlabs.Data.Entity.Intern {
 
     private Enc enc;
 
-    public byte[] BodyData { get; set; }
+    public byte[]? BodyData { get; set; }
 
     public string Encoding {
       get { return enc.ToString(); }

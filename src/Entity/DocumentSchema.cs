@@ -29,14 +29,14 @@ namespace Tlabs.Data.Entity {
     private static readonly char[] TSUB= new char[] { '-' };
     public static readonly BasicCache<string, DocumentSchema> Cache= new BasicCache<string, DocumentSchema>();
     public static readonly BasicCache<string, string> AltNameCache= new BasicCache<string, string>();
-    public static string BuildTypeId(string typeName, string typeVers) {
+    public static string BuildTypeId(string? typeName, string? typeVers) {
       return $"{typeName}:{typeVers}";
     }
 
-    private string baseType;
-    private string subType;
-    private byte[] binary_calcModelData; //not to be used as backing field
-    private Stream calcModelStream;
+    private string? baseType;
+    private string? subType;
+    private byte[]? binary_calcModelData; //not to be used as backing field
+    private Stream? calcModelStream;
 
     public static void ParseTypeId(string typeId, out string typeName, out string typeVers) {
       var typeComp= typeId.Split(TSID, 2);
@@ -46,7 +46,7 @@ namespace Tlabs.Data.Entity {
     }
 
     public static void ParseTypeName(string typeName, out string baseType, out string subType) {
-      if (null == typeName) throw new ArgumentNullException(nameof(typeName));
+      ArgumentNullException.ThrowIfNull(typeName);
       var comp= typeName.Split(TSUB);
       if (comp.Length > 2) throw new ArgumentException($"Invalid {nameof(typeName)} format: '{typeName}'");
       subType= comp.Length == 2 ? comp[1] : "";
@@ -54,22 +54,22 @@ namespace Tlabs.Data.Entity {
     }
 
 
-    public string TypeName { get; set; }
-    public string TypeAltName { get; set; } // alternate (import) form name
-    public string TypeVers { get; set; }
-    public string Comment { get; set; }
+    public string? TypeName { get; set; }
+    public string? TypeAltName { get; set; } // alternate (import) form name
+    public string? TypeVers { get; set; }
+    public string? Comment { get; set; }
 
     public string TypeId {  //implicitly not mapped
       get { return BuildTypeId(TypeName, TypeVers); }
     }
 
-    public string BaseType {
+    public string? BaseType {
       get {
         parseSubType();
         return baseType;
       }
     }
-    public string SubType {
+    public string? SubType {
       get {
         parseSubType();
         return subType;
@@ -82,45 +82,45 @@ namespace Tlabs.Data.Entity {
         ParseTypeName(TypeName, out this.baseType, out this.subType);
     }
 
-    string ctxType;
-    public string EvalContextType {
+    string? ctxType;
+    public string? EvalContextType {
       get => ctxType;
       set => ctxType= string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
-    string selfProp;
-    public string EvalCtxSelfProp {
+    string? selfProp;
+    public string? EvalCtxSelfProp {
       get => selfProp;
       set => selfProp= string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
-    public byte[] FormData { get; set; }
+    public byte[]? FormData { get; set; }
 
-    public byte[] FormStyleData { get; set; }
+    public byte[]? FormStyleData { get; set; }
 
-    public byte[] CalcModelData {
+    public byte[]? CalcModelData {
       get => binary_calcModelData;
       set {
         binary_calcModelData= value;
         calcModelStream=   HasCalcModel
-                         ? new MemoryStream(binary_calcModelData, writable: false)
+                         ? new MemoryStream(binary_calcModelData!, writable: false)
                          : null;
-      } 
+      }
     }
 
-    public Stream CalcModelStream => calcModelStream;
+    public Stream? CalcModelStream => calcModelStream;
 
     public bool HasCalcModel => null != binary_calcModelData && binary_calcModelData.Length > 0;
-    
-    public List<Field> Fields { get; set; }
-    public List<ValidationRule> Validations { get; set; }
-    public List<EvaluationRef> EvalReferences { get; set; }
+
+    public List<Field>? Fields { get; set; }
+    public List<ValidationRule>? Validations { get; set; }
+    public List<EvaluationRef>? EvalReferences { get; set; }
 
     public class Field : Intern.EditableEntity {
-      private string typeName;
-      private Type type;
-      private string extMappingInfo;
-      private IDictionary<string, string> mappingInfo;
+      private string? typeName;
+      private Type? type;
+      private string? extMappingInfo;
+      private IDictionary<string, string>? mappingInfo;
 
       ///<summary>Default ctor</summary>
       public Field() { }
@@ -139,23 +139,23 @@ namespace Tlabs.Data.Entity {
         this.CalcFormula= other.CalcFormula;
       }
 
-      public string Name { get; set; }
+      public string? Name { get; set; }
       public bool Sensitive { get; set; }
-      public string TypeName {
+      public string? TypeName {
         get { return typeName; }
         set { typeName= value; }
       }
-      public DocumentSchema Schema { get; set; }
+      public DocumentSchema? Schema { get; set; }
 
       //implicitly not mapped
       public Type Type {
         get {
-          if (type == null && !ATTR_TYPE.TryGetValue(typeName, out type)) throw new AppConfigException($"Unknown document field[{Name ?? "???"}] type: '{typeName}'.");
+          if (type == null && (null == typeName || !ATTR_TYPE.TryGetValue(typeName, out type))) throw EX.New<AppConfigException>("Unknown document field[{Name}] of type: '{TypeName}'.", Name??"?", TypeName??"?");
           return type;
         }
       }
 
-      public string ExtMappingInfo {
+      public string? ExtMappingInfo {
         get => this.extMappingInfo;
         set {
           this.extMappingInfo= value;
@@ -168,10 +168,10 @@ namespace Tlabs.Data.Entity {
         }
       }
 
-      public string CalcFormula { get; set; }
+      public string? CalcFormula { get; set; }
 
       //implicitly not mapped
-      public IDictionary<string, string> MappingInfo {
+      public IDictionary<string, string>? MappingInfo {
         get => this.mappingInfo;
       }
 
@@ -191,10 +191,10 @@ namespace Tlabs.Data.Entity {
 
 
     public class ValidationRule : Intern.BaseEntity {
-      public string Key { get; set; }
-      public string Description { get; set; }
-      public string Code { get; set; }
-      public DocumentSchema Schema { get; set; }
+      public string? Key { get; set; }
+      public string? Description { get; set; }
+      public string? Code { get; set; }
+      public DocumentSchema? Schema { get; set; }
 
 
       /// <summary>Validation exception.</summary>
@@ -213,9 +213,9 @@ namespace Tlabs.Data.Entity {
     } //class ValidationRule
 
     public class EvaluationRef : Intern.BaseEntity {
-      public string PropName { get; set; }
-      public string ReferenceSid { get; set; }
-      public DocumentSchema Schema { get; set; }
+      public string? PropName { get; set; }
+      public string? ReferenceSid { get; set; }
+      public DocumentSchema? Schema { get; set; }
     }
   }
 }

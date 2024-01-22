@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 
@@ -12,7 +11,7 @@ namespace Tlabs.Data.Model {
     public static IQueryable<T> Apply<T>(this QueryFilter filter,
                                          IQueryable<T> query,
                                          IDictionary<string, QueryFilter.FilterExpression<T>> filterMap,
-                                         IDictionary<string, QueryFilter.SorterExpression<T>> sorterMap= null) where T : Entity.Intern.BaseEntity
+                                         IDictionary<string, QueryFilter.SorterExpression<T>>? sorterMap= null) where T : Entity.Intern.BaseEntity
     {
       if (null == filter) return query;
       var filteredQuery= query;

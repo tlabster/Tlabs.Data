@@ -63,7 +63,7 @@ namespace Tlabs.Data {
     void LoadExplicit<P>(TEntity ent, Expression<Func<TEntity, IEnumerable<P>>> prop) where P : class;
 
     ///<summary>Explicitly load referenced <paramref name="prop">property</paramref> from <paramref name="ent"/> (if not already loaded).</summary>
-    void LoadExplicit<P>(TEntity ent, Expression<Func<TEntity, P>> prop) where P : class;
+    void LoadExplicit<P>(TEntity ent, Expression<Func<TEntity, P?>> prop) where P : class;
   }
 
 }

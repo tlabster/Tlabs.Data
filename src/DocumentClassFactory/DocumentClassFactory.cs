@@ -7,6 +7,7 @@ using Tlabs.Misc;
 using Tlabs.Dynamic;
 using Tlabs.Data.Entity;
 using Tlabs.Data.Repo;
+using System.Collections.Immutable;
 
 namespace Tlabs.Data {
 
@@ -27,12 +28,12 @@ namespace Tlabs.Data {
        * to avoid multiple dynamic Schema Type creations (causing memory leaks...).
        */
       return cache[typeId, () => {
-        DocumentSchema schema= null;
+        DocumentSchema? schema= null;
         App.WithServiceScope(prov => {
-          var schemaRepo= prov.GetService<IDocSchemaRepo>();
+          var schemaRepo= prov.GetRequiredService<IDocSchemaRepo>();
           schema= schemaRepo.GetByTypeId(typeId);
         });
-        return createType(schema);
+        return createType(schema ?? throw new DataEntityNotFoundException<DocumentSchema>(typeId));
       }];
     }
 
@@ -50,7 +51,7 @@ namespace Tlabs.Data {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="field"></param>
     /// <param name="keyValuePairs"></param>
@@ -68,9 +69,9 @@ namespace Tlabs.Data {
     private Type createType(DocumentSchema schema) {
       if (0 == schema.Fields?.Count) throw new InvalidOperationException("Unable to create DocBody from empty fields list");
 
-      var dynProps= schema.Fields.Select(fld => new DynamicProperty(fld.Name, fld.Type, GetAttributes(fld))).ToList();
+      IList<DynamicProperty>? dynProps= schema.Fields?.Select(fld => new DynamicProperty(fld.Name??"?", fld.Type, GetAttributes(fld))).ToList();
       string bdyTypeName= $"{schema.TypeId}-{DateTime.UtcNow.Ticks}";     //unique type name to avoid caching in DynamicClassFactory
-      return DynamicClassFactory.CreateType(dynProps, baseType, bdyTypeName);
+      return DynamicClassFactory.CreateType(dynProps ?? ImmutableList<DynamicProperty>.Empty, baseType, bdyTypeName);
     }
 
   }

@@ -16,11 +16,11 @@ namespace Tlabs.Data.Model {
       this.LastName= u.Lastname;
       this.Email= u.Email;
       this.Lang= u.Locale?.Lang;
-      this.RoleIds= u.Roles?.Select(x => x.Role.Name).ToList();
-      this.Roles= u.Roles?.Select(r => new Role(r.Role)).ToList();
+      this.RoleIds= u.Roles?.Select(x => x.Role?.Name).Where(r => null != r).ToList()!;
+      this.Roles= u.Roles?.Where(r => null != r.Role).Select(r => new Role(r.Role!)).ToList();
     }
 
-    public Tlabs.Data.Entity.User AsEntity(ICachedRepo<Tlabs.Data.Entity.Locale> locRepo= null) {
+    public Tlabs.Data.Entity.User AsEntity(ICachedRepo<Tlabs.Data.Entity.Locale>? locRepo= null) {
       var loc= resolveLocale(locRepo);
       return new Tlabs.Data.Entity.User {
         Status= this.Status,
@@ -32,7 +32,7 @@ namespace Tlabs.Data.Model {
       };
     }
 
-    public Tlabs.Data.Entity.User CopyTo(Tlabs.Data.Entity.User ent, ICachedRepo<Tlabs.Data.Entity.Locale> locRepo= null) {
+    public Tlabs.Data.Entity.User CopyTo(Tlabs.Data.Entity.User ent, ICachedRepo<Tlabs.Data.Entity.Locale>? locRepo= null) {
       var loc= resolveLocale(locRepo);
       ent.Status= this.Status ?? ent.Status;
       ent.UserName= this.Username ?? ent.UserName;
@@ -54,7 +54,7 @@ namespace Tlabs.Data.Model {
       return usr;
     }
 
-    private Tlabs.Data.Entity.Locale resolveLocale(ICachedRepo<Tlabs.Data.Entity.Locale> locRepo) {
+    private Tlabs.Data.Entity.Locale? resolveLocale(ICachedRepo<Tlabs.Data.Entity.Locale>? locRepo) {
       var loc=   !string.IsNullOrEmpty(this.Lang) && null != locRepo
                 ? locRepo.AllUntracked().Where(l => this.Lang.Equals(l.Lang, StringComparison.OrdinalIgnoreCase)).SingleOrDefault()
                 : null;
@@ -62,15 +62,15 @@ namespace Tlabs.Data.Model {
       return loc;
     }
 
-    public string Status;
+    public string? Status;
     public DateTime? Modified;
-    public string Username;
-    public string Password;
-    public string FirstName;
-    public string LastName;
-    public string Email;
-    public string Lang;
-    public IList<string> RoleIds;
-    public IList<Role> Roles;
+    public string? Username;
+    public string? Password;
+    public string? FirstName;
+    public string? LastName;
+    public string? Email;
+    public string? Lang;
+    public IList<string>? RoleIds;
+    public IList<Role>? Roles;
   }
 }

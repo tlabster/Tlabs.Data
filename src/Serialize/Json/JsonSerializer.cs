@@ -62,16 +62,16 @@ namespace Tlabs.Data.Serialize.Json {
       public string Encoding => "Json";
 
       ///<inheritdoc/>
-      public IEnumerable<T> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
+      public IEnumerable<T?> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
-      public T LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
+      public T? LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
 
       ///<inheritdoc/>
-      public T LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).AsTask().GetAwaiter().GetResult();
+      public T? LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).AsTask().GetAwaiter().GetResult();
 
       ///<inheritdoc/>
-      public T LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
+      public T? LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
 
       // ///<inheritdoc/>
       // public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
@@ -104,13 +104,13 @@ namespace Tlabs.Data.Serialize.Json {
       }
 
       ///<inheritdoc/>
-      public object LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
+      public object? LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
 
       ///<inheritdoc/>
-      public object LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).AsTask().GetAwaiter().GetResult();
+      public object? LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).AsTask().GetAwaiter().GetResult();
 
       ///<inheritdoc/>
-      public object LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);
+      public object? LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);
 
       ///<inheritdoc/>
       public void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback) {

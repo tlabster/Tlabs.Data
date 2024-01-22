@@ -5,34 +5,38 @@ using Microsoft.Extensions.Logging;
 
 using Tlabs.Data.Serialize;
 using Tlabs.Data.Entity;
+using System.Diagnostics.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace Tlabs.Data.Repo {
 
   ///<summary>>see cref="DocumentSchema"/> spcific repository.</summary>
   public interface IDocSchemaRepo : IRepo<DocumentSchema> {
     ///<summary>Get schema by <paramref name="typeId"/>.</summary>
+    ///<exception cref="DataEntityNotFoundException{DocumentSchema}">if <paramref name="typeId"/> not found </exception>
     DocumentSchema GetByTypeId(string typeId);
     ///<summary>Try to get <paramref name="schema"/> by <paramref name="typeId"/>.</summary>
-    bool TryGetByTypeId(string typeId, out DocumentSchema schema);
+    bool TryGetByTypeId(string typeId, [MaybeNullWhen(false)] out DocumentSchema schema);
     ///<summary>Get schema def. streams by <paramref name="typeId"/>.</summary>
     SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false);
     ///<summary>>Get schema by <paramref name="altName"/>.</summary>
+    ///<exception cref="DataEntityNotFoundException{DocumentSchema}">if <paramref name="altName"/> not found </exception>
     DocumentSchema GetByAltTypeName(string altName);
     ///<summary>Try to get <paramref name="schema"/> by <paramref name="altName"/>.</summary>
-    bool TryGetByAltTypeName(string altName, out DocumentSchema schema);
+    bool TryGetByAltTypeName(string altName, [MaybeNullWhen(false)] out DocumentSchema schema);
     ///<summary>List of <see cref="DocumentSchema.TypeId"/>(s) optionally filterd by <paramref name="typeIdFilter"/>.</summary>
-    IQueryable<string> FilteredTypeIdList(string typeIdFilter= null);
+    IQueryable<string> FilteredTypeIdList(string? typeIdFilter= null);
     ///<summary>Create schema from <paramref name="defStreams"/> (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
     DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Processing.IDocProcessorRepo docProcRepo);
     ///<summary>Create schema from <paramref name="defStreams"/> using <paramref name="validateSchemaSyntax"/> callback for schema syntax validation.</summary>
     DocumentSchema CreateFromStreams(SchemaDefinitionStreams defStreams, Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax);
 
     ///<summary>Create schema from streams (using <paramref name="docProcRepo"/> for schema syntax validation).</summary>
-    DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null);
+    DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream? formStrm= null, Stream? styleStrm= null, Stream? calcModelStrm= null);
 
     ///<summary>Create schema from streams (using <paramref name="validateSchemaSyntax"/> callback for schema syntax validation).</summary>
     DocumentSchema CreateFromStreams(Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax,
-                                     Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null);
+                                     Stream schemaStrm, Stream? formStrm= null, Stream? styleStrm= null, Stream? calcModelStrm= null);
 
     ///<summary>Returns form data for <paramref name="schemaId"/> of <paramref name="type"/>.</summary>
     ///<returns>Data <see cref="Stream"/>.</returns>
@@ -74,7 +78,7 @@ namespace Tlabs.Data.Repo {
     }
 
     ///<inheritdoc/>
-    public bool TryGetByTypeId(string typeId, out DocumentSchema schema) {
+    public bool TryGetByTypeId(string typeId, [MaybeNullWhen(false)] out DocumentSchema schema) {
       try {
         schema= GetByTypeId(typeId);
       }
@@ -82,12 +86,12 @@ namespace Tlabs.Data.Repo {
         schema= null;
         return false;
       }
-      return true;
+      return null != schema;
     }
 
     ///<inheritdoc/>
     public SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false) {
-      Stream stream= null;
+      Stream? stream= null;
       var schema= GetByTypeId(typeId);
       if (schemaStream) schemaSeri.WriteObj(stream= new MemoryStream(4096), schema);
       return new SchemaDefinitionStreams(schema, stream);
@@ -95,7 +99,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inheritdoc/>
     public DocumentSchema GetByAltTypeName(string altName) {
-      DocumentSchema docSchema= null;
+      DocumentSchema? docSchema= null;
       DocumentSchema.ParseTypeId(altName, out var typeAltName, out var typeVers);
       string loadSchema() {
         docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
@@ -109,11 +113,11 @@ namespace Tlabs.Data.Repo {
 
       docSchema??= DocumentSchema.Cache[typeId];
 
-      return docSchema;
+      return docSchema ?? throw new DataEntityNotFoundException<DocumentSchema>(altName);
     }
 
     ///<inheritdoc/>
-    public bool TryGetByAltTypeName(string altName, out DocumentSchema schema) {
+    public bool TryGetByAltTypeName(string altName, [MaybeNullWhen(false)] out DocumentSchema schema) {
       try {
         schema= GetByAltTypeName(altName);
       }
@@ -121,27 +125,27 @@ namespace Tlabs.Data.Repo {
         schema= null;
         return false;
       }
-      return true;
+      return null != schema;
     }
 
-    private IQueryable<DocumentSchema> filterByTypeId(string typeIdFilter) {
+    private IQueryable<DocumentSchema> filterByTypeId(string? typeIdFilter) {
       var query= AllUntracked;
-      string typeName= null;
-      string typeVers= null;
+      string? typeName= null;
+      string? typeVers= null;
       if (!string.IsNullOrEmpty(typeIdFilter)) {
         DocumentSchema.ParseTypeId(typeIdFilter, out typeName, out typeVers);
         if (0 == typeName.Length) typeName= null;
         if (0 == typeVers.Length) typeVers= null;
-        query= query.Where(s => (typeName == null || s.TypeName.Contains(typeName)) && (typeVers == null || s.TypeVers == typeVers));
+        query= query.Where(s => (typeName == null || s.TypeName!.Contains(typeName)) && (typeVers == null || s.TypeVers == typeVers));
       }
       return query;
     }
 
     ///<inheritdoc/>
-    public IQueryable<string> FilteredTypeIdList(string typeIdFilter= null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
+    public IQueryable<string> FilteredTypeIdList(string? typeIdFilter= null) => filterByTypeId(typeIdFilter).Select(s => s.TypeId);
 
     ///<inheritdoc/>
-    public DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null) {
+    public DocumentSchema CreateFromStreams(Processing.IDocProcessorRepo docProcRepo, Stream schemaStrm, Stream? formStrm= null, Stream? styleStrm= null, Stream? calcModelStrm= null) {
       using var defStreams = new SchemaDefinitionStreams {  //also cares about disposing streams
         Schema= schemaStrm,
         Form= formStrm,
@@ -153,7 +157,7 @@ namespace Tlabs.Data.Repo {
 
     ///<inheritdoc/>
     public DocumentSchema CreateFromStreams(Func<DocumentSchema, Processing.IDocSchemaProcessor> validateSchemaSyntax,
-                                            Stream schemaStrm, Stream formStrm= null, Stream styleStrm= null, Stream calcModelStrm= null)
+                                            Stream schemaStrm, Stream? formStrm= null, Stream? styleStrm= null, Stream? calcModelStrm= null)
     {
       using var defStreams = new SchemaDefinitionStreams {  //also cares about disposing streams
         Schema= schemaStrm,
@@ -197,6 +201,7 @@ namespace Tlabs.Data.Repo {
     private DocumentSchema loadFromStreams(SchemaDefinitionStreams defStreams) {
       if (null == defStreams.Schema) throw new ArgumentException("Schema stream required.");
       var schema= schemaSeri.LoadObj(defStreams.Schema);
+      if (null == schema) throw EX.New<ArgumentException>("Invalid schema defintion in {name}", $"{nameof(SchemaDefinitionStreams)}.{nameof(defStreams.Schema)}");
 
       using (var memStrm= new MemoryStream()) {
         if (null != defStreams.CalcModel) {
@@ -225,8 +230,8 @@ namespace Tlabs.Data.Repo {
     public Stream FormData(string schemaId, FormDataType type) {
       var schema= GetByTypeId(schemaId);
       return type switch {
-        FormDataType.Markup => new MemoryStream(schema.FormData),
-        FormDataType.Style  => new MemoryStream(schema.FormStyleData),
+        FormDataType.Markup => new MemoryStream(schema.FormData??Array.Empty<byte>()),
+        FormDataType.Style  => new MemoryStream(schema.FormStyleData??Array.Empty<byte>()),
         _                   => throw new ArgumentException($"Unsupported {nameof(FormDataType)}: {type}"),
       };
     }
@@ -234,7 +239,7 @@ namespace Tlabs.Data.Repo {
     ///<inheritdoc/>
     public override DocumentSchema Get(params object[] keys) {
       var typeId= AllUntracked.Where(s => (int)keys[0] == s.Id).Select(s => s.TypeId).SingleOrDefault();
-      if (null == typeId) throw new DataEntityNotFoundException<DocumentSchema>(keys[0]?.ToString());
+      if (null == typeId) throw new DataEntityNotFoundException<DocumentSchema>(keys[0]?.ToString()??"");
       return GetByTypeId(typeId); //cached schema
     }
 
@@ -243,7 +248,7 @@ namespace Tlabs.Data.Repo {
       log.LogDebug("Inserting schema: {s}", schema.TypeId);
       schema= base.Insert(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
-      DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      if (null != schema.TypeAltName) DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
       return schema;
     }
 
@@ -252,7 +257,7 @@ namespace Tlabs.Data.Repo {
       log.LogDebug("Updating schema: {s}", schema.TypeId);
       schema= base.Update(fixedSchema(schema));
       DocumentSchema.Cache[schema.TypeId]= schema;
-      DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      if (null != schema.TypeAltName) DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
       return schema;
     }
 
@@ -261,7 +266,7 @@ namespace Tlabs.Data.Repo {
       log.LogDebug("Deleting schema: {s}", schema.TypeId);
       base.Delete(schema);
       DocumentSchema.Cache.Evict(schema.TypeId);
-      DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
+      if (null != schema.TypeAltName) DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
     }
 
     ///<inheritdoc/>
@@ -269,7 +274,7 @@ namespace Tlabs.Data.Repo {
       log.LogDebug("Attaching schema: {s}", schema.TypeId);
       schema= base.Attach(schema);
       DocumentSchema.Cache[schema.TypeId]= LoadRelated(schema);
-      DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
+      if (null != schema.TypeAltName) DocumentSchema.AltNameCache[schema.TypeAltName]= schema.TypeId;
       return schema;
     }
 
@@ -278,17 +283,18 @@ namespace Tlabs.Data.Repo {
       log.LogDebug("Evicting schema: {s}", schema.TypeId);
       base.Evict(schema);
       DocumentSchema.Cache.Evict(schema.TypeId);
-      DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
+      if (null != schema.TypeAltName) DocumentSchema.AltNameCache.Evict(schema.TypeAltName);
     }
 
     private DocumentSchema LoadRelated(DocumentSchema schema) {
-      if (null == schema.Fields) store.LoadExplicit(schema, s => s.Fields);
-      if (null == schema.Validations) store.LoadExplicit(schema, s => s.Validations);
+      if (null == schema.Fields) store.LoadExplicit(schema, s => s.Fields ?? new());
+      if (null == schema.Validations) store.LoadExplicit(schema, s => s.Validations ?? new());
       return schema;
     }
 
     private DocumentSchema fixedSchema(DocumentSchema schema) {
       this.LoadRelated(schema);
+      if (null == schema.Fields) return schema;
       for (int l= 0, n= schema.Fields.Count; l < n; ++l) {
         var fld= schema.Fields[l];
         if (typeof(DocumentSchema.Field) != fld.GetType())

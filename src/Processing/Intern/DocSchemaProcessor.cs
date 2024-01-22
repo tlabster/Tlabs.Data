@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 using Microsoft.Extensions.Logging;
 
@@ -43,11 +45,11 @@ namespace Tlabs.Data.Processing.Intern {
     ///<inheritdoc/>
     public object EmptyBody {
       get {
-        var emptyBody= Activator.CreateInstance(BodyType);
+        object emptyBody= Activator.CreateInstance(BodyType)!;    //BodyType is not Nullable<>
         var bodyTypeInfo= BodyType.GetTypeInfo();
-        foreach (var strFld in Schema.Fields.Where(fld => fld.Type == typeof(string))) {
-          var prop= bodyTypeInfo.GetDeclaredProperty(strFld.Name);
-          prop.SetValue(emptyBody, string.Empty);
+        foreach (var strFld in Schema.Fields?.Where(fld => fld.Type == typeof(string)) ?? Enumerable.Empty<DocumentSchema.Field>()) {
+          var prop= bodyTypeInfo.GetDeclaredProperty(strFld.Name??"");
+          prop?.SetValue(emptyBody, string.Empty);
         }
         return emptyBody;
       }
@@ -58,17 +60,17 @@ namespace Tlabs.Data.Processing.Intern {
       checkDocument(doc);
       return doc.GetBodyObject((body)
         =>   null != body.Data
-           ? docSeri.LoadObj(new MemoryStream(body.Data), BodyType)
+           ? docSeri.LoadObj(body.Data, BodyType) ?? throw EX.New<InvalidOperationException>("Invalid body data: '{data}'", Encoding.UTF8.GetString(body.Data))
            : EmptyBody
       );
     }
 
     ///<inheritdoc/>
-    public IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>
+    public IDictionary<string, object?> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc>
       => BodyAccessor.ToDictionary(LoadBodyObject(doc));
 
     ///<inheritdoc/>
-    public object UpdateBodyObject<DocT>(DocT doc, object bodyObj, Func<object, IDictionary<string, object>> setupData= null, int bufSz= 10*1024) where DocT : BaseDocument<DocT> {
+    public object UpdateBodyObject<DocT>(DocT doc, object bodyObj, Func<object, IDictionary<string, object?>>? setupData= null, int bufSz= 10*1024) where DocT : BaseDocument<DocT> {
       checkDocument(doc);
 
       var body= doc.Body;
@@ -82,7 +84,7 @@ namespace Tlabs.Data.Processing.Intern {
         body.Encoding= docSeri.Encoding;
 
         strm.Position= 0;
-        bodyObj= docSeri.LoadObj(strm, BodyType);
+        bodyObj= docSeri.LoadObj(strm, BodyType) ?? throw EX.New<InvalidOperationException>("Invalid body data: '{data}'", Encoding.UTF8.GetString(body.Data));
       }
 
       processBodyObject(bodyObj, setupData);
@@ -102,7 +104,7 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inheritdoc/>
-    public object MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object>> props, ISchemaEvalContext cx= null) where TDoc : BaseDocument<TDoc> {
+    public object? MergeBodyProperties<TDoc>(TDoc doc, IEnumerable<KeyValuePair<string, object?>> props, ISchemaEvalContext? cx= null) where TDoc : BaseDocument<TDoc> {
       if (null == props) return props;
       var body= LoadBodyObject(doc);
       if (body.GetType() != BodyType) log.LogWarning("Doc. body type {bt} not matching processor type: {pt}", body.GetType(), BodyType);
@@ -123,13 +125,13 @@ namespace Tlabs.Data.Processing.Intern {
       return UpdateBodyObject(doc, body);
     }
     private void checkDocument<DocT>(DocT doc) where DocT : BaseDocument<DocT> {
-      if (null == doc) throw new ArgumentNullException(nameof(doc));
+      ArgumentNullException.ThrowIfNull(doc);
       if (null == doc.Body) throw new ArgumentException(nameof(doc.Body));
       if (this.Sid != doc.Sid) throw new ArgumentException(nameof(doc.Sid));
     }
 
     ///<inheritdoc/>
-    protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object>> setupData) => bodyObj;
+    protected virtual object processBodyObject(object bodyObj, Func<object, IDictionary<string, object?>>? setupData) => bodyObj;
 
     ///<inheritdoc/>
     public void ApplyValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out object body) where DocT : BaseDocument<DocT> {
@@ -143,12 +145,12 @@ namespace Tlabs.Data.Processing.Intern {
     }
 
     ///<inheritdoc/>
-    public bool CheckValidation<DocT>(DocT doc, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) where DocT : BaseDocument<DocT> {
+    public bool CheckValidation<DocT>(DocT doc, ISchemaEvalContext ecx, [MaybeNullWhen(true)] out DocumentSchema.ValidationRule rule) where DocT : BaseDocument<DocT> {
       return compSchema.CheckValidation(LoadBodyObject(doc), ecx, out rule);
     }
 
     ///<inheritdoc/>
-    public bool CheckValidation(object body, ISchemaEvalContext ecx, out DocumentSchema.ValidationRule rule) => compSchema.CheckValidation(body, ecx, out rule);
+    public bool CheckValidation(object body, ISchemaEvalContext ecx, [MaybeNullWhen(true)] out DocumentSchema.ValidationRule rule) => compSchema.CheckValidation(body, ecx, out rule);
 
     ///<inheritdoc/>
     public void EvaluateComputedFields(ISchemaEvalContext ecx) => compSchema.ComputeFieldFormulas(ecx);

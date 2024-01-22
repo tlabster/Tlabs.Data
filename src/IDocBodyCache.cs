@@ -13,7 +13,7 @@ namespace Tlabs.Data {
   public interface IDocBodyCache<K, TDoc> where TDoc : BaseDocument<TDoc> {
     ///<summary>Product entity repository.</summary>
     IRepo<TDoc> DocRepo { get; }
-    
+
     ///<summary>Document processor repo.</summary>
     IDocProcessorRepo DocProcessorRepo { get; }
 
@@ -24,18 +24,18 @@ namespace Tlabs.Data {
     ///<item><description>Setting a value of of <typeparamref name="TDoc"/> converts the document into its body object (using <c>DocProcessorRepo.GetDocumentProcessorBySid(...))</c>).</description></item>
     ///</list>
     ///</remarks>
-    object this[TDoc tmplDoc] { get; set; }
+    object? this[TDoc tmplDoc] { get; set; }
 
     ///<summary>Perform cache warm-up.</summary>
     bool WarmUp();
-    
+
   }
 }
 
 namespace Tlabs.Data.Repo.Intern {
 
   ///<summary>Object cache.</summary>
-  public interface IObjectCache<K, E> : IMemoryCache {
+  public interface IObjectCache<K, E> : IMemoryCache where K : notnull {
     ///<summary>Count of currently cached objects (informational).</summary>
     int Count { get; }
 
@@ -47,7 +47,7 @@ namespace Tlabs.Data.Repo.Intern {
   }
 
   ///<summary>Abstract object cache.</summary>
-  public abstract class AbstractObjectCache<K, E> : MemoryCache, IObjectCache<K, E> {
+  public abstract class AbstractObjectCache<K, E> : MemoryCache, IObjectCache<K, E> where K : notnull {
     ///<summary>Ctor from <paramref name="opt"/>.</summary>
     public AbstractObjectCache(IOptions<Options> opt) : base(opt ?? new Options()) {
       this.CfgOptions= (opt ?? new Options()).Value;
@@ -74,7 +74,7 @@ namespace Tlabs.Data.Repo.Intern {
   }
 
   ///<summary>Abstract document Cache.</summary>
-  public abstract class AbstractDocBodyCache<K, TDoc> : IDocBodyCache<K, TDoc> where TDoc : BaseDocument<TDoc> {
+  public abstract class AbstractDocBodyCache<K, TDoc> : IDocBodyCache<K, TDoc> where TDoc : BaseDocument<TDoc> where K : notnull {
     readonly IObjectCache<K, TDoc> cache;
     readonly MemoryCacheEntryOptions entryOpt= new MemoryCacheEntryOptions();
 
@@ -95,7 +95,7 @@ namespace Tlabs.Data.Repo.Intern {
     public IDocProcessorRepo DocProcessorRepo { get; }
 
     ///<inheritdoc/>
-    public object this[TDoc tmplDoc] {
+    public object? this[TDoc tmplDoc] {
       get {
         var key= cache.GetKey(tmplDoc);
         if (null == key) return null;

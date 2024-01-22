@@ -73,7 +73,7 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     ///<Inherit/>
-    public void LoadExplicit<P>(TEntity ent, System.Linq.Expressions.Expression<Func<TEntity, P>> prop) where P : class {
+    public void LoadExplicit<P>(TEntity ent, System.Linq.Expressions.Expression<Func<TEntity, P?>> prop) where P : class {
       store.LoadExplicit<TEntity, P>(ent, prop);
     }
   }

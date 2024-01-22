@@ -46,15 +46,15 @@ namespace Tlabs.Data.Model {
       return ent;
     }
 
-    public string Lang;
-    public string DecimalSep;
-    public string ThousandSep;
-    public string ListSep;
-    public string DateFormat;
-    public string TimeFormat;
-    public string DateTimeFormat;
-    public string IntegerFormat;
-    public string FixedFormat;
-    public string MonetaryFormat;
+    public string? Lang;
+    public string? DecimalSep;
+    public string? ThousandSep;
+    public string? ListSep;
+    public string? DateFormat;
+    public string? TimeFormat;
+    public string? DateTimeFormat;
+    public string? IntegerFormat;
+    public string? FixedFormat;
+    public string? MonetaryFormat;
   }
 }

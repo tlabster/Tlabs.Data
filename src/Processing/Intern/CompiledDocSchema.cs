@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<summary>Check <paramref name="body"/> object against the validation rules (with validation context <paramref name="cx"/>).</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    bool CheckValidation(object body, ISchemaEvalContext cx, out DocumentSchema.ValidationRule rule);
+    bool CheckValidation(object body, ISchemaEvalContext cx, [MaybeNullWhen(true)]out DocumentSchema.ValidationRule rule);
 
     ///<summary>Compute all field formulas.</summary>
     void ComputeFieldFormulas(ISchemaEvalContext cx);
@@ -48,24 +49,25 @@ namespace Tlabs.Data.Processing.Intern {
     public IReadOnlyDictionary<string, Type> EvalTypeIdx { get; }
 
     private class CompiledValidation {
-      public DocumentSchema.ValidationRule Rule { get; set; }
-      public DynamicExpression<TCx, bool> Validator { get; set; }
+      public DocumentSchema.ValidationRule? Rule { get; init; }
+      public DynamicExpression<TCx, bool>? Validator { get; init; }
     }
 
     private class CompiledFieldFomula {
-      public DocumentSchema.Field Field { get; set; }
-      public Action<object, TCx> Compute { get; set; }
+      public DocumentSchema.Field? Field { get; set; }
+      public Action<object, TCx>? Compute { get; set; }
     }
 
     /// <summary>Compile <paramref name="schema"/> for <paramref name="ctxDesc"/> using <paramref name="docClassFactory"/>.</summary>
     public static ICompiledDocSchema Compile(DocumentSchema schema, ISchemaCtxDescriptor ctxDesc, IDocumentClassFactory docClassFactory, bool newSchema) {
-      var typeMap= (schema.EvalReferences ?? Enumerable.Empty<DocumentSchema.EvaluationRef>()).ToDictionary(r => r.PropName, r => docClassFactory.GetBodyType(r.ReferenceSid));
+      var typeMap= (schema.EvalReferences ?? Enumerable.Empty<DocumentSchema.EvaluationRef>()).ToDictionary(r => r.PropName ?? throw new ArgumentNullException(nameof(r.PropName)),
+                                                                                                            r => docClassFactory.GetBodyType(r.ReferenceSid ?? ""));
       var bodyType=   newSchema
                     ? docClassFactory.CreateBodyType(schema)
                     : docClassFactory.GetBodyType(schema.TypeId);
       typeMap[schema.EvalCtxSelfProp ?? nameof(DefaultSchemaEvalContext.d)]= bodyType;
       var compType= typeof(CompiledDocSchema<>).MakeGenericType(ctxDesc.EvalCtxTypeAccessor.TargetType);
-      return (ICompiledDocSchema)Activator.CreateInstance(compType, schema, bodyType, typeMap);
+      return (ICompiledDocSchema)Activator.CreateInstance(compType, schema, bodyType, typeMap)!;    //compType is never nullable<>
     }
 
     /// <summary>Ctor form <paramref name="schema"/>, <paramref name="bodyType"/> and <paramref name="evalTypeIdx"/>.</summary>
@@ -87,18 +89,18 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<summary>Check <paramref name="body"/> object against the validation rules.</summary>
     ///<returns>true if valid. If invalid (false) the offending rule is set in <paramref name="rule"/>.</returns>
-    public bool CheckValidation(object body, ISchemaEvalContext cx, out DocumentSchema.ValidationRule rule) {
+    public bool CheckValidation(object body, ISchemaEvalContext cx, [MaybeNullWhen(true)] out DocumentSchema.ValidationRule rule) {
       rule= null;
       var evCtx= cx as TCx;
       if (null == evCtx) throw (ArgumentException)(null == evCtx ? new ArgumentNullException(nameof(evCtx)) : new ArgumentException($"Can't cast {evCtx.GetType()} into {typeof(TCx)}"));
-      foreach (var v in compValidations) try {
+      foreach (var v in compValidations) if (null != v.Rule) try {
         rule= v.Rule.NewCopy<DocumentSchema.ValidationRule>();
         log.LogTrace("Evaluating rule {rule} for body type: {bt}", rule.Key, evCtx.GetBody().GetType());
-        if (!v.Validator.Evaluate(evCtx))
+        if (false == v.Validator?.Evaluate(evCtx))
           return false;
       }
       catch (Exception e) {
-        log.LogDebug(e, "Rule {rule} evaluation failed: {msg}", rule.Key, e.Message);
+        log.LogDebug(e, "Rule {rule} evaluation failed: {msg}", rule!.Key, e.Message);
         throw new DocumentValidationException(rule, e);
       }
       rule= null;
@@ -107,7 +109,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<inheritdoc/>
     public void ComputeFieldFormulas(ISchemaEvalContext cx) {
-      IDictionary<string, object> bdyProps= null;
+      IDictionary<string, object?>? bdyProps= null;
       var evCtx= cx as TCx;
       if (null == evCtx) throw (ArgumentException)(null == evCtx ? new ArgumentNullException(nameof(evCtx)) : new ArgumentException($"Can't cast {evCtx.GetType()} into {typeof(TCx)}"));
       if (log.IsEnabled(LogLevel.Debug)) {
@@ -115,35 +117,35 @@ namespace Tlabs.Data.Processing.Intern {
         bdyProps= BodyAccessor.ToDictionary(evCtx.GetBody());
       }
       foreach(var frml in compFieldFormulas) {
-        frml.Compute(evCtx.GetBody(), evCtx);
-        if (log.IsEnabled(LogLevel.Trace)) log.LogTrace("{fld}[{calc}]]: {val}", frml.Field.Name, frml.Field.CalcFormula, bdyProps[frml.Field.Name]);
+        frml.Compute?.Invoke(evCtx.GetBody(), evCtx);
+        if (log.IsEnabled(LogLevel.Trace) && null != bdyProps) log.LogTrace("{fld}[{calc}]]: {val}", frml.Field?.Name, frml.Field?.CalcFormula, bdyProps[frml.Field?.Name??""]);
       }
     }
 
-    private IEnumerable<CompiledValidation> compiledValidation(List<DocumentSchema.ValidationRule> validations) {
+    private CompiledValidation[] compiledValidation(List<DocumentSchema.ValidationRule> validations) {
       var validRules= new CompiledValidation[validations.Count];
       var errors= new List<ExpressionSyntaxException>();
 
       for (var l = 0; l < validations.Count; ++l) try {
-          var valid= validations[l];
-          var exprCode= valid.Code;
-          if (!exprCode.StartsWith("{", StringComparison.Ordinal) || !exprCode.EndsWith("}", StringComparison.Ordinal)) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
-          exprCode= exprCode.Substring(1, exprCode.Length-2);
+        var valid= validations[l];
+        var exprCode= valid.Code  ?? "";
+        if (!exprCode.StartsWith('{') || !exprCode.EndsWith('}')) throw new ExpressionSyntaxException("Validation rule expession within {braces} expected.");
+        exprCode= exprCode.Substring(1, exprCode.Length-2); //[1..^1];
           validRules[l]= new CompiledValidation {
-            Rule= validations[l],
-            Validator= new DynamicExpression<TCx, bool>(exprCode, EvalTypeIdx, Tlabs.Dynamic.Misc.Function.Library)
-          };
-        }
-        catch (ExpressionSyntaxException se) {
-          errors.Add(se);
-          if (errors.Count >= 10) break;
-        }
+          Rule= validations[l],
+          Validator= new DynamicExpression<TCx, bool>(exprCode, EvalTypeIdx, Tlabs.Dynamic.Misc.Function.Library)
+        };
+      }
+      catch (ExpressionSyntaxException se) {
+        errors.Add(se);
+        if (errors.Count >= 10) break;
+      }
       if (errors.Count > 0) throw new ExpressionSyntaxException(errors);  //error aggregate
       log.LogDebug("Compiled {n} validation(s).", validRules.Length);
       return validRules;
     }
 
-    private IEnumerable<CompiledFieldFomula> compiledFormulas(List<DocumentSchema.Field> fields) {
+    private List<CompiledFieldFomula> compiledFormulas(List<DocumentSchema.Field> fields) {
       var compParams= new ParameterExpression[] {
         Expression.Parameter(typeof(object), "body"),
         Expression.Parameter(typeof(TCx), "cx")
@@ -163,12 +165,12 @@ namespace Tlabs.Data.Processing.Intern {
 
     private Action<object, TCx> compiledFrml(DocumentSchema.Field fld, ParameterExpression[] callParams, IReadOnlyDictionary<string, Type> cxCnv) {
       try {
-        var ctxExprInfo= DynXHelper.BuildExpression(fld.CalcFormula, callParams[1], fld.Type, Tlabs.Dynamic.Misc.Function.Library, cxCnv);
+        var ctxExprInfo= DynXHelper.BuildExpression(fld.CalcFormula??"", callParams[1], fld.Type, Tlabs.Dynamic.Misc.Function.Library, cxCnv);
         var asgnParms= callParams.Select((par, l) => l == 0 ? Expression.Parameter(BodyType, "bdy") : par).ToArray();
         var convParms= callParams.Select((par, l) => l == 0 ? Expression.Convert(par, BodyType) : (Expression)par).ToArray();
 
         var propAssign= Expression.Lambda(Expression.Assign(
-                        Expression.MakeMemberAccess(asgnParms[0], BodyType.GetProperty(fld.Name, fld.Type)),
+                        Expression.MakeMemberAccess(asgnParms[0], BodyType.GetProperty(fld.Name??"", fld.Type) ?? throw EX.New<InvalidOperationException>("Missing property '{propName}' in {type}", fld.Name??"", BodyType.Name)),
                         ctxExprInfo.Expression), asgnParms);
         var delType= typeof(Action<,>).MakeGenericType(BodyType, typeof(TCx));
         var lambda=  Expression.Lambda<Action<object, TCx>>(Expression.Invoke(propAssign, convParms), callParams);

@@ -12,20 +12,20 @@ namespace Tlabs.Data.Repo {
     ///<summary>Default ctor.</summary>
     public SchemaDefinitionStreams() { }
     ///<summary>Ctor from <paramref name="schema"/>.</summary>
-    public SchemaDefinitionStreams(DocumentSchema schema, Stream schemaStream) {
+    public SchemaDefinitionStreams(DocumentSchema schema, Stream? schemaStream) {
       this.Schema= schemaStream;
       this.Form= null != schema.FormData ? new MemoryStream(schema.FormData, writable: false) : null;
       this.Style= null != schema.FormStyleData ? new MemoryStream(schema.FormStyleData, writable: false) : null;
       this.CalcModel= schema.CalcModelStream;
     }
     ///<summary>Schema definition (required).</summary>
-    public Stream Schema { get; set; }
+    public Stream? Schema { get; set; }
     ///<summary>Schema calculation model definition (optional).</summary>
-    public Stream CalcModel { get; set; }
+    public Stream? CalcModel { get; set; }
     ///<summary>Schema form definition (optional).</summary>
-    public Stream Form { get; set; }
+    public Stream? Form { get; set; }
     ///<summary>Schema style definition (optional).</summary>
-    public Stream Style { get; set; }
+    public Stream? Style { get; set; }
 
     ///<summary>Dispose all <see cref="Stream"/>(s).</summary>
     public void Dispose() {

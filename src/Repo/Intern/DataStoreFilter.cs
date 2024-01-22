@@ -26,7 +26,7 @@ namespace Tlabs.Data.Repo.Intern {
     /// <param name="predicate">The predicate.</param>
     /// <returns>A new <see cref="IDataStoreFilter{E}"/>.</returns>
     public static IDataStoreFilter<E> Where(Expression<Func<E, bool>> predicate) {
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      ArgumentNullException.ThrowIfNull(predicate);
 
       return new WhereDataStoreFilter<E>(predicate);
     }
@@ -58,8 +58,8 @@ namespace Tlabs.Data.Repo.Intern {
     /// <param name="predicate">The predicate.</param>
     /// <returns>A new <see cref="IDataStoreFilter{E}"/>.</returns>
     public static IDataStoreFilter<E> Where<E>(this IDataStoreFilter<E> baseFilter, Expression<Func<E, bool>> predicate) {
-      if (baseFilter == null) throw new ArgumentNullException(nameof(baseFilter));
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      ArgumentNullException.ThrowIfNull(baseFilter);
+      ArgumentNullException.ThrowIfNull(predicate);
 
       return new WhereDataStoreFilter<E>(baseFilter, predicate);
     }
@@ -69,27 +69,28 @@ namespace Tlabs.Data.Repo.Intern {
   /// <typeparam name="E">The type of the entity.</typeparam>
   [DebuggerDisplay("DataStoreFilter ( where {ToString()} )")]
   internal sealed class WhereDataStoreFilter<E> : IDataStoreFilter<E> {
-    private readonly IDataStoreFilter<E> baseFilter;
-    private readonly Expression<Func<E, bool>> predicate;
+    private readonly IDataStoreFilter<E>? baseFilter;
+    private readonly Expression<Func<E, bool>>? predicate;
 
     /// <summary>Initializes a new instance of the <see cref="WhereDataStoreFilter{E}"/> class.</summary>
     /// <param name="predicate">The predicate.</param>
     public WhereDataStoreFilter(Expression<Func<E, bool>> predicate) {
-      this.predicate = predicate;
+      this.predicate= predicate;
     }
 
     /// <summary>Initializes a new instance of the <see cref="WhereDataStoreFilter{E}"/> class.</summary>
     /// <param name="baseFilter">The base filter.</param>
     /// <param name="predicate">The predicate.</param>
     public WhereDataStoreFilter(IDataStoreFilter<E> baseFilter, Expression<Func<E, bool>> predicate) {
-      this.baseFilter = baseFilter;
-      this.predicate = predicate;
+      this.baseFilter= baseFilter;
+      this.predicate= predicate;
     }
 
     /// <summary>Filters the specified query.</summary>
     /// <param name="query">The query.</param>
     /// <returns>A filtered query.</returns>
     public IQueryable<E> Filter(IQueryable<E> query) {
+      if (null == this.predicate) return query;
       if (this.baseFilter == null)
         return query.Where(this.predicate);
 
@@ -97,15 +98,14 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     /// <inherit/>
-    public override string ToString() {
-      string baseFilterPresentation =
-                this.baseFilter != null ? this.baseFilter.ToString() : string.Empty;
+    public override string? ToString() {
+      string baseFilterPresentation= this.baseFilter?.ToString() ?? string.Empty;
 
       // The returned string is used in the DebuggerDisplay.
       if (!string.IsNullOrEmpty(baseFilterPresentation))
-        return baseFilterPresentation + ", " + this.predicate.ToString();
+        return baseFilterPresentation + ", " + this.predicate?.ToString();
 
-      return this.predicate.ToString();
+      return this.predicate?.ToString() ?? string.Empty;
     }
   }
 }

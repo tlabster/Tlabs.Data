@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Configuration;
@@ -29,8 +30,8 @@ namespace Tlabs.Data {
     public RepositoriesConfigurator() : this(null) { }
 
     ///<summary>Ctor from <paramref name="config"/>.</summary>
-    public RepositoriesConfigurator(IDictionary<string, string> config) {
-      this.config= config ?? new Dictionary<string, string>();
+    public RepositoriesConfigurator(IDictionary<string, string>? config) {
+      this.config= config ?? ImmutableDictionary<string, string>.Empty;
     }
 
     ///<inheritdoc/>
@@ -94,6 +95,6 @@ namespace Tlabs.Data {
 #endif
       services.AddScoped<IDocSchemaRepo, DocSchemaRepo>();
     }
-    
+
   }
 }

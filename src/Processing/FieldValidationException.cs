@@ -7,7 +7,7 @@ namespace Tlabs.Data.Processing {
   /// <summary>Document validation exception, thrown during validation.</summary>
   public class DocumentValidationException : GeneralException {
     /// <summary>Rule for which validation failed.</summary>
-    public DocumentSchema.ValidationRule Rule { get; }
+    public DocumentSchema.ValidationRule? Rule { get; }
     /// <summary>Default ctor</summary>
     public DocumentValidationException() : base() { }
     /// <summary>Ctor from message</summary>

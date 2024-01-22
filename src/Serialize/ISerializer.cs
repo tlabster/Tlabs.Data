@@ -28,13 +28,13 @@ namespace Tlabs.Data.Serialize {
     void WriteObj(Stream strm, object obj);
 
     /// <summary>Load deserialized object from <paramref name="utf8"/> bytes with expected <paramref name="type"/>.</summary>
-    object LoadObj(byte[] utf8, Type type);
+    object? LoadObj(byte[] utf8, Type type);
 
     /// <summary>Load deserialized object from <paramref name="strm"/> stream with expected <paramref name="type"/>.</summary>
-    object LoadObj(Stream strm, Type type);
+    object? LoadObj(Stream strm, Type type);
 
     /// <summary>Load deserialized object from <paramref name="text"/> string with expected <paramref name="type"/>.</summary>
-    object LoadObj(string text, Type type);
+    object? LoadObj(string text, Type type);
 
     /// <summary>Write serialized <paramref name="itemsToSerialize"/> to <paramref name="strm"/> from IEnumerable.</summary>
     void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback);
@@ -55,19 +55,19 @@ namespace Tlabs.Data.Serialize {
     void WriteObj(Stream strm, T obj);
 
     /// <summary>Load deserialized instance of T from <paramref name="utf8"/> bytes.</summary>
-    T LoadObj(byte[] utf8);
+    T? LoadObj(byte[] utf8);
 
     /// <summary>Load deserialized instance of T from <paramref name="strm"/> stream.</summary>
-    T LoadObj(Stream strm);
+    T? LoadObj(Stream strm);
 
     /// <summary>Load deserialized instance of T from <paramref name="text"/> string.</summary>
-    T LoadObj(string text);
-    
+    T? LoadObj(string text);
+
     // /// <summary>Write serialized <paramref name="itemsToSerialize"/> to <paramref name="strm"/> from IEnumerable.</summary>
     // void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback);
 
     /// <summary>Load deserialized items from <paramref name="strm"/> string as IEnumerable.</summary>
-    IEnumerable<T> LoadIEnumerable(Stream strm);
+    IEnumerable<T?> LoadIEnumerable(Stream strm);
   }
 
   /// <summary>
