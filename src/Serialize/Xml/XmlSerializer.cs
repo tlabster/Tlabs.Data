@@ -73,6 +73,9 @@ namespace Tlabs.Data.Serialize.Xml {
       public string Encoding => "XML";
 
       ///<inheritdoc/>
+      public T? LoadObj(ReadOnlySpan<byte> utf8xml) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8xml));
+
+      ///<inheritdoc/>
       public T? LoadObj(byte[] utf8Xml) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8Xml));
 
       ///<summary>Load object from XML <paramref name="strm"/>.</summary>
@@ -83,7 +86,7 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<summary>Load object from XML <paramref name="text"/>.</summary>
       public T? LoadObj(string text) {
-        using var sr = new StringReader(text);
+        using var sr= new StringReader(text);
         return loadObj(sr);
       }
 

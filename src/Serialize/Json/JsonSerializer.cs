@@ -65,10 +65,13 @@ namespace Tlabs.Data.Serialize.Json {
       public IEnumerable<T?> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
+      public T? LoadObj(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
+
+      ///<inheritdoc/>
       public T? LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
 
       ///<inheritdoc/>
-      public T? LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).AsTask().GetAwaiter().GetResult();
+      public T? LoadObj(Stream strm) => JsonSerializer.Deserialize<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
       public T? LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
@@ -82,7 +85,7 @@ namespace Tlabs.Data.Serialize.Json {
       public byte[] WriteObj(T obj) => JsonSerializer.SerializeToUtf8Bytes<T>(obj, DefaultOptions);
 
       ///<inheritdoc/>
-      public void WriteObj(Stream strm, T obj) => JsonSerializer.SerializeAsync<T>(strm, obj, DefaultOptions).GetAwaiter().GetResult();
+      public void WriteObj(Stream strm, T obj) => JsonSerializer.Serialize<T>(strm, obj, DefaultOptions);
     }
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
@@ -102,6 +105,9 @@ namespace Tlabs.Data.Serialize.Json {
       public IEnumerable LoadIEnumerable(Stream strm) {
         throw new NotImplementedException();
       }
+
+      ///<inheritdoc/>
+      public object? LoadObj(ReadOnlySpan<byte> utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
 
       ///<inheritdoc/>
       public object? LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);

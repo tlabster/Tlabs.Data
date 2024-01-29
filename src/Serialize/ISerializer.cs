@@ -27,6 +27,9 @@ namespace Tlabs.Data.Serialize {
     /// <summary>Write serialized <paramref name="obj"/> to <paramref name="strm"/>.</summary>
     void WriteObj(Stream strm, object obj);
 
+    /// <summary>Load deserialized object from <paramref name="utf8"/> byte span with expected <paramref name="type"/>.</summary>
+    object? LoadObj(ReadOnlySpan<byte> utf8, Type type);
+
     /// <summary>Load deserialized object from <paramref name="utf8"/> bytes with expected <paramref name="type"/>.</summary>
     object? LoadObj(byte[] utf8, Type type);
 
@@ -53,6 +56,9 @@ namespace Tlabs.Data.Serialize {
 
     /// <summary>Write serialized <paramref name="obj"/> to <paramref name="strm"/>.</summary>
     void WriteObj(Stream strm, T obj);
+
+    /// <summary>Load deserialized instance of T from <paramref name="utf8"/> byte span.</summary>
+    T? LoadObj(ReadOnlySpan<byte> utf8);
 
     /// <summary>Load deserialized instance of T from <paramref name="utf8"/> bytes.</summary>
     T? LoadObj(byte[] utf8);
