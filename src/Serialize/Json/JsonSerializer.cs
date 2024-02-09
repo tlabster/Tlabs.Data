@@ -65,7 +65,7 @@ namespace Tlabs.Data.Serialize.Json {
       public IEnumerable<T?> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
-      public T? LoadObj(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
+      public T? LoadObj(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);    //***TODO: change into ReadOnlySequence<byte>...
 
       ///<inheritdoc/>
       public T? LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
