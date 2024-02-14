@@ -57,7 +57,7 @@ namespace Tlabs.Data.Serialize.Json.Tests {
     }
 
     public class Enum<T> : IEnumerable<T> where T : ITstClassInit, new() {
-      public Enum(int cnt = 34567) => this.cnt= cnt;
+      public Enum(int cnt= 34567) => this.cnt= cnt;
       readonly int cnt;
       public IEnumerator<T> GetEnumerator() {
         var rnd= new Random();
@@ -76,7 +76,7 @@ namespace Tlabs.Data.Serialize.Json.Tests {
     ITestOutputHelper tstout;
     public JsonStreamEnumeratorTest(ITestOutputHelper tstout) => this.tstout= tstout;
 
-    public static Stream JsonStream<T>(int cnt) where T : ITstClassInit, new() {
+    public static MemoryStream JsonStream<T>(int cnt) where T : ITstClassInit, new() {
       var strm= new ReusableStream();
 
       var json= JsonFormat.CreateSerializer<IEnumerable<T>>();
@@ -108,6 +108,8 @@ namespace Tlabs.Data.Serialize.Json.Tests {
         Assert.NotEmpty(obj.AryProp);
       };
       var strm= JsonStream<TestClass>(JSON_CNT);
+
+      Assert.NotEmpty(JsonFormat.CreateSerializer<IEnumerable<TestClass>>().LoadObj(strm));
 
       serializewithBufSize<TestClass>(strm, JSON_CNT, 17, test);
       serializewithBufSize<TestClass>(strm, JSON_CNT, 256, test);

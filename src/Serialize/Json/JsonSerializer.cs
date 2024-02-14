@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -65,6 +64,12 @@ namespace Tlabs.Data.Serialize.Json {
       public IEnumerable<T?> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
+      public T? LoadObj(ReadOnlySequence<byte> utf8Json) {
+        var reader= new Utf8JsonReader(utf8Json, true, default);
+        return JsonSerializer.Deserialize<T>(ref reader, DefaultOptions);
+      }
+
+      ///<inheritdoc/>
       public T? LoadObj(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);    //***TODO: change into ReadOnlySequence<byte>...
 
       ///<inheritdoc/>
@@ -104,6 +109,12 @@ namespace Tlabs.Data.Serialize.Json {
       ///<inheritdoc/>
       public IEnumerable LoadIEnumerable(Stream strm) {
         throw new NotImplementedException();
+      }
+
+      ///<inheritdoc/>
+      public object? LoadObj(ReadOnlySequence<byte> utf8Json, Type type) {
+        var reader= new Utf8JsonReader(utf8Json, true, default);
+        return JsonSerializer.Deserialize(ref reader, type, DefaultOptions);
       }
 
       ///<inheritdoc/>

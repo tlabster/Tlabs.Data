@@ -4,6 +4,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using System.Buffers;
 
 namespace Tlabs.Data.Serialize.Xml {
 
@@ -71,6 +72,10 @@ namespace Tlabs.Data.Serialize.Xml {
 
       ///<inheritdoc/>
       public string Encoding => "XML";
+
+
+      ///<inheritdoc/>
+      public T? LoadObj(ReadOnlySequence<byte> utf8) => LoadObj(utf8.ToArray());
 
       ///<inheritdoc/>
       public T? LoadObj(ReadOnlySpan<byte> utf8xml) => LoadObj(System.Text.Encoding.UTF8.GetString(utf8xml));
