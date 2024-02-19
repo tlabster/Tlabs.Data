@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
 using Tlabs.Data.Serialize;
 using Tlabs.Data.Entity;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections.Immutable;
+using Tlabs.Data.Entity.Intern;
 
 namespace Tlabs.Data.Repo {
 
@@ -65,7 +66,7 @@ namespace Tlabs.Data.Repo {
     public DocumentSchema GetByTypeId(string typeId) {
       DocumentSchema loadSchema() { //helping Omnisharp...
         DocumentSchema.ParseTypeId(typeId, out var typeName, out var typeVers);
-        var docSchema = AllUntracked.LoadRelated(store, s => s.Fields)
+        var docSchema= AllUntracked.LoadRelated(store, s => s.Fields)
                                    .LoadRelated(store, s => s.Validations)
                                    .LoadRelated(Store, s => s.EvalReferences)
                                    .SingleOrDefault(s => s.TypeName == typeName && s.TypeVers == typeVers);
@@ -93,7 +94,15 @@ namespace Tlabs.Data.Repo {
     public SchemaDefinitionStreams StreamsByTypeId(string typeId, bool schemaStream= false) {
       Stream? stream= null;
       var schema= GetByTypeId(typeId);
-      if (schemaStream) schemaSeri.WriteObj(stream= new MemoryStream(4096), schema);
+      if (schemaStream && null != schema.Fields) {
+        var fields= schema.Fields;
+        var fields2= new List<DocumentSchema.Field>();
+        foreach(var f in schema.Fields) fields2.Add(new AnyChildXmlField(f));
+        schema.Fields= fields2;
+        schemaSeri.WriteObj(stream= new MemoryStream(4096), schema);
+        schema.Fields= fields;
+        stream.Position= 0;
+      }
       return new SchemaDefinitionStreams(schema, stream);
     }
 

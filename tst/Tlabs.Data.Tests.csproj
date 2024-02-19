@@ -31,7 +31,7 @@
     <PackageReference Include="ReportGenerator" Version="5.2.*" PrivateAssets="All"/>
   </ItemGroup>
   <Target Name="GenerateHtmlCoverageReport" AfterTargets="GenerateCoverageResultAfterTest">
-    <ReportGenerator ReportFiles="@(CoverletReport)" TargetDirectory="__coverage/html" ReportTypes="HtmlInline_AzurePipelines_Light"/>
+    <ReportGenerator ReportFiles="@(CoverletReport)" TargetDirectory="__coverage/html" ReportTypes="HtmlInline_AzurePipelines_Dark"/>
   </Target>
 
   <ItemGroup>

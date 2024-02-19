@@ -23,7 +23,9 @@ namespace Tlabs.Data.Processing.Tests {
 
     public static DocumentSchema CreateTestSchema() {
       return new DocumentSchema {
+        Id= 2,
         TypeName= "TST-DOC",
+        TypeAltName= "ALT-TST-DOC",
         TypeVers= "0",
         Comment= "comment text",
         FormData= Encoding.UTF8.GetBytes("<html></html>"),
@@ -108,7 +110,9 @@ namespace Tlabs.Data.Processing.Tests {
 
     public static DocumentSchema CreateDocSchema() {
       var schema= new DocumentSchema() {
+        Id= 1,
         TypeName= "basic-x",
+        TypeAltName= "alt-basic-z",
         TypeVers= "123",
         Comment= "test",
         Fields= SAMPLE_SCHEMA_FIELDS

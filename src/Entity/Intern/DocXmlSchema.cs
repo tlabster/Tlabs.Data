@@ -147,6 +147,12 @@ namespace Tlabs.Data.Entity.Intern {
   ///<summary>Derived <see cref="DocumentSchema.Field"/> to convert any xml child-elements into <see cref="DocumentSchema.Field.ExtMappingInfo"/>.</summary>
   public class AnyChildXmlField : DocumentSchema.Field {
 
+    ///<summary>Default ctor</summary>
+    public AnyChildXmlField() { }
+
+    ///<summary>Ctor from <paramref name="other"/></summary>
+    public AnyChildXmlField(DocumentSchema.Field other) : base(other) { }
+
     ///<summary>Property to receive any child elements.</summary>
     public System.Xml.XmlElement[]? AnyChildElements {
       get { return null; }

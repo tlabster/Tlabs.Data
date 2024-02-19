@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 
 using Xunit;
-using Xunit.Abstractions;
 using Moq;
-using System.Linq.Expressions;
 
 namespace Tlabs.Data.Repo.Intern.Tests {
 
@@ -44,6 +42,11 @@ namespace Tlabs.Data.Repo.Intern.Tests {
       public string Title { get; set; }
     }
 
+    public class TestModel {
+      public string Value { get; set; }
+      public string GetKey() => Value[0..Value.IndexOf(':')];
+      public static TestModel FromEntity(TestEntity ent) => new TestModel { Value= $"{ent.Key}:{ent.Title}"};
+    }
     public class TestKeyCacheRepo : AbstractKeyCachedRepo<TestEntity, string> {
       public int SupplCnt;
       public TestKeyCacheRepo(IDataStore store) : base(store) { }
@@ -51,6 +54,16 @@ namespace Tlabs.Data.Repo.Intern.Tests {
       protected override IQueryable<TestEntity> supplementalQuery(IQueryable<TestEntity> query) {
         ++SupplCnt;
         return base.supplementalQuery(query);
+      }
+    }
+
+    public class TestModelKeyCacheRepo : AbstractKeyCachedRepo<TestEntity, TestModel, string> {
+      public int SupplCnt;
+      public TestModelKeyCacheRepo(IDataStore store) : base(store) { }
+      protected override Expression<Func<TestModel, string>> getKeyExpression => m => m.GetKey();
+      protected override IQueryable<TestModel> selectQuery (IQueryable<TestEntity> query) {
+        ++SupplCnt;
+        return query.Select(ent => TestModel.FromEntity(ent));
       }
     }
 
@@ -69,7 +82,7 @@ namespace Tlabs.Data.Repo.Intern.Tests {
     }
 
     [Fact]
-    public void BasicTest() {
+    public void KeyCacheTest() {
       var repo= new TestKeyCacheRepo(fix.Store);
 
       fix.QueryCnt= 0;
@@ -88,6 +101,33 @@ namespace Tlabs.Data.Repo.Intern.Tests {
       key= "key_03";
       Assert.NotNull(ent= repo.GetByKey(key, mustExist: false));
       Assert.Equal(key, ent.Key);
+
+      Assert.Null(repo.GetByKey("___non_existing__", mustExist: false));
+      Assert.ThrowsAny<DataEntityNotFoundException>(() => repo.GetByKey("___non_existing__", mustExist: true));
+
+      Assert.Equal(1, fix.QueryCnt);
+      Assert.Equal(fix.QueryCnt, repo.SupplCnt);
+    }
+
+    [Fact]
+    public void ModelKeyCacheTest() {
+      var repo= new TestModelKeyCacheRepo(fix.Store);
+
+      fix.QueryCnt= 0;
+      Assert.Null(repo.GetByKey(null));
+      Assert.ThrowsAny<DataEntityNotFoundException>(() => repo.GetByKey(null, mustExist: true));
+      Assert.Equal(0, fix.QueryCnt);
+      Assert.Equal(fix.QueryCnt, repo.SupplCnt);
+
+      var key= "key_01";
+      var mdl= repo.GetByKey(key, mustExist: true);
+      Assert.NotNull(mdl);
+      Assert.Equal(key, mdl.GetKey());
+      Assert.NotEmpty(repo.AllUntracked);
+
+      key= "key_03";
+      Assert.NotNull(mdl= repo.GetByKey(key, mustExist: false));
+      Assert.Equal(key, mdl.GetKey());
 
       Assert.Null(repo.GetByKey("___non_existing__", mustExist: false));
       Assert.ThrowsAny<DataEntityNotFoundException>(() => repo.GetByKey("___non_existing__", mustExist: true));
