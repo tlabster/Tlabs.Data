@@ -75,7 +75,7 @@ namespace Tlabs.Data {
         log.LogWarning(0, e, "Time-zone {tz} not available on this system - falling back to UTC !!!", tzid);
         timeZoneInfo= TimeZoneInfo.Utc;
       }
-      App.TimeInfo= new DateTimeHelper(timeZoneInfo);
+      App.Setup= App.Setup with { TimeInfo= new DateTimeHelper(timeZoneInfo) };
       log.LogWarning("Application time zone: '{id}'", timeZoneInfo.Id);
 
     }
