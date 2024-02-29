@@ -1,11 +1,10 @@
 ﻿using System.Linq;
 using System.Threading;
 
-using Microsoft.Extensions.DependencyInjection;
+using Tlabs.Config;
 
 using Xunit;
 using System.Collections.Generic;
-using Tlabs.Misc;
 
 namespace Tlabs.Data.Processing.Tests {
 
