@@ -41,7 +41,7 @@ namespace Tlabs.Data.Serialize.Tests {
 
       // De-serializes from UTC in application time zone
       TestClass deserializedFromUtc= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000Z\"}", typeof(TestClass)) as TestClass;
-      var d=  DateTime.Parse("1996-12-19T17:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
+      var d=  DateTime.Parse("1996-12-19T16:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
       Assert.Equal(d, deserializedFromUtc.DateProp);
 
       // Serializes it back again into UTC TZ

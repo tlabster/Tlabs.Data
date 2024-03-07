@@ -19,10 +19,9 @@ namespace Tlabs.Data {
   ///<summary>Configures all data repositories as services.</summary>
   public class RepositoriesConfigurator : IConfigurator<IServiceCollection> {
     ///<summary>Default windows time zone</summary>
-    public const string DEFAULT_WINDOWS_TIME_ZONE= "W. Europe Standard Time";
-    ///<summary>Default non-windows time zone</summary>
-    public const string DEFAULT_NON_WINDOWS_TIME_ZONE= "Europe/Berlin";
-
+    public static readonly string CET_ZONE_ID=   RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                                               ? "W. Europe Standard Time"
+                                               : "Europe/Berlin";
     readonly ILogger log= App.Logger<RepositoriesConfigurator>();
     readonly IDictionary<string, string> config;
 
@@ -58,18 +57,18 @@ namespace Tlabs.Data {
     }
 
     private void configureAppTime() {
-      if (   !config.TryGetValue("timeZone", out var tzid)
-          || string.IsNullOrWhiteSpace(tzid)) {
-        tzid=   RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-              ? DEFAULT_WINDOWS_TIME_ZONE
-              : DEFAULT_NON_WINDOWS_TIME_ZONE;
+      var timeZoneInfo= TimeZoneInfo.Utc;
+      config.TryGetValue("timeZone", out var tzid);
+      if (0 == string.Compare("CET", tzid, StringComparison.OrdinalIgnoreCase)) tzid= CET_ZONE_ID;
+      else if (0 == string.Compare("LOCAL", tzid, StringComparison.OrdinalIgnoreCase)) {
+        timeZoneInfo= TimeZoneInfo.Local;
+        tzid= null;
       }
 
-      /* TODO: Use TimeZoneInfo.FromSerializedString() / ToSerilaizedString() but these are available only starting from .NET Core 2.0 ...
-       */
-      TimeZoneInfo timeZoneInfo;
       try {
-        timeZoneInfo= TimeZoneInfo.FindSystemTimeZoneById(tzid);
+        /* TODO: Use TimeZoneInfo.FromSerializedString() / ToSerilaizedString() but these are available only starting from .NET Core 2.0 ...
+         */
+        if (!string.IsNullOrEmpty(tzid)) timeZoneInfo= TimeZoneInfo.FindSystemTimeZoneById(tzid);
       }
       catch (Exception e) {
         log.LogWarning(0, e, "Time-zone {tz} not available on this system - falling back to UTC !!!", tzid);
