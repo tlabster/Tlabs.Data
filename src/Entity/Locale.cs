@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace Tlabs.Data.Entity {
   ///<summary>Insured person.</summary>
   public class Locale : Intern.BaseEntity {

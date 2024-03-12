@@ -1,7 +1,5 @@
 ﻿#pragma warning disable CS1591
 
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Tlabs.Data.Entity.Intern {
 
   public class EntityBody : Intern.BaseEntity {
