@@ -61,20 +61,20 @@ namespace Tlabs.Data.Serialize.Json {
     public ref struct Deserializer {
 #pragma warning disable CA1001   //StreamState is IDisposable !
       public struct StreamState : IDisposable {
-        internal ReadStreamBuffer buffer;
+        internal SegmentSequenceBuffer buffer;
         internal long bufOffset;
         internal JsonReaderState jsonState;
         internal JsonSerializerOptions? jsonOptions;
         internal T? currentElement;
 
         public StreamState(Stream stream, JsonSerializerOptions? jsonOptions, int bufferSize) {
-          this.buffer= new ReadStreamBuffer(stream, bufferSize);
+          this.buffer= new SegmentSequenceBuffer(stream, bufferSize);
           this.jsonState= default(Utf8JsonReader).CurrentState;
           this.bufOffset= 0;
           this.jsonOptions= jsonOptions;
           this.currentElement= default!;
         }
-        internal Utf8JsonReader newJsonReader(ref Utf8JsonReader prevReader, in ReadOnlySequence<byte> seq) {
+        internal Utf8JsonReader newJsonReader(scoped ref Utf8JsonReader prevReader, in ReadOnlySequence<byte> seq) {
           bufOffset+= prevReader.BytesConsumed;
           return new Utf8JsonReader(seq.Slice(bufOffset), buffer.IsEndOfStream, prevReader.CurrentState);
         }

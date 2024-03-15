@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -62,16 +61,25 @@ namespace Tlabs.Data.Serialize.Json {
       public string Encoding => "Json";
 
       ///<inheritdoc/>
-      public IEnumerable<T> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
+      public IEnumerable<T?> LoadIEnumerable(Stream strm) => new JsonStreamEnumerator<T>(strm, DefaultOptions);
 
       ///<inheritdoc/>
-      public T LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
+      public T? LoadObj(ReadOnlySequence<byte> utf8Json) {
+        var reader= new Utf8JsonReader(utf8Json, true, default);
+        return JsonSerializer.Deserialize<T>(ref reader, DefaultOptions);
+      }
 
       ///<inheritdoc/>
-      public T LoadObj(Stream strm) => JsonSerializer.DeserializeAsync<T>(strm, DefaultOptions).AsTask().GetAwaiter().GetResult();
+      public T? LoadObj(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);    //***TODO: change into ReadOnlySequence<byte>...
 
       ///<inheritdoc/>
-      public T LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
+      public T? LoadObj(byte[] utf8Json) => JsonSerializer.Deserialize<T>(utf8Json, DefaultOptions);
+
+      ///<inheritdoc/>
+      public T? LoadObj(Stream strm) => JsonSerializer.Deserialize<T>(strm, DefaultOptions);
+
+      ///<inheritdoc/>
+      public T? LoadObj(string text) => JsonSerializer.Deserialize<T>(text, DefaultOptions);
 
       // ///<inheritdoc/>
       // public void WriteIEnumerable(Stream strm, IEnumerable<T> itemsToSerialize, ElementCallback<T> callback) {
@@ -82,7 +90,7 @@ namespace Tlabs.Data.Serialize.Json {
       public byte[] WriteObj(T obj) => JsonSerializer.SerializeToUtf8Bytes<T>(obj, DefaultOptions);
 
       ///<inheritdoc/>
-      public void WriteObj(Stream strm, T obj) => JsonSerializer.SerializeAsync<T>(strm, obj, DefaultOptions).GetAwaiter().GetResult();
+      public void WriteObj(Stream strm, T obj) => JsonSerializer.Serialize<T>(strm, obj, DefaultOptions);
     }
 
     ///<summary>Json format serializer for dynamic types known only during runtime.</summary>
@@ -104,13 +112,22 @@ namespace Tlabs.Data.Serialize.Json {
       }
 
       ///<inheritdoc/>
-      public object LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
+      public object? LoadObj(ReadOnlySequence<byte> utf8Json, Type type) {
+        var reader= new Utf8JsonReader(utf8Json, true, default);
+        return JsonSerializer.Deserialize(ref reader, type, DefaultOptions);
+      }
 
       ///<inheritdoc/>
-      public object LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).AsTask().GetAwaiter().GetResult();
+      public object? LoadObj(ReadOnlySpan<byte> utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
 
       ///<inheritdoc/>
-      public object LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);
+      public object? LoadObj(byte[] utf8Json, Type type) => JsonSerializer.Deserialize(utf8Json, type, DefaultOptions);
+
+      ///<inheritdoc/>
+      public object? LoadObj(Stream strm, Type type) => JsonSerializer.DeserializeAsync(strm, type, DefaultOptions).AsTask().GetAwaiter().GetResult();
+
+      ///<inheritdoc/>
+      public object? LoadObj(string text, Type type) => JsonSerializer.Deserialize(text, type, DefaultOptions);
 
       ///<inheritdoc/>
       public void WriteIEnumerable(Stream strm, IEnumerable itemsToSerialize, ElementCallback callback) {

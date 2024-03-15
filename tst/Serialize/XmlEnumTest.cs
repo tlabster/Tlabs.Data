@@ -41,7 +41,9 @@ namespace Tlabs.Data.Serialize.Tests {
       Assert.False(XmlEnum.TryParse("x", out tstEnm));
 
       var e0= default(Enum);
+      Assert.False(XmlEnum.TryParse("x", typeof(Enum), out e0));
       Assert.False(XmlEnum.TryParse("x", out e0));
+      Assert.Equal(default(Enum), e0);
 
       Assert.True(XmlEnum.TryParse(((int)TestEnum.One).ToString(), typeof(TestEnum), out var enm));
       Assert.Equal(TestEnum.One, enm);

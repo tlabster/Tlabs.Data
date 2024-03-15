@@ -2,8 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+
+using Tlabs.Misc;
+
 using Xunit;
 
 namespace Tlabs.Data.Serialize.Tests {
@@ -37,7 +41,7 @@ namespace Tlabs.Data.Serialize.Tests {
 
       // De-serializes from UTC in application time zone
       TestClass deserializedFromUtc= ser.LoadObj("{\"dateProp\": \"1996-12-19T16:39:57.0000000Z\"}", typeof(TestClass)) as TestClass;
-      var d=  DateTime.Parse("1996-12-19T17:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
+      var d=  DateTime.Parse("1996-12-19T16:39:57.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
       Assert.Equal(d, deserializedFromUtc.DateProp);
 
       // Serializes it back again into UTC TZ
@@ -63,6 +67,26 @@ namespace Tlabs.Data.Serialize.Tests {
     }
 
     [Fact]
+    public void ReadOnlySequenceDerializeTest() {
+      var json= Json.JsonFormat.CreateSerializer<TestClassCover>();
+      var d0=  DateTime.Parse("2018-12-01T09:00:00.000000Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
+      var obj= new TestClass {
+        StrProp= $"abc: {new string('.', 4096 + 1234)}",
+        NumProp= 2.718281828,
+        DateProp= Tlabs.App.TimeInfo.ToAppTime(d0)
+      };
+      var cover= new TestClassCover { Data= EnumerableUtil.One(obj) };
+      var strm= new MemoryStream();
+      json.WriteObj(strm, cover);
+      strm.Position= 0;
+
+      using var buf= new SegmentSequenceBuffer(strm, 1789);
+      while (!buf.IsEndOfStream) buf.Expand();
+      var cover2= json.LoadObj(buf.Sequence);
+      Assert.Equal(cover.Data.Single(), cover2.Data.Single());
+    }
+
+    [Fact]
     public void EnumerationTest() {
       var json= Json.JsonFormat.CreateSerializer<TestClassCover>();
       var strm = new MemoryStream();
@@ -76,6 +100,16 @@ namespace Tlabs.Data.Serialize.Tests {
       public string StrProp { get; set; }
       public double NumProp { get; set; }
       public DateTime DateProp { get; set; }
+      public override bool Equals(object obj) {
+        if (obj is not TestClass other) return false;
+        return    this.StrProp == other.StrProp
+               && this.NumProp == other.NumProp
+               && this.DateProp == other.DateProp;
+      }
+
+      public override int GetHashCode() {
+        return HashCode.Combine(StrProp, NumProp, DateProp);
+      }
     }
 
     public class TestClassCover {

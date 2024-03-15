@@ -35,27 +35,28 @@ namespace Tlabs.Data.Store {
 
       foreach (var dir in rscDir.GetDirectories("*.xls.data")) {
         log.LogWarning("Seeding {schema} from: {dir}", nameof(DocumentSchema), dir.FullName);
-        
+
         var xmlFile= dir.GetFiles("*.xml");
         if (1 != xmlFile.Length) throw new AppConfigException($"Exactly ONE XML schema file required in {dir.FullName}");
-        using var xmlStrm = File.OpenRead(xmlFile[0].FullName);
-        var schema = schemaSeri.LoadObj(xmlStrm);
+        using var xmlStrm= File.OpenRead(xmlFile[0].FullName);
+        var schema= schemaSeri.LoadObj(xmlStrm);
+        if (null == schema) throw EX.New<AppConfigException>("Invalid document schema in {file}", xmlFile[0].FullName);
 
-        var htmlFile = dir.GetFiles("*.htm");
+        var htmlFile= dir.GetFiles("*.htm");
         if (htmlFile.Length > 0) {
           schema.FormData= File.ReadAllBytes(htmlFile[0].FullName);
           if (htmlFile.Length > 1) log.LogWarning("Only {file} of multiple HTML forms loaded!", htmlFile[0].Name);
         }
         else log.LogWarning("No HTML form in {dir}", dir.FullName);
 
-        var cssFile = dir.GetFiles("*.css");
+        var cssFile= dir.GetFiles("*.css");
         if (cssFile.Length > 0) {
           schema.FormStyleData= File.ReadAllBytes(cssFile[0].FullName);
           if (cssFile.Length > 1) log.LogWarning("Only {file} of multiple CSS files loaded!", htmlFile[0].Name);
         }
         else log.LogWarning("No CSS file in {dir}", dir.FullName);
 
-        var xlsFile = dir.GetFiles("*.xls");
+        var xlsFile= dir.GetFiles("*.xls");
         if (xlsFile.Length > 1) {
           schema.CalcModelData= File.ReadAllBytes(xlsFile[0].FullName);
           if (xlsFile.Length > 1) log.LogWarning("Only {file} of multiple XLS files load!", xlsFile[0].FullName);

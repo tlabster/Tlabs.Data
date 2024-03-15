@@ -133,10 +133,11 @@ namespace Tlabs.Data.Entity.Intern {
 
 
     ///<summary>Custom <paramref name="schema"/> finishing by adding references in children to this schema.</summary>
-    public override DocumentSchema Finished(DocumentSchema schema) {
-      foreach (var fld in schema.Fields)
+    public override DocumentSchema? Finished(DocumentSchema? schema) {
+      if (null == schema) return schema;
+      if (null != schema.Fields) foreach (var fld in schema.Fields)
         fld.Schema= schema;
-      foreach (var vld in schema.Validations)
+      if (null != schema.Validations) foreach (var vld in schema.Validations)
         vld.Schema= schema;
 
       return schema;
@@ -146,8 +147,14 @@ namespace Tlabs.Data.Entity.Intern {
   ///<summary>Derived <see cref="DocumentSchema.Field"/> to convert any xml child-elements into <see cref="DocumentSchema.Field.ExtMappingInfo"/>.</summary>
   public class AnyChildXmlField : DocumentSchema.Field {
 
+    ///<summary>Default ctor</summary>
+    public AnyChildXmlField() { }
+
+    ///<summary>Ctor from <paramref name="other"/></summary>
+    public AnyChildXmlField(DocumentSchema.Field other) : base(other) { }
+
     ///<summary>Property to receive any child elements.</summary>
-    public System.Xml.XmlElement[] AnyChildElements {
+    public System.Xml.XmlElement[]? AnyChildElements {
       get { return null; }
       set {
         if (null == value) return;

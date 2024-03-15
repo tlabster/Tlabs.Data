@@ -43,12 +43,12 @@ namespace Tlabs.Data.Processing.Intern {
     public IDocSchemaRepo SchemaRepo => schemaRepo;
 
     ///<inheritdoc/>
-    public IDocSchemaProcessor GetDocumentProcessorBySid(string sid) {
-      if (null == sid) throw new ArgumentNullException(nameof(sid));
+    public IDocSchemaProcessor GetDocumentProcessorBySid(string? sid) {
+      ArgumentNullException.ThrowIfNull(sid);
 
       IDocSchemaProcessor loadSchemaProc() {  //helping Omnisharp...
-        var docSchema = schemaRepo.GetByTypeId(sid);
-        ISchemaCtxDescriptor ctxDesc = ctxDescResolver.DescriptorByName(docSchema.EvalContextType);
+        var docSchema= schemaRepo.GetByTypeId(sid);
+        ISchemaCtxDescriptor ctxDesc= ctxDescResolver.DescriptorByName(docSchema.EvalContextType);
         log.LogDebug("Caching new processsor for document with schema: {sid} and evalType: {type}", sid, ctxDesc.Name);
         return this.createProcessor(CompiledDocSchema<DefaultSchemaEvalContext>.Compile(docSchema, ctxDesc, docClassFactory, newSchema: false));
       }
@@ -63,7 +63,7 @@ namespace Tlabs.Data.Processing.Intern {
 
     ///<inheritdoc/>
     public IDocSchemaProcessor GetDocumentProcessor<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc> {
-      if (null == doc) throw new ArgumentNullException(nameof(doc));
+      ArgumentNullException.ThrowIfNull(doc);
       return GetDocumentProcessorBySid(doc.Sid);
     }
 
@@ -71,8 +71,10 @@ namespace Tlabs.Data.Processing.Intern {
     public SchemaEvalCtxProcessor GetSchemaEvalCtxProcessor(string sid) {
       var docProc= GetDocumentProcessorBySid(sid);
       ISchemaCtxDescriptor ctxDesc= ctxDescResolver.DescriptorByName(docProc.Schema.EvalContextType);
-      var docProcIndex= docProc.Schema.EvalReferences.ToDictionary(r => r.PropName, r => GetDocumentProcessorBySid(r.ReferenceSid));
-      docProcIndex.Add(docProc.Schema.EvalCtxSelfProp ?? nameof(DefaultSchemaEvalContext.d), docProc);
+      var docProcIndex= docProc.Schema.EvalReferences?.ToDictionary(r => r.PropName ?? throw new ArgumentNullException(nameof(r.PropName)),
+                                                                    r => GetDocumentProcessorBySid(r.ReferenceSid))
+                        ?? new();
+      docProcIndex[docProc.Schema.EvalCtxSelfProp ?? nameof(DefaultSchemaEvalContext.d)]= docProc;
       return new SchemaEvalCtxProcessor(ctxDesc, docProcIndex);
     }
 
@@ -83,11 +85,11 @@ namespace Tlabs.Data.Processing.Intern {
     public object UpdateDocumentBodyObject<TDoc>(TDoc doc, object bodyObj) where TDoc : Entity.Intern.BaseDocument<TDoc> => GetDocumentProcessor(doc).UpdateBodyObject(doc, bodyObj);
 
     ///<inheritdoc/>
-    public IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc> => GetDocumentProcessor(doc).LoadBodyProperties(doc);
+    public IDictionary<string, object?> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : BaseDocument<TDoc> => GetDocumentProcessor(doc).LoadBodyProperties(doc);
 
     ///<inheritdoc/>
     public IDocSchemaProcessor CreateDocumentProcessor(DocumentSchema docSchema) {
-      if (null == docSchema) throw new ArgumentNullException(nameof(docSchema));
+      ArgumentNullException.ThrowIfNull(docSchema);
       var sid= docSchema.TypeId;
       ISchemaCtxDescriptor ctxDesc= ctxDescResolver.DescriptorByName(docSchema.EvalContextType);
       log.LogDebug("Creating new processsor for schema: {sid} and evalType: {type}", sid, ctxDesc.Name);

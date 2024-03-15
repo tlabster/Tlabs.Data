@@ -27,11 +27,12 @@ namespace Tlabs.Data.Serialize {
     ///<summary>Property attribute setter helper.</summary>
     public struct PropAttribSetter<T> {
       ///<summary>Property map.</summary>
-      public Dictionary<string, PropertyAttribs> pMap;
+      public Dictionary<string, PropertyAttribs>? pMap;
       ///<summary>Attribute setter.</summary>
       [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0251:Member can be made 'readonly'", Justification = "Setter not readonly.")]
       public PropAttribSetter<T> Set<P>(Expression<Func<T, P>> ex, PropertyAttribs attr) {
         if (ex.Body is not MemberExpression prop) throw new ArgumentException("No member access expression");
+        if (null == pMap) throw new InvalidOperationException("No declaring type specified");
         pMap[prop.Member.Name]= attr;
         return this;
       }

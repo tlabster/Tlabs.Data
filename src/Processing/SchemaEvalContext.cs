@@ -10,7 +10,7 @@ namespace Tlabs.Data.Processing {
 
   ///<summary>Schema context descriptor resolver.</summary>
   public class SchemaCtxDescriptorResolver {
-    readonly IReadOnlyDictionary<string, ISchemaCtxDescriptor> evalCtxMap;
+    readonly Dictionary<string, ISchemaCtxDescriptor> evalCtxMap;
 
     ///<summary>Ctor from <paramref name="ctxDescriptors"/>.</summary>
     public SchemaCtxDescriptorResolver(IEnumerable<ISchemaCtxDescriptor> ctxDescriptors) {
@@ -18,8 +18,8 @@ namespace Tlabs.Data.Processing {
     }
 
     ///<summary>Resolve context descriptor by name.</summary>
-    public ISchemaCtxDescriptor DescriptorByName(string name) {
-      ISchemaCtxDescriptor ctxDesc= DefaultSchemaCtxDescriptor.Instance;
+    public ISchemaCtxDescriptor DescriptorByName(string? name) {
+      ISchemaCtxDescriptor? ctxDesc= DefaultSchemaCtxDescriptor.Instance;
       if (   !string.IsNullOrEmpty(name)
           && !evalCtxMap.TryGetValue(name, out ctxDesc)) throw new InvalidOperationException($"Unknown schema evaluation context type: '{name}'");
       return ctxDesc;
@@ -55,7 +55,7 @@ namespace Tlabs.Data.Processing {
     public DynamicAccessor EvalCtxTypeAccessor { get; }
 
     ///<summary>Context descriptor name.</summary>
-    public override string ToString() {
+    public override string? ToString() {
       return Name ?? base.ToString();
     }
   }
@@ -88,7 +88,7 @@ namespace Tlabs.Data.Processing {
   }
 
   ///<summary>Default schema evaluation context.</summary>
-  public class DefaultSchemaEvalContext : ISchemaEvalContext {
+  public sealed class DefaultSchemaEvalContext : ISchemaEvalContext {
     ///<summary>Default ctor.</summary>
     public DefaultSchemaEvalContext() { }
     ///<summary>Ctor from <paramref name="body"/>.</summary>
@@ -100,7 +100,7 @@ namespace Tlabs.Data.Processing {
     /// <summary>Set body of context.</summary>
     public void SetBody(object body) => d= body;
     /// <summary>Document (body) exposed as d (for self referencing).</summary>
-    public object d { get; private set; }
+    public object d { get; private set; }= NoEvaluationContext.Instance;
   }
 
   /// <summary>No data context type.</summary>

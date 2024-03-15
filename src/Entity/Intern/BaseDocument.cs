@@ -13,21 +13,21 @@ namespace Tlabs.Data.Entity.Intern {
       VALID= 2
     }
     private State state;
-    private BodyData docBody;
-    private object cachedBodyObj;
+    private BodyData? docBody;
+    private object? cachedBodyObj;
 
-    public virtual string Title { get; set; }
-    public virtual string Summary { get; set; }
+    public virtual string? Title { get; set; }
+    public virtual string? Summary { get; set; }
     ///<summary>Schema TypeId</summary>
-    public string Sid { get; set; }
-    public virtual string Status {
+    public string? Sid { get; set; }
+    public virtual string? Status {
       get { return state.ToString(); }
       set {
         if (!Enum.TryParse<State>(value, out this.state)) this.state= default(State);
         Validated= State.VALID == state ? App.TimeInfo.Now : default(DateTime?);
       }
     }
-    public string StatusDetails { get; set; }
+    public string? StatusDetails { get; set; }
     public DateTime Created { get; set; }
     public DateTime? Validated { get; set; }
     public BodyData Body {
@@ -48,13 +48,13 @@ namespace Tlabs.Data.Entity.Intern {
     public class BodyData : Intern.BaseEntity {
       private Enc enc;
 
-      public T Document { get; set; }
-      public byte[] Data { get; set; }
+      public T? Document { get; set; }
+      public byte[]? Data { get; set; }
       public string Encoding {
         get => enc.ToString();
         set => Enc.TryParse<Enc>(value, true, out enc);
       }
- 
+
       public enum Enc {
         Undefined = 0,
         Json,

@@ -1,4 +1,5 @@
-﻿using Tlabs.Test.Common;
+﻿using System;
+
 using Xunit;
 
 namespace Tlabs.Data.Model.Tests {
@@ -16,15 +17,19 @@ namespace Tlabs.Data.Model.Tests {
       Assert.Null(filter.Properties);
       Assert.Null(filter.SortAscBy);
 
-      var tfilter= new TimeQueryFilter(filter);
+      var tfilter= new TimeQueryFilter();
+      Assert.Equal(DateTime.MinValue, tfilter.Since);
+      Assert.Equal(DateTime.MaxValue, tfilter.Until);
+
+      tfilter= new TimeQueryFilter(filter);
       tfilter.Since= default(System.DateTime);
       Assert.Equal(filter.Limit, tfilter.Limit);
       Assert.Null(tfilter.Start);
       Assert.False(tfilter.NoTotalCount);
-      Assert.NotNull(tfilter.Properties);
-      Assert.NotNull(tfilter.SortAscBy);
+      Assert.NotEmpty(tfilter.Properties);
+      Assert.Null(tfilter.SortAscBy);
       Assert.NotNull(tfilter.Since);
-      Assert.Null(tfilter.Until);
+      Assert.Equal(DateTime.MaxValue, tfilter.Until);
 
     }
 

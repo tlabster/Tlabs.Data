@@ -25,7 +25,7 @@ namespace Tlabs.Data.Processing {
     object LoadDocumentBodyObject<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
     ///<summary>Return <paramref name="doc"/> body's properties (according to its <see cref="DocumentSchema"/>).</summary>
-    IDictionary<string, object> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
+    IDictionary<string, object?> LoadBodyProperties<TDoc>(TDoc doc) where TDoc : Entity.Intern.BaseDocument<TDoc>;
 
     ///<summary>Update <paramref name="doc"/>'s body with <paramref name="bodyObj"/>.</summary>
     object UpdateDocumentBodyObject<TDoc>(TDoc doc, object bodyObj) where TDoc : Entity.Intern.BaseDocument<TDoc>;

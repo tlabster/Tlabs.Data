@@ -9,11 +9,11 @@ namespace Tlabs.Data.Event {
     private static readonly BasicCache<BaseTypePair, ITrigger> cache= new BasicCache<BaseTypePair, ITrigger>();
 
     ///<summary>Returns a <see ref="ITrigger"/> for given <paramref name="entityType"/>.</summary>
-    public static ITrigger Trigger(Type entityType, Type baseType = null) {
+    public static ITrigger Trigger(Type entityType, Type? baseType= null) {
       var tp= new BaseTypePair(entityType, baseType);
       ITrigger triggerCreator() {
         var triggerType = typeof(DataStoreEvent<>.Trigger<>).MakeGenericType(tp.EntType, tp.BaseType);
-        return (ITrigger)Activator.CreateInstance(triggerType);
+        return (ITrigger)Activator.CreateInstance(triggerType)!;    //triggerType is never Nullable<>
       }
       return cache[tp, triggerCreator ];
     }
@@ -45,11 +45,11 @@ namespace Tlabs.Data.Event {
 
     struct BaseTypePair {
       public Type EntType, BaseType;
-      public BaseTypePair(Type type, Type baseType) {
+      public BaseTypePair(Type type, Type? baseType) {
         if (null == (this.EntType= type)) throw new ArgumentNullException(nameof(type));
         this.BaseType= baseType ?? type;
       }
-      public override readonly bool Equals(object o) {
+      public override readonly bool Equals(object? o) {
         if (o == null || GetType() != o.GetType()) return false;
         var tp= (BaseTypePair)o;
         return EntType.Equals(tp.EntType) && BaseType.Equals(tp.BaseType);

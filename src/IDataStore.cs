@@ -29,7 +29,7 @@ namespace Tlabs.Data {
 
     ///<summary>Take actions to make sure the underlying store exists and optional plants all provided <paramref name="seeds"/>.</summary>
     ///<remarks>Should create the entire store, if not present.</remarks>
-    void EnsureStore(IEnumerable<IDataSeed> seeds= null);
+    void EnsureStore(IEnumerable<IDataSeed>? seeds= null);
 
     ///<summary>Get a persistent entity instance from the data store.</summary>
     E Get<E>(params object[] ids) where E : class;
@@ -68,7 +68,7 @@ namespace Tlabs.Data {
     ///</list>
     ///</remarks>
     E Merge<E>(E ent) where E : class, new();
-    
+
     ///<summary>Track given <paramref name="ent"/> as modified for updating with the store.</summary>
     E Update<E>(E ent) where E : class;
 
@@ -91,7 +91,7 @@ namespace Tlabs.Data {
     E LoadExplicit<E, P>(E ent, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class;
 
     ///<summary>Explicitly load referenced <paramref name="prop">property</paramref> from <paramref name="ent"/> (if not already loaded).</summary>
-    E LoadExplicit<E, P>(E ent, Expression<Func<E, P>> prop) where E : class where P : class;
+    E LoadExplicit<E, P>(E ent, Expression<Func<E, P?>> prop) where E : class where P : class;
 
     ///<summary>Load related data associated with the given <paramref name="navigationPropertyPath"/> with the entities selected by the <paramref name="query"/>.</summary>
     ///<remarks>
@@ -107,7 +107,7 @@ namespace Tlabs.Data {
 
     ///<summary>Load additional related data associated with the given <paramref name="navProperty"/> based on a related type that was just loaded.</summary>
     IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, IEnumerable<Prev>> query, Expression<Func<Prev, Prop>> navProperty) where E : class;
- 
+
     ///<summary>Load additional related data associated with the given <paramref name="navProperty"/> based on a related type that was just loaded.</summary>
     IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class;
   }

@@ -12,8 +12,8 @@ namespace Tlabs.Data {
     /// (with optional <paramref name="querySupplement"/> to be used e.g. for <c>LoadRelated(...)</c> clauses).
     ///</summary>
     ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
-    System.Linq.IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>> querySupplement= null);
-    
+    System.Linq.IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement= null);
+
     ///<summary>(Mark) <paramref name="ent"/> as updated or inserted.</summary>
     TEntity InsertOrUpdate(TEntity ent);
 
@@ -27,9 +27,9 @@ namespace Tlabs.Data.Repo.Intern {
     public const int MAX_CACHE= 300;
 
     static readonly ILogger<CachedRepo<TEntity>> log= Tlabs.App.Logger<CachedRepo<TEntity>>();
-    static IQueryable<TEntity> cache;
+    static IQueryable<TEntity>? cache;
     static readonly object sync= new object();
-    static CachedRepo() { 
+    static CachedRepo() {
       DataStoreEvent<TEntity>.Inserting+= evictCache;
       DataStoreEvent<TEntity>.Updating+= evictCache;
       DataStoreEvent<TEntity>.Deleting+= evictCache;
@@ -43,8 +43,8 @@ namespace Tlabs.Data.Repo.Intern {
     public CachedRepo(IDataStore store) : base(store) { }
 
     ///<inheritdoc/>
-    public IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>> querySupplement= null) {
-      IQueryable<TEntity> all= cache;
+    public IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement= null) {
+      IQueryable<TEntity>? all= cache;
       if (null == all) lock (sync) {
         all= store.UntrackedQuery<TEntity>();
         all= querySupplement?.Invoke(all) ?? all;

@@ -7,13 +7,13 @@ namespace Tlabs.Data.Entity {
   ///<summary>Entity class for an API Key</summary>
   public class ApiKey : EditableEntity {
     ///<summary>Unique token name</summary>
-    public string TokenName { get; set; }
+    public string? TokenName { get; set; }
 
     ///<summary>Hashed API Key</summary>
-    public string Hash { get; set; }
+    public string? Hash { get; set; }
 
     ///<summary>Description</summary>
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     ///<summary>Valid from (inclusive)</summary>
     public DateTime ValidFrom { get; set; }
@@ -44,16 +44,16 @@ namespace Tlabs.Data.Entity {
     }
 
     ///<summary>Associated roles</summary>
-    public List<RoleRef> Roles { get; set; }
+    public List<RoleRef>? Roles { get; set; }
 
     ///<summary>Reference between roles and API Keys</summary>
     public class RoleRef {
 
       ///<summary>Role</summary>
-      public Role Role { get; set; }
+      public Role? Role { get; set; }
 
       ///<summary>API Key</summary>
-      public ApiKey ApiKey { get; set; }
+      public ApiKey? ApiKey { get; set; }
     }
   }
 }

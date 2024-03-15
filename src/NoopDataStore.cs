@@ -43,7 +43,7 @@ namespace Tlabs.Data {
       // public void Dispose() { }
 
       ///<inheritdoc/>
-      public void EnsureStore(IEnumerable<IDataSeed> seeds) => log.LogInformation("Confirmed to NOT provide ANY storage facility.");
+      public void EnsureStore(IEnumerable<IDataSeed>? seeds) => log.LogInformation("Confirmed to NOT provide ANY storage facility.");
 
       ///<inheritdoc/>
       public void Evict<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
@@ -85,7 +85,7 @@ namespace Tlabs.Data {
       public IQueryable<TEntity> UntrackedQuery<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();
 
       ///<inheritdoc/>
-      public E LoadExplicit<E, P>(E entity, Expression<Func<E, P>> prop) where E : class where P : class => throw new NotImplementedException();
+      public E LoadExplicit<E, P>(E entity, Expression<Func<E, P?>> prop) where E : class where P : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public E LoadExplicit<E, P>(E entity, Expression<Func<E, IEnumerable<P>>> prop) where E : class where P : class => throw new NotImplementedException();
@@ -94,29 +94,18 @@ namespace Tlabs.Data {
       public IQueryable<E> LoadRelated<E>(IQueryable<E> query, string navigationPropertyPath) where E : class => query;
 
       ///<inheritdoc/>
-      public IEagerLoadedQueryable<E, P> LoadRelated<E, P>(IQueryable<E> query, Expression<Func<E, P>> navProperty) where E : class => new EagerLoadedQueryable<E,P>(query);
+      public IEagerLoadedQueryable<E, P> LoadRelated<E, P>(IQueryable<E> query, Expression<Func<E, P>> navProperty) where E : class => new NoopEagerLoadedQueryable<E,P>(query);
 
       ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, IEnumerable<Prev>> query, Expression<Func<Prev, Prop>> navProperty) where E : class
-         => new EagerLoadedQueryable<E,Prop>(query);
+         => new NoopEagerLoadedQueryable<E,Prop>(query);
 
       ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
-         => new EagerLoadedQueryable<E,Prop>(query);
+         => new NoopEagerLoadedQueryable<E,Prop>(query);
 
       E IDataStore.Attach<E>(E ent) => ent;
-    }
-    
-    private class EagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {
-      private readonly IQueryable<E> q;
-      public EagerLoadedQueryable(IQueryable<E> q) {
-        this.q = q;
-      }
-      public Expression Expression => q.Expression;
-      public Type ElementType => q.ElementType;
-      public IQueryProvider Provider => q.Provider;
-      public IEnumerator<E> GetEnumerator() => q.GetEnumerator();
-      IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     }
 
     private class NoOpTransaction : IDataTransaction {
@@ -129,4 +118,21 @@ namespace Tlabs.Data {
       public void Dispose() { }
     }
   }
+
+  ///<summary>Dummy no op. <see cref="IEagerLoadedQueryable{E, P}"/> implementation.</summary>
+  public class NoopEagerLoadedQueryable<E, P> : IEagerLoadedQueryable<E, P> {
+    private readonly IQueryable<E> q;
+    ///<summary>Ctor from <paramref name="queryable"/>.</summary>
+    public NoopEagerLoadedQueryable(IQueryable<E> queryable) => this.q = queryable;
+    ///<inheritdoc/>
+    public Expression Expression => q.Expression;
+    ///<inheritdoc/>
+    public Type ElementType => q.ElementType;
+    ///<inheritdoc/>
+    public IQueryProvider Provider => q.Provider;
+    ///<inheritdoc/>
+    public IEnumerator<E> GetEnumerator() => q.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+  }
+
 }

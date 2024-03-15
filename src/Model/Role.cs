@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Tlabs.Data.Model {
 
-  public class Role {
+  public partial class Role {
     public Role() { }
 
     public Role(Tlabs.Data.Entity.Role r) {
@@ -40,11 +40,11 @@ namespace Tlabs.Data.Model {
       };
     }
     public DateTime Modified;
-    public string Key;
-    public string Description;
-    public string[] AllowedRoutes;
-    public string[] DeniedRoutes;
-    public string[] EnforcedFilters;
+    public string? Key;
+    public string? Description;
+    public string[]? AllowedRoutes;
+    public string[]? DeniedRoutes;
+    public string[]? EnforcedFilters;
 
     ///<summary>Check if action is allowed</summary>
     public bool AllowsAction(string method, string route) {
@@ -61,7 +61,7 @@ namespace Tlabs.Data.Model {
       return !denied && allowPolicies.Any(x => x.Matches(method, route));
     }
     ///<summary>Returns the enforced parameters for an action</summary>
-    public EnforcedParameter ParamsForAction(string route) {
+    public EnforcedParameter? ParamsForAction(string route) {
       if (null == enforcedParams) {
         var enfPar= (EnforcedFilters ?? Enumerable.Empty<string>()).Select(f => new EnforcedParameter(f)).ToList();
         Interlocked.CompareExchange(ref enforcedParams, enfPar, null);
@@ -70,10 +70,12 @@ namespace Tlabs.Data.Model {
     }
 
 
-    private List<AccessPolicy> allowPolicies;
-    private List<AccessPolicy> denyPolicies;
-    private List<EnforcedParameter> enforcedParams;
-    private static readonly Regex FILTER_REGEX= new Regex(@"^(?<position>\d)>(?<route>.+)\[(?<params>#.+)\]$", RegexOptions.Compiled);
+    private List<AccessPolicy>? allowPolicies;
+    private List<AccessPolicy>? denyPolicies;
+    private List<EnforcedParameter>? enforcedParams;
+    private static readonly Regex FILTER_REGEX= FILTERregex();
+    [GeneratedRegex(@"^(?<position>\d)>(?<route>.+)\[(?<params>#.+)\]$")]
+    private static partial Regex FILTERregex();
 
     ///<summary>Route access policy</summary>
     class AccessPolicy {
@@ -108,7 +110,7 @@ namespace Tlabs.Data.Model {
         this.Values= new Dictionary<string, string>();
 
         foreach (var g in enforcementParts.Groups["params"].Value.Split('#')) {
-          if (!g.Any()) continue;
+          if (0 == g.Length) continue;
           var kv= g.Split("=");
           this.Values.Add(kv[0], kv[1]);
         }

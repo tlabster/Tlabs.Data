@@ -17,17 +17,17 @@ namespace Tlabs.Data.Event {
   ///</example>
   public static class DataStoreEvent<T> {
 
-    private static Action<IBeforeEvent<T>> insertingEnv;
-    private static Action<IBeforeChangeEvent<T>> updatingEnv;
-    private static Action<IBeforeChangeEvent<T>> deletingEnv;
+    private static Action<IBeforeEvent<T>>? insertingEnv;
+    private static Action<IBeforeChangeEvent<T>>? updatingEnv;
+    private static Action<IBeforeChangeEvent<T>>? deletingEnv;
 
-    private static Action<IEvent<T>> insertedEnv;
-    private static Action<IEvent<T>> updatedEnv;
-    private static Action<IEvent<T>> deletedEnv;
+    private static Action<IEvent<T>>? insertedEnv;
+    private static Action<IEvent<T>>? updatedEnv;
+    private static Action<IEvent<T>>? deletedEnv;
 
-    private static Action<IFailedEvent<T>> insertFailedEnv;
-    private static Action<IChangeFailedEvent<T>> updateFailedEnv;
-    private static Action<IChangeFailedEvent<T>> deleteFailedEnv;
+    private static Action<IFailedEvent<T>>? insertFailedEnv;
+    private static Action<IChangeFailedEvent<T>>? updateFailedEnv;
+    private static Action<IChangeFailedEvent<T>>? deleteFailedEnv;
 
     #region Before events
     ///<summary>Event raised (before) inserting entity.</summary>
@@ -224,9 +224,9 @@ namespace Tlabs.Data.Event {
         return wasSwallowed;
       }
 
-      static DataStoreEvent.ITrigger baseTrigger {
+      static DataStoreEvent.ITrigger? baseTrigger {
         get {
-          Type baseType= typeof(B).GetTypeInfo().BaseType;
+          Type? baseType= typeof(B).GetTypeInfo().BaseType;
           if (null == baseType) return null;
           return DataStoreEvent.Trigger(typeof(T), baseType);
         }

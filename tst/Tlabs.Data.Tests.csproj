@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
 
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <CollectCoverage>true</CollectCoverage>
+    <CoverletOutput>__coverage/lcov.info</CoverletOutput>
+    <CoverletOutputFormat>lcov</CoverletOutputFormat>
+    <ExcludeByFile>**/*.g.cs</ExcludeByFile>
     <Include>[Tlabs.Data]*</Include>
   </PropertyGroup>
 
@@ -25,7 +28,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="ReportGenerator" Version="5.2.*" PrivateAssets="All"/>
   </ItemGroup>
+  <Target Name="GenerateHtmlCoverageReport" AfterTargets="GenerateCoverageResultAfterTest">
+    <ReportGenerator ReportFiles="@(CoverletReport)" TargetDirectory="__coverage/html" ReportTypes="HtmlInline_AzurePipelines_Dark"/>
+  </Target>
 
   <ItemGroup>
     <Content Include="./rsc/*.data/*" CopyToOutputDirectory="PreserveNewest" Link="rsc/%(RecursiveDir)/%(Filename)%(Extension)"/>

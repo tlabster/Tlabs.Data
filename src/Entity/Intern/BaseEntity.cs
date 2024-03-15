@@ -16,7 +16,7 @@ namespace Tlabs.Data.Entity.Intern {
     /// (If this object's Id is the default value (0), it is assumed of not beeing stored yet and thus referenc equality is checked.)
     ///</para>
     ///</remarks>
-    public override bool Equals(object o) {
+    public override bool Equals(object? o) {
       if (o is not BaseEntity obj || GetType() != o.GetType())
         return false;
 
@@ -27,7 +27,7 @@ namespace Tlabs.Data.Entity.Intern {
 
     ///<inheritdoc/>
     public override int GetHashCode() {
-      return default(int) != Id
+      return   default(int) != Id
              ? Id
              : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
     }
@@ -51,6 +51,6 @@ namespace Tlabs.Data.Entity.Intern {
       var copy= (T)this.MemberwiseClone();
       copy.Id= default(int);
       return copy;
-    } 
+    }
   }
 }
