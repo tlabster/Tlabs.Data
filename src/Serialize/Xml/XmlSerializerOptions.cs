@@ -7,10 +7,10 @@ namespace Tlabs.Data.Serialize.Xml {
   ///<summary><see cref="XmlFormat{T, S}.Serializer"/> <typeparamref name="T"/> specific serialization options.</summary>
   public class XmlSerializerOptions<T> where T : class {
   ///<summary>Ctor from <paramref name="readerSettings"/>.</summary>
-  public XmlSerializerOptions(XmlReaderSettings readerSettings, XmlWriterSettings writerSettings, XmlSerializerNamespaces ns) {
+  public XmlSerializerOptions(XmlReaderSettings readerSettings, XmlWriterSettings writerSettings, XmlSerializerNamespaces? ns= null) {
       this.ReaderSettings= readerSettings;
       this.WriterSettings= writerSettings;
-      this.Namespaces= ns;
+      this.Namespaces= ns ?? XmlFormat.DFLTnamespace;
     }
     ///<summary>ReaderSettings</summary>
     public XmlReaderSettings ReaderSettings { get; }
@@ -19,6 +19,6 @@ namespace Tlabs.Data.Serialize.Xml {
     ///<summary>Serializer namespaces</summary>
     public XmlSerializerNamespaces Namespaces { get; }
     ///<summary>Options target type</summary>
-    public Type TargetType => typeof(T); 
+    public Type TargetType => typeof(T);
   }
 }
