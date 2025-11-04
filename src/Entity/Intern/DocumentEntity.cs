@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Tlabs.Data.Event;
 
-namespace Tlabs.Data.Entity.Intern {
+namespace Tlabs.Data.Entity.Intern
+{
   /// <summary>
   /// Document entity interface
   /// </summary>
-  public interface IDocumentEntity {
-    /// <summary>
-    /// Creation timestamp
-    /// </summary>
-    public DateTime Created { get; set; }
+  public interface IDocumentEntity
+  {
     /// <summary>
     /// Serialized 
     /// </summary>
@@ -19,10 +18,8 @@ namespace Tlabs.Data.Entity.Intern {
   /// <summary>
   /// Base document entity which stores a series of 
   /// </summary>
-  public abstract class DocumentEntity : BaseEntity, IDocumentEntity {
-    /// <inheritdoc/>
-    public DateTime Created { get; set; }
-
+  public abstract class DocumentEntity : EditableEntity, IDocumentEntity
+  {
     /// <inheritdoc/>
     public IDictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
   }
@@ -30,10 +27,8 @@ namespace Tlabs.Data.Entity.Intern {
   /// <summary>
   /// Base document entity which stores a series of 
   /// </summary>
-  public abstract class EditableDocumentEntity : EditableEntity, IDocumentEntity {
-    /// <inheritdoc/>
-    public DateTime Created { get; set; }
-
+  public abstract class EditableDocumentEntity : EditableEntity, IDocumentEntity
+  {
     /// <inheritdoc/>
     public IDictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
   }
