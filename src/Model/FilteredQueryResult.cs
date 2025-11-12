@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using Tlabs.Misc;
 
@@ -74,7 +75,7 @@ namespace Tlabs.Data.Model {
       }
     }
     ///<summary>Filter by <see cref="Until"/>.</summary>
-    public virtual DateTime Until{
+    public virtual DateTime Until {
       get => Properties?[nameof(Until)] as DateTime? ?? DateTime.MaxValue;
       set {
         Properties??= new Dictionary<string, IConvertible>();
@@ -110,12 +111,16 @@ namespace Tlabs.Data.Model {
     ///<summary>Ctor to provide result <see cref="Data"/> with full <see cref="Total"/> from unlimitted <paramref name="query"/>.</summary>
     public QueryResult(IQueryable<T> query) : this(query, query, UNLIMITED_RESULT_COUNT) { }
     ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
-    public QueryResult(IQueryable<T> query, IQueryable<T> limitedQuery, int maxCount= MAX_RESULT_COUNT) {
+    public QueryResult(IQueryable<T> query, IQueryable<T> limitedQuery, int maxCount = MAX_RESULT_COUNT) {
       this.Total= maxCount > UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
+      if (maxCount > 0 && this.Total == maxCount) {
+        this.Total = -1;
+      }
+      this.Data= query.Take(maxCount).ToList();
       this.Data= limitedQuery.ToList();
     }
     ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
-    public QueryResult(IQueryable<T> query, QueryFilter filter, int maxCount= MAX_RESULT_COUNT) {
+    public QueryResult(IQueryable<T> query, QueryFilter filter, int maxCount = MAX_RESULT_COUNT) {
       if (!filter.NoTotalCount)
         this.Total= maxCount > UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
       else this.Total= -1;
@@ -124,15 +129,15 @@ namespace Tlabs.Data.Model {
     ///<inheritdoc/>
     public int Total { get; set; }
     ///<inheritdoc/>
-    public IReadOnlyList<T> Data { get; set; }= IResultList<T>.Empty;
+    public IReadOnlyList<T> Data { get; set; } = IResultList<T>.Empty;
     ///<inheritdoc/>
     public IConvertible? LastId { get; set; }
   }
 
-    ///<summary>Query result list returned from a filtered query transformed into <typeparamref name="T2"/> .</summary>
-    public class QueryResult<T1, T2> : IResultList<T2> {
+  ///<summary>Query result list returned from a filtered query transformed into <typeparamref name="T2"/> .</summary>
+  public class QueryResult<T1, T2> : IResultList<T2> {
     ///<summary>Ctor to provide result <see cref="Data"/> with <see cref="Total"/> (typically max. count, optionally full total) .</summary>
-    public QueryResult(IQueryable<T1> query, QueryFilter filter, Expression<Func<T1, T2>> selector, int maxCount= QueryResult<T1>.MAX_RESULT_COUNT) {
+    public QueryResult(IQueryable<T1> query, QueryFilter filter, Expression<Func<T1, T2>> selector, int maxCount = QueryResult<T1>.MAX_RESULT_COUNT) {
       if (!filter.NoTotalCount)
         this.Total= maxCount > QueryResult<T1>.UNLIMITED_RESULT_COUNT ? query.Take(maxCount).Count() : query.Count();
       else this.Total= -1;
@@ -141,7 +146,7 @@ namespace Tlabs.Data.Model {
     ///<inheritdoc/>
     public int Total { get; set; }
     ///<inheritdoc/>
-    public IReadOnlyList<T2> Data { get; set; }= IResultList<T2>.Empty;
+    public IReadOnlyList<T2> Data { get; set; } = IResultList<T2>.Empty;
     ///<inheritdoc/>
     public IConvertible? LastId { get; set; }
   }
