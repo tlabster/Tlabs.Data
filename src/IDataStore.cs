@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tlabs.Data {
@@ -19,7 +20,7 @@ namespace Tlabs.Data {
     void CommitChanges();
     ///
     ///<summary>Commit all tracked (detected) changes to the undrlying persistence store.</summary>
-    Task CommitChangesAsync();
+    Task CommitChangesAsync(CancellationToken token);
 
     ///<summary>Reset the change state of all tracked entities to 'unchanged'.</summary>
     void ResetChanges();
@@ -39,7 +40,7 @@ namespace Tlabs.Data {
     E Get<E>(params object[] ids) where E : class;
 
     ///<summary>Get a persistent entity instance from the data store.</summary>
-    Task<E> GetAsync<E>(params object[] ids) where E : class;
+    Task<E> GetAsync<E>(CancellationToken token, params object[] ids) where E : class;
 
     ///<summary>Get the data store identifier value(s) of the given <paramref name="ent"/>.</summary>
     object GetIdentifier<E>(E ent) where E : class;
@@ -56,23 +57,13 @@ namespace Tlabs.Data {
     E Insert<E>(E ent) where E : class;
 
     ///<summary>Add <paramref name="ent"/> for inserting to the store.</summary>
-    Task<E> InsertAsync<E>(E ent) where E : class;
+    Task<E> InsertAsync<E>(E ent, CancellationToken token) where E : class;
 
     ///<summary>Add an <see cref="IEnumerable{E}"/> of <paramref name="entities"/> for inserting to the store.</summary>
     IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class;
 
     ///<summary>Add an <see cref="IEnumerable{E}"/> of <paramref name="entities"/> for inserting to the store.</summary>
-    Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities) where E : class;
-
-    // /// <summary>
-    // /// Gets entities with applied specification
-    // /// </summary>
-    // Task<IEnumerable<E>> ApplyQueryAsync<E>(IQueryable<E> query, QuerySpecification<E> specification) where E : class;
-
-    // /// <summary>
-    // /// Gets count of entities matching the filter criteria
-    // /// </summary>
-    // Task<int> CountAsync<E>(IFilterCriteria<E>? filter = null) where E : class;
+    Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities, CancellationToken token) where E : class;
 
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>

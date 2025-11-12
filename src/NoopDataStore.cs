@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Tlabs.Config;
 using System.Collections;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Tlabs.Data {
 
@@ -35,7 +36,7 @@ namespace Tlabs.Data {
       public void CommitChanges() { }
 
       ///<inheritdoc/>
-      public Task CommitChangesAsync() => Task.CompletedTask;
+      public Task CommitChangesAsync(CancellationToken token) => Task.CompletedTask;
 
       ///<inheritdoc/>
       public void Delete<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
@@ -56,7 +57,7 @@ namespace Tlabs.Data {
       public TEntity Get<TEntity>(params object[] keys) where TEntity : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
-      public Task<E> GetAsync<E>(params object[] ids) where E : class => throw new NotImplementedException();
+      public Task<E> GetAsync<E>(CancellationToken token, params object[] ids) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public object GetIdentifier<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
@@ -68,10 +69,10 @@ namespace Tlabs.Data {
       public IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
-      public Task<E> InsertAsync<E>(E ent) where E : class => throw new NotImplementedException();
+      public Task<E> InsertAsync<E>(E ent, CancellationToken token) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
-      public Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
+      public Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities, CancellationToken token) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public E Update<E>(E ent) where E : class => ent;
