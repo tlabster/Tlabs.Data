@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 using Tlabs.Config;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace Tlabs.Data {
 
@@ -31,7 +32,10 @@ namespace Tlabs.Data {
       // public TEntity Attach<TEntity>(TEntity ent) where TEntity : class =>  ent;
 
       ///<inheritdoc/>
-      public void CommitChanges() {}
+      public void CommitChanges() { }
+
+      ///<inheritdoc/>
+      public Task CommitChangesAsync() => Task.CompletedTask;
 
       ///<inheritdoc/>
       public void Delete<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
@@ -52,6 +56,9 @@ namespace Tlabs.Data {
       public TEntity Get<TEntity>(params object[] keys) where TEntity : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
+      public Task<E> GetAsync<E>(params object[] ids) where E : class => throw new NotImplementedException();
+
+      ///<inheritdoc/>
       public object GetIdentifier<TEntity>(TEntity ent) where TEntity : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
@@ -59,6 +66,12 @@ namespace Tlabs.Data {
 
       ///<inheritdoc/>
       public IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
+
+      ///<inheritdoc/>
+      public Task<E> InsertAsync<E>(E ent) where E : class => throw new NotImplementedException();
+
+      ///<inheritdoc/>
+      public Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public E Update<E>(E ent) where E : class => ent;
@@ -94,18 +107,17 @@ namespace Tlabs.Data {
       public IQueryable<E> LoadRelated<E>(IQueryable<E> query, string navigationPropertyPath) where E : class => query;
 
       ///<inheritdoc/>
-      public IEagerLoadedQueryable<E, P> LoadRelated<E, P>(IQueryable<E> query, Expression<Func<E, P>> navProperty) where E : class => new NoopEagerLoadedQueryable<E,P>(query);
+      public IEagerLoadedQueryable<E, P> LoadRelated<E, P>(IQueryable<E> query, Expression<Func<E, P>> navProperty) where E : class => new NoopEagerLoadedQueryable<E, P>(query);
 
       ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, IEnumerable<Prev>> query, Expression<Func<Prev, Prop>> navProperty) where E : class
-         => new NoopEagerLoadedQueryable<E,Prop>(query);
+         => new NoopEagerLoadedQueryable<E, Prop>(query);
 
       ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
-         => new NoopEagerLoadedQueryable<E,Prop>(query);
+         => new NoopEagerLoadedQueryable<E, Prop>(query);
 
       E IDataStore.Attach<E>(E ent) => ent;
-
     }
 
     private class NoOpTransaction : IDataTransaction {

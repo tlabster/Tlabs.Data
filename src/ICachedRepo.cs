@@ -12,7 +12,7 @@ namespace Tlabs.Data {
     /// (with optional <paramref name="querySupplement"/> to be used e.g. for <c>LoadRelated(...)</c> clauses).
     ///</summary>
     ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
-    System.Linq.IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement= null);
+    System.Linq.IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement = null);
 
     ///<summary>(Mark) <paramref name="ent"/> as updated or inserted.</summary>
     TEntity InsertOrUpdate(TEntity ent);
@@ -21,8 +21,8 @@ namespace Tlabs.Data {
 }
 
 namespace Tlabs.Data.Repo.Intern {
-    ///<summary><see cref="IRepo{TEntity}"/> for a small number of (cached) persistent instances.</summary>
-    public class CachedRepo<TEntity> : Intern.BaseNonQueryRepo<TEntity>, ICachedRepo<TEntity> where TEntity : class, new() {
+  ///<summary><see cref="IRepo{TEntity}"/> for a small number of (cached) persistent instances.</summary>
+  public class CachedRepo<TEntity> : Intern.BaseNonQueryRepo<TEntity>, ICachedRepo<TEntity> where TEntity : class, new() {
     ///<summary>Maximum cache size.</summary>
     public const int MAX_CACHE= 300;
 
@@ -36,23 +36,23 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     private static void evictCache(Event.IEvent<TEntity> ev) {
-      lock(sync) cache= null;
+      lock (sync) cache= null;
     }
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public CachedRepo(IDataStore store) : base(store) { }
 
     ///<inheritdoc/>
-    public IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement= null) {
+    public IQueryable<TEntity> AllUntracked(Func<IQueryable<TEntity>, IQueryable<TEntity>>? querySupplement = null) {
       IQueryable<TEntity>? all= cache;
       if (null == all) lock (sync) {
-        all= store.UntrackedQuery<TEntity>();
-        all= querySupplement?.Invoke(all) ?? all;
-        var lst= all.Take(MAX_CACHE+1).ToList();
-        if (lst.Count <= MAX_CACHE)
-          all= cache= lst.AsQueryable();
-        else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
-      }
+          all= store.UntrackedQuery<TEntity>();
+          all= querySupplement?.Invoke(all) ?? all;
+          var lst= all.Take(MAX_CACHE+1).ToList();
+          if (lst.Count <= MAX_CACHE)
+            all= cache= lst.AsQueryable();
+          else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
+        }
       return all;
     }
 

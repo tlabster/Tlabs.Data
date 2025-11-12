@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Tlabs.Data {
 
@@ -9,11 +11,11 @@ namespace Tlabs.Data {
 
     ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
     ///<remarks>Any changes to returned entities are beeing tracked (for potential commit with the underlying store). </remarks>
-    System.Linq.IQueryable<TEntity> All { get; }
+    IQueryable<TEntity> All { get; }
 
     ///<summary>A queryable enumeration of *ALL* entities of <typeparamref name="TEntity"/> in the store.</summary>
     ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
-    System.Linq.IQueryable<TEntity> AllUntracked { get; }
+    IQueryable<TEntity> AllUntracked { get; }
   }
 
   ///<summary>Interface of an non queryable <typeparamref name="TEntity"/> repository.</summary>
