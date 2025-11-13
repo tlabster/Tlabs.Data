@@ -6,7 +6,7 @@ namespace Tlabs.Data {
   /// <summary>
   /// Paged result of a query of entities of type <typeparamref name="T"/>
   /// </summary>
-  public class PagedResult<T> {
+  public class PagedQueryResult<T> {
     /// <summary>
     /// Items of the current page
     /// </summary>

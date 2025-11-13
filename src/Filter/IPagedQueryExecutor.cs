@@ -16,7 +16,7 @@ namespace Tlabs.Data.Filter {
     /// <summary>
     /// Executes a paged query and maps entities to models using a mapper
     /// </summary>
-    Task<PagedResult<TModel>> ExecuteAsync<TModel>(
+    Task<PagedQueryResult<TModel>> ExecuteAsync<TModel>(
       QuerySpecification<TEntity, TFilterCriteria, TSortCriteria, TSortField> specification,
       Func<TEntity, TModel> mapper,
       IQueryable<TEntity>? query
@@ -25,7 +25,7 @@ namespace Tlabs.Data.Filter {
     /// <summary>
     /// Executes a paged query and maps entities to models using an async mapper
     /// </summary>
-    Task<PagedResult<TModel>> ExecuteAsync<TModel>(
+    Task<PagedQueryResult<TModel>> ExecuteAsync<TModel>(
       QuerySpecification<TEntity, TFilterCriteria, TSortCriteria, TSortField> specification,
       Func<TEntity, Task<TModel>> asyncMapper,
       IQueryable<TEntity>? query

@@ -8,8 +8,8 @@ namespace Tlabs.Data {
     /// <summary>
     /// Page number
     /// </summary>
-    [DefaultValue(0)]
-    public int Page { get; set; } = 0;
+    [DefaultValue(1)]
+    public int Page { get; set; } = 1;
     /// <summary>
     /// Page size
     /// </summary>
