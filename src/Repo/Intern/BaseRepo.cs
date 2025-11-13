@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tlabs.Data.Repo.Intern {
@@ -39,6 +40,9 @@ namespace Tlabs.Data.Repo.Intern {
     public virtual TEntity Get(params object[] keys) => store.Get<TEntity>(keys);
 
     /// <inheritdoc/>
+    public Task<TEntity> GetAsync(CancellationToken token = default, params object[] ids) => store.GetAsync<TEntity>(token, ids);
+
+    /// <inheritdoc/>
     public virtual object GetIdentifier(TEntity ent) => store.GetIdentifier<TEntity>(ent);
 
     /// <inheritdoc/>
@@ -46,6 +50,12 @@ namespace Tlabs.Data.Repo.Intern {
 
     /// <inheritdoc/>
     public virtual IEnumerable<TEntity> Insert(IEnumerable<TEntity> entities) => store.Insert(entities);
+
+    /// <inheritdoc/>
+    public Task<TEntity> InsertAsync(TEntity entity, CancellationToken token = default) => store.InsertAsync(entity, token);
+
+    /// <inheritdoc/>
+    public Task<IEnumerable<TEntity>> InsertAsync(IEnumerable<TEntity> entities, CancellationToken token = default) => store.InsertAsync(entities, token);
 
     /// <inheritdoc/>
     public virtual TEntity Merge(TEntity ent) => store.Merge<TEntity>(ent);
