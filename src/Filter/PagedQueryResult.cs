@@ -14,7 +14,7 @@ namespace Tlabs.Data {
     /// <summary>
     /// Total element count
     /// </summary>
-    public int TotalCount { get; set; }
+    public int? TotalCount { get; set; }
     /// <summary>
     /// Current page
     /// </summary>
@@ -24,8 +24,12 @@ namespace Tlabs.Data {
     /// </summary>
     public int PageSize { get; set; }
     /// <summary>
+    /// Current page count
+    /// </summary>
+    public int ItemCount => Items.Count();
+    /// <summary>
     /// States if there is a next page
     /// </summary>
-    public bool HasNextPage => Items.Count() < PageSize || !Items.Any();
+    public bool HasNextPage => Items.Count() == PageSize || !Items.Any();
   }
 }

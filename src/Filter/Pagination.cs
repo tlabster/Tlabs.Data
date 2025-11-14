@@ -16,6 +16,12 @@ namespace Tlabs.Data {
     [DefaultValue(20)]
     public int PageSize { get; set; } = 20;
 
+    /// <summary>
+    /// Maximum number of records to count when filters are applied.
+    /// If count reaches this limit, totalCount will be null to avoid performance issues.
+    /// </summary>
+    public int MaxCountLimit { get; private set; } = 1000;
+
     internal int Skip => (Page - 1) * PageSize;
 
     internal int Take => PageSize;
@@ -26,7 +32,7 @@ namespace Tlabs.Data {
     public void Validate() {
       if (Page < 1) Page = 1;
       if (PageSize < 1) PageSize = 20;
-      if (PageSize > 100) PageSize = 100; // Max page size
+      if (PageSize > 1000) PageSize = 1000;
     }
   }
 }

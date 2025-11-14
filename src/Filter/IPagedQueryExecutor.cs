@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Tlabs.Data.Filter;
@@ -19,7 +20,8 @@ namespace Tlabs.Data.Filter {
     Task<PagedQueryResult<TModel>> ExecuteAsync<TModel>(
       QuerySpecification<TEntity, TFilterCriteria, TSortCriteria, TSortField> specification,
       Func<TEntity, TModel> mapper,
-      IQueryable<TEntity>? query
+      IQueryable<TEntity>? query,
+      CancellationToken token = default
     );
 
     /// <summary>
@@ -28,7 +30,8 @@ namespace Tlabs.Data.Filter {
     Task<PagedQueryResult<TModel>> ExecuteAsync<TModel>(
       QuerySpecification<TEntity, TFilterCriteria, TSortCriteria, TSortField> specification,
       Func<TEntity, Task<TModel>> asyncMapper,
-      IQueryable<TEntity>? query
+      IQueryable<TEntity>? query,
+      CancellationToken token = default
     );
   }
 }
