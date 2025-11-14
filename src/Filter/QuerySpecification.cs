@@ -37,8 +37,8 @@ namespace Tlabs.Data.Filter {
     /// <param name="query">Original unfiltered query</param>
     /// <param name="filterBuilder">Filter builder for the given <typeparamref name="TEntity"/> and <typeparamref name="TFilterCriteria"/></param>
     /// <param name="sortBuilder">Sort builder for the given <typeparamref name="TEntity"/> and <typeparamref name="TSortCriteria"/></param>
-    /// <returns></returns>
-    public IQueryable<TEntity> Apply(IQueryable<TEntity> query, IFilterBuilder<TEntity, TFilterCriteria>? filterBuilder, ISortBuilder<TEntity, TSortCriteria, TSortField>? sortBuilder) {
+    /// <returns>Filtered query</returns>
+    public IQueryable<TEntity> ApplyFilter(IQueryable<TEntity> query, IFilterBuilder<TEntity, TFilterCriteria>? filterBuilder, ISortBuilder<TEntity, TSortCriteria, TSortField>? sortBuilder) {
       if (filterBuilder != null) {
         var filterExpression = filterBuilder.BuildExpression(Filter);
         if (filterExpression != null) {
@@ -50,10 +50,19 @@ namespace Tlabs.Data.Filter {
         query = sortBuilder.ApplySort(query, Sort);
       }
 
-      Filter.Validate();
+      return query;
+    }
+
+    /// <summary>
+    /// Applies pagination criteria defined in <paramref name="filterBuilder"/> to <paramref name="query"/>
+    /// </summary>
+    /// <returns>Paginated query</returns>
+    public IQueryable<TEntity> ApplyPagination(IQueryable<TEntity> query, IFilterBuilder<TEntity, TFilterCriteria>? filterBuilder) {
+      Filter.ValidatePagination();
       query = query.Skip(Filter.Skip).Take(Filter.Take);
 
       return query;
     }
+
   }
 }

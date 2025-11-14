@@ -29,7 +29,7 @@ namespace Tlabs.Data {
     /// <summary>
     /// Validates paging criteria
     /// </summary>
-    public void Validate() {
+    public void ValidatePagination() {
       if (Page < 1) Page = 1;
       if (PageSize < 1) PageSize = 20;
       if (PageSize > 1000) PageSize = 1000;
