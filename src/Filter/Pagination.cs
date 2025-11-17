@@ -45,7 +45,7 @@ namespace Tlabs.Data {
       if (Page < 0) throw new PagedQueryException($"Invalid pagination criteria: '{nameof(Page)}' must be > 0'");
       if (Offset < 0) throw new PagedQueryException($"Invalid pagination criteria: '{nameof(Offset)}' must be > 0'");
       if (Limit < 1) throw new PagedQueryException($"Invalid pagination criteria: '{nameof(Limit)}' must be > 1'");
-      if (Limit > 1000) throw new PagedQueryException($"Invalid pagination criteria: '{nameof(Limit)}' must be < 1000'");
+      if (Limit > 1000) throw new PagedQueryException($"Invalid pagination criteria: '{nameof(Limit)}' must be <= 1000'");
     }
   }
 }
