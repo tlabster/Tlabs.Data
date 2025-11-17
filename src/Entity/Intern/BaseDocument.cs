@@ -28,7 +28,6 @@ namespace Tlabs.Data.Entity.Intern {
       }
     }
     public string? StatusDetails { get; set; }
-    public DateTime Created { get; set; }
     public DateTime? Validated { get; set; }
     public BodyData Body {
       get => docBody??= new BodyData { Document= (T)this };

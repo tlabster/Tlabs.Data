@@ -23,7 +23,7 @@ namespace Tlabs.Data.Processing {
   /// <summary>Field validation exception, thrown if a validation returned false.</summary>
   public class FieldValidationException : DocumentValidationException {
     /// <summary>Ctor from <paramref name="offendingRule"/>.</summary>
-    public FieldValidationException(DocumentSchema.ValidationRule offendingRule) : base ($"{offendingRule.Key} - {offendingRule.Description}") { }
+    public FieldValidationException(DocumentSchema.ValidationRule offendingRule) : base($"{offendingRule.Key} - {offendingRule.Description}") { }
   }
 
 }

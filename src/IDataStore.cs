@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tlabs.Data {
 
@@ -16,6 +18,9 @@ namespace Tlabs.Data {
 
     ///<summary>Commit all tracked (detected) changes to the undrlying persistence store.</summary>
     void CommitChanges();
+    ///
+    ///<summary>Commit all tracked (detected) changes to the undrlying persistence store.</summary>
+    Task CommitChangesAsync(CancellationToken token);
 
     ///<summary>Reset the change state of all tracked entities to 'unchanged'.</summary>
     void ResetChanges();
@@ -29,10 +34,13 @@ namespace Tlabs.Data {
 
     ///<summary>Take actions to make sure the underlying store exists and optional plants all provided <paramref name="seeds"/>.</summary>
     ///<remarks>Should create the entire store, if not present.</remarks>
-    void EnsureStore(IEnumerable<IDataSeed>? seeds= null);
+    void EnsureStore(IEnumerable<IDataSeed>? seeds = null);
 
     ///<summary>Get a persistent entity instance from the data store.</summary>
     E Get<E>(params object[] ids) where E : class;
+
+    ///<summary>Get a persistent entity instance from the data store.</summary>
+    Task<E> GetAsync<E>(CancellationToken token, params object[] ids) where E : class;
 
     ///<summary>Get the data store identifier value(s) of the given <paramref name="ent"/>.</summary>
     object GetIdentifier<E>(E ent) where E : class;
@@ -48,8 +56,14 @@ namespace Tlabs.Data {
     ///<summary>Add <paramref name="ent"/> for inserting to the store.</summary>
     E Insert<E>(E ent) where E : class;
 
+    ///<summary>Add <paramref name="ent"/> for inserting to the store.</summary>
+    Task<E> InsertAsync<E>(E ent, CancellationToken token) where E : class;
+
     ///<summary>Add an <see cref="IEnumerable{E}"/> of <paramref name="entities"/> for inserting to the store.</summary>
     IEnumerable<E> Insert<E>(IEnumerable<E> entities) where E : class;
+
+    ///<summary>Add an <see cref="IEnumerable{E}"/> of <paramref name="entities"/> for inserting to the store.</summary>
+    Task<IEnumerable<E>> InsertAsync<E>(IEnumerable<E> entities, CancellationToken token) where E : class;
 
     ///<summary>Merge given <paramref name="ent"/> with any persistent version.</summary>
     ///<remarks>

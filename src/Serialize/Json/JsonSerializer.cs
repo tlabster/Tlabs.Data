@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Tlabs.Misc;
 using Tlabs.Config;
+using System.Text.Json.Serialization;
 
 namespace Tlabs.Data.Serialize.Json {
 
@@ -35,6 +36,7 @@ namespace Tlabs.Data.Serialize.Json {
       opt.Converters.Add(new AppTimeJsonConverter());
       opt.Converters.Add(new PropertyDictionaryJsonConverter());
       opt.Converters.Add(new PropertyReadOnlyDictionaryJsonConverter());
+      opt.Converters.Add(new JsonStringEnumConverter());
       opt.WriteIndented= true;
     }
 
