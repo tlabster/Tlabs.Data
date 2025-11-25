@@ -11,6 +11,7 @@ using Tlabs.Config;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Threading;
+using Tlabs.Data.Model;
 
 namespace Tlabs.Data {
 
@@ -119,7 +120,7 @@ namespace Tlabs.Data {
          => new NoopEagerLoadedQueryable<E, Prop>(query);
 
       ///<inheritdoc/>
-      public string GetTableName<E>() => throw new NotImplementedException();
+      public RelationalTableInfo GetTableName<E>() => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public string GetColumnName<E>(string propName) => throw new NotImplementedException();
