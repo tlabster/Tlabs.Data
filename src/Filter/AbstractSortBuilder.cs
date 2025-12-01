@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Tlabs.Data.Filter;
-
 namespace Tlabs.Data.Filter {
   /// <summary>
   /// Provides common sorting logic for entity-specific sort builders.

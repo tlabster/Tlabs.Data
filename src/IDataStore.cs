@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Tlabs.Data.Model;
+
 namespace Tlabs.Data {
 
   ///<summary>Interface of an eager-loaded <see cref="IQueryable{TEntity}" />.</summary>
@@ -124,5 +126,17 @@ namespace Tlabs.Data {
 
     ///<summary>Load additional related data associated with the given <paramref name="navProperty"/> based on a related type that was just loaded.</summary>
     IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class;
+
+    /// <summary>Gets the table name for the given entity type, if backed by a database.</summary>
+    RelationalTableInfo GetTableName<E>();
+
+    /// <summary>Gets the DB column name for the given <paramref name="propName"/></summary>
+    string GetColumnName<E>(string propName);
+
+    /// <summary>Execute raw <paramref name="sqlQuery"/> with <paramref name="parameters"/></summary>
+    IQueryable<E> SqlQueryRaw<E>(string sqlQuery, params object[] parameters);
+
+    /// <summary>Execute formatted <paramref name="sqlQuery"/></summary>
+    IQueryable<E> SqlQuery<E>(FormattableString sqlQuery);
   }
 }

@@ -11,6 +11,7 @@ using Tlabs.Config;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Threading;
+using Tlabs.Data.Model;
 
 namespace Tlabs.Data {
 
@@ -117,6 +118,18 @@ namespace Tlabs.Data {
       ///<inheritdoc/>
       public IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class
          => new NoopEagerLoadedQueryable<E, Prop>(query);
+
+      ///<inheritdoc/>
+      public RelationalTableInfo GetTableName<E>() => throw new NotImplementedException();
+
+      ///<inheritdoc/>
+      public string GetColumnName<E>(string propName) => throw new NotImplementedException();
+
+      ///<inheritdoc/>
+      public IQueryable<E> SqlQuery<E>(FormattableString sqlQuery) => new List<E>().AsQueryable();
+
+      ///<inheritdoc/>
+      public IQueryable<E> SqlQueryRaw<E>(string sqlQuery, params object[] parameters) => new List<E>().AsQueryable();
 
       E IDataStore.Attach<E>(E ent) => ent;
     }
