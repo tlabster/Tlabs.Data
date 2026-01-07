@@ -127,6 +127,27 @@ namespace Tlabs.Data {
     ///<summary>Load additional related data associated with the given <paramref name="navProperty"/> based on a related type that was just loaded.</summary>
     IEagerLoadedQueryable<E, Prop> ThenLoadRelated<E, Prev, Prop>(IEagerLoadedQueryable<E, Prev> query, Expression<Func<Prev, Prop>> navProperty) where E : class;
 
+    /// <summary>
+    /// Returns the first element of the <paramref name="query"/> matching <paramref name="predicate"/>
+    /// </summary>
+    Task<E?> FirstOrDefaultAsync<E>(IQueryable<E> query, Expression<Func<E, bool>> predicate, CancellationToken token) where E : class;
+
+    /// <summary>
+    /// Returns the single element of the <paramref name="query"/> matching <paramref name="predicate"/>
+    /// </summary>
+    /// <exception cref="InvalidOperationException"><paramref name="query" /> contains more than one element.</exception>
+    Task<E?> SingleOrDefaultAsync<E>(IQueryable<E> query, Expression<Func<E, bool>> predicate, CancellationToken token) where E : class;
+
+    /// <summary>
+    /// Materializes the <paramref name="query"/> into a list
+    /// </summary>
+    Task<List<E>> ToListAsync<E>(IQueryable<E> query, CancellationToken cancellationToken = default) where E : class?;
+
+    /// <summary>
+    /// Sets the <paramref name="query"/> to ignore any default query filters that might apply
+    /// </summary>
+    IQueryable<E> IgnoreQueryFilters<E>(IQueryable<E> query) where E : class;
+
     /// <summary>Gets the table name for the given entity type, if backed by a database.</summary>
     RelationalTableInfo GetTableName<E>();
 
