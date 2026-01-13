@@ -82,7 +82,7 @@ namespace Tlabs.Data {
       public IEnumerable<E> Update<E>(IEnumerable<E> entities) where E : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
-      public TEntity Merge<TEntity>(TEntity entity) where TEntity : class, new() => throw new NotImplementedException();
+      public TEntity Merge<TEntity>(TEntity entity) where TEntity : class => throw new NotImplementedException();
 
       ///<inheritdoc/>
       public IQueryable<TEntity> Query<TEntity>() where TEntity : class => new List<TEntity>().AsQueryable();

@@ -2,31 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using Microsoft.Extensions.Logging;
+
 using Tlabs.Data.Event;
 
 namespace Tlabs.Data {
 
   ///<summary>Interface of a look up by key repository.</summary>
-  public interface IKeyLookup<T, K> where T : class, new() {
+  public interface IKeyLookup<T, K> where T : class {
     ///<summary>Return <typeparamref name="T"/> with <paramref name="key"/> (and optional <paramref name="mustExist"/> flag).</summary>
     ///<exception cref="DataEntityNotFoundException{T}"><paramref name="mustExist"/> is true and no entity with given <paramref name="key"/></exception>
-    T? GetByKey(K key, bool mustExist= false);
+    T? GetByKey(K key, bool mustExist = false);
   }
 
   ///<summary>Interface of a <see cref="IRepo{TEntity}"/> for entities that are assumed to have a small number of (cached) persistent instances.</summary>
-  public interface IKeyCachedRepo<TEntity, K> : INonQueryRepo<TEntity>, IKeyLookup<TEntity, K> where TEntity : class, new() {
+  public interface IKeyCachedRepo<TEntity, K> : INonQueryRepo<TEntity>, IKeyLookup<TEntity, K> where TEntity : class {
 
     ///<summary>A queryable enumeration of *ALL* (cached) entities of <typeparamref name="TEntity"/> in the store.</summary>
     ///<remarks>Changes to returned entities are NOT beeing tracked.</remarks>
     System.Linq.IQueryable<TEntity> AllUntracked { get; }
 
     ///<summary>(Mark) <paramref name="ent"/> as updated or inserted.</summary>
-    TEntity InsertOrUpdate(TEntity ent);
+    TEntity InsertOrUpdate(TEntity ent, Func<TEntity>? factory = null);
   }
 
   ///<summary>Interface of a <see cref="IKeyCachedRepo{TEntity, K}"/> that is caching <typeparamref name="TModel"/> instances.</summary>
-  public interface IKeyCachedRepo<TEntity, TModel, K> : INonQueryRepo<TEntity>, IKeyLookup<TModel, K> where TEntity : class, new() where TModel : class, new() {
+  public interface IKeyCachedRepo<TEntity, TModel, K> : INonQueryRepo<TEntity>, IKeyLookup<TModel, K> where TEntity : class where TModel : class {
 
     ///<summary>A queryable enumeration of *ALL* (cached) entities of <typeparamref name="TModel"/> in the store.</summary>
     System.Linq.IQueryable<TModel> AllUntracked { get; }
@@ -37,8 +39,8 @@ namespace Tlabs.Data {
 }
 
 namespace Tlabs.Data.Repo.Intern {
-    ///<summary><see cref="IRepo{TEntity}"/> for a small number of (cached) persistent instances with key.</summary>
-    public abstract class AbstractKeyCachedRepo<TEntity, K> : Intern.BaseNonQueryRepo<TEntity>, IKeyCachedRepo<TEntity, K> where TEntity : class, new() where K : notnull {
+  ///<summary><see cref="IRepo{TEntity}"/> for a small number of (cached) persistent instances with key.</summary>
+  public abstract class AbstractKeyCachedRepo<TEntity, K> : Intern.BaseNonQueryRepo<TEntity>, IKeyCachedRepo<TEntity, K> where TEntity : class where K : notnull {
     ///<summary>Maximum cache size.</summary>
     public const int MAX_CACHE= 300;
 
@@ -52,7 +54,7 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     static void evictCache(Event.IEvent<TEntity> ev) {
-      lock(sync) cache= null;
+      lock (sync) cache= null;
     }
 
     readonly Func<TEntity, K> obtainKey;
@@ -63,24 +65,32 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     ///<inheritdoc/>
-    public IQueryable<TEntity> AllUntracked { get {
-      var cache0= cache;
-      IQueryable<TEntity>? q= cache0?.Values.AsQueryable();
-      if (null == cache0) lock (sync) {
-        q= supplementalQuery(store.UntrackedQuery<TEntity>());
-        cache0= q.Take(MAX_CACHE+1).ToDictionary(obtainKey);
-        if (cache0.Count <= MAX_CACHE)
-          q= (cache= cache0).Values.AsQueryable();
-        else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
+    public IQueryable<TEntity> AllUntracked {
+      get {
+        var cache0= cache;
+        IQueryable<TEntity>? q= cache0?.Values.AsQueryable();
+        if (null == cache0) lock (sync) {
+          q= supplementalQuery(store.UntrackedQuery<TEntity>());
+          cache0= q.Take(MAX_CACHE+1).ToDictionary(obtainKey);
+          if (cache0.Count <= MAX_CACHE)
+            q= (cache= cache0).Values.AsQueryable();
+          else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
+        }
+        return q ?? Enumerable.Empty<TEntity>().AsQueryable();
       }
-      return q ?? Enumerable.Empty<TEntity>().AsQueryable();
-    }}
+    }
 
     ///<inheritdoc/>
-    public TEntity InsertOrUpdate(TEntity ent) => (null == ent) ? Insert(new TEntity()) : Update(ent);
+    public TEntity InsertOrUpdate(TEntity ent, Func<TEntity>? factory = null) {
+      if (ent == null) {
+        ArgumentNullException.ThrowIfNull(factory);
+        return Insert(factory());
+      }
+      return Update(ent);
+    }
 
     ///<inheritdoc/>
-    public TEntity? GetByKey(K key, bool mustExist= false) {
+    public TEntity? GetByKey(K key, bool mustExist = false) {
       if (null == key) {
         if (!mustExist) return null;
         throw new DataEntityNotFoundException<TEntity>("<null>");
@@ -136,24 +146,26 @@ namespace Tlabs.Data.Repo.Intern {
     }
 
     ///<inheritdoc/>
-    public IQueryable<TModel> AllUntracked { get {
-      var cache0= cache;
-      IQueryable<TModel>? q= cache0?.Values.AsQueryable();
-      if (null == cache0) lock (sync) {
-        q= selectQuery(store.UntrackedQuery<TEntity>());
-        cache0= q.Take(MAX_CACHE+1).ToDictionary(obtainKey);
-        if (cache0.Count <= MAX_CACHE)
-          q= (cache= cache0).Values.AsQueryable();
-        else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
+    public IQueryable<TModel> AllUntracked {
+      get {
+        var cache0= cache;
+        IQueryable<TModel>? q= cache0?.Values.AsQueryable();
+        if (null == cache0) lock (sync) {
+          q= selectQuery(store.UntrackedQuery<TEntity>());
+          cache0= q.Take(MAX_CACHE+1).ToDictionary(obtainKey);
+          if (cache0.Count <= MAX_CACHE)
+            q= (cache= cache0).Values.AsQueryable();
+          else log.LogWarning("Maximum cache size ({max}) exceeded. Using raw IQuerable from store !", MAX_CACHE);
+        }
+        return q ?? Enumerable.Empty<TModel>().AsQueryable();
       }
-      return q ?? Enumerable.Empty<TModel>().AsQueryable();
-    }}
+    }
 
     ///<inheritdoc/>
     public TEntity InsertOrUpdate(TEntity ent) => (null == ent) ? Insert(new TEntity()) : Update(ent);
 
     ///<inheritdoc/>
-    public TModel? GetByKey(K key, bool mustExist= false) {
+    public TModel? GetByKey(K key, bool mustExist = false) {
       if (null == key) {
         if (!mustExist) return null;
         throw new DataEntityNotFoundException<TEntity>("<null>");
