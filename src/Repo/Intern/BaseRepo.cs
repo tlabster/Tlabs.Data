@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Tlabs.Data.Repo.Intern {
 
   ///<summary>Base data repository for <typeparamref name="TEntity"/>.</summary>
-  public class BaseRepo<TEntity> : BaseNonQueryRepo<TEntity>, IRepo<TEntity> where TEntity : class, new() {
+  public class BaseRepo<TEntity> : BaseNonQueryRepo<TEntity>, IRepo<TEntity> where TEntity : class {
 
     ///<summary>Ctor from <paramref name="store"/>.</summary>
     public BaseRepo(IDataStore store) : base(store) { }
@@ -24,7 +24,7 @@ namespace Tlabs.Data.Repo.Intern {
   }
 
   ///<summary>Base data repository for <typeparamref name="TEntity"/>.</summary>
-  public class BaseNonQueryRepo<TEntity> : INonQueryRepo<TEntity> where TEntity : class, new() {
+  public class BaseNonQueryRepo<TEntity> : INonQueryRepo<TEntity> where TEntity : class {
     /// <summary>Data store</summary>
     protected IDataStore store;
 

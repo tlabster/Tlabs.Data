@@ -83,7 +83,7 @@ namespace Tlabs.Data {
     ///</description></item>
     ///</list>
     ///</remarks>
-    E Merge<E>(E ent) where E : class, new();
+    E Merge<E>(E ent) where E : class;
 
     ///<summary>Track given <paramref name="ent"/> as modified for updating with the store.</summary>
     E Update<E>(E ent) where E : class;
